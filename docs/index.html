@@ -15,16 +15,24 @@
       name: 'Виртуальная Арт-Галерея',
       repo: 'MaryZhminkovskaya/VAG_Mobile',
       loadSidebar: true,
+      loadNavbar: false,
       subMaxLevel: 3,
       auto2top: true,
       alias: {
         '/.*/_sidebar.md': '/_sidebar.md'
       },
-      notFoundPage: true,
+      notFoundPage: '404.md',
       executeScript: true,
       maxLevel: 4,
-      // Уберите basePath для GitHub Pages
-      // basePath: '/VAG_Mobile/'
+      mergeNavbar: true,
+      formatUpdated: '{YYYY}-{MM}-{DD} {HH}:{mm}',
+      plugins: [
+        function(hook, vm) {
+          hook.ready(function() {
+            console.log('Docsify ready!');
+          });
+        }
+      ]
     }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>
