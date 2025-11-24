@@ -1,6 +1,0 @@
-- [Главная](README.md)
-- [Публикации](publications/README.md)
-  - [Создание публикаций](publications/creating/README.md)
-  - [Управление публикациями](publications/managing/README.md)
-- [Формы публикаций](forms/README.md)
-- [Частые вопросы](faq/README.md)
