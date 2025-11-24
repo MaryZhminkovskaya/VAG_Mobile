@@ -14,6 +14,7 @@ import com.example.vagmobile.ui.fragment.ProfileFragment;
 import com.example.vagmobile.util.SharedPreferencesHelper;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.example.vagmobile.ui.fragment.DocumentationFragment;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -74,6 +75,9 @@ public class MainActivity extends AppCompatActivity {
                 } else if (itemId == R.id.nav_profile) {
                     selectedFragment = new ProfileFragment();
                 }
+                else if (itemId == R.id.nav_documentation) {
+                    selectedFragment = new DocumentationFragment();
+                }
 
                 if (selectedFragment != null) {
                     loadFragment(selectedFragment);
@@ -98,14 +102,26 @@ public class MainActivity extends AppCompatActivity {
                 .commit();
     }
 
-//    @Override
-//    public void onBackPressed() {
-//        // Если мы на главном фрагменте, выходим из приложения
-//        if (bottomNavigationView.getSelectedItemId() == R.id.nav_home) {
-//            finishAffinity();
-//        } else {
-//            // Иначе переходим на главный фрагмент
-//            bottomNavigationView.setSelectedItemId(R.id.nav_home);
-//        }
-//    }
+    @Override
+    public void onBackPressed() {
+        // Получаем текущий фрагмент
+        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+
+        if (currentFragment instanceof DocumentationFragment) {
+            DocumentationFragment docsFragment = (DocumentationFragment) currentFragment;
+            if (docsFragment.canGoBack()) {
+                docsFragment.goBack();
+                return;
+            }
+        }
+
+        // Если мы на главном фрагменте, выходим из приложения
+        if (bottomNavigationView.getSelectedItemId() == R.id.nav_home) {
+            super.onBackPressed(); // Добавьте вызов super
+            finishAffinity();
+        } else {
+            // Иначе переходим на главный фрагмент
+            bottomNavigationView.setSelectedItemId(R.id.nav_home);
+        }
+    }
 }
