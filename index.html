@@ -13,9 +13,13 @@
     window.$docsify = {
       name: 'Виртуальная Арт-Галерея',
       repo: 'MaryZhminkovskaya/VAG_Mobile',
+      basePath: '/docs/',
       loadSidebar: true,
       subMaxLevel: 3,
-      auto2top: true
+      auto2top: true,
+      alias: {
+        '/.*/_sidebar.md': '/_sidebar.md' 
+      }
     }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>
