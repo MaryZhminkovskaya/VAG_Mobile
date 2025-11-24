@@ -38,4 +38,4 @@
 
 ---
 
-[Создание публикаций](/creating/) | [Управление публикациями](/managing/)
+[Создание публикаций](/publications/creating/) | [Управление публикациями](/publications/managing/)
