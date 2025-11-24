@@ -19,9 +19,15 @@
       auto2top: true,
       alias: {
         '/.*/_sidebar.md': '/_sidebar.md'
-      }
+      },
+      notFoundPage: true,
+      executeScript: true,
+      maxLevel: 4,
+      // Уберите basePath для GitHub Pages
+      // basePath: '/VAG_Mobile/'
     }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
 </body>
 </html>
