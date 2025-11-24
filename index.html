@@ -4,20 +4,26 @@
   <meta charset="UTF-8">
   <title>Документация Виртуальной Арт-Галереи</title>
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-  <meta name="description" content="Description">
+  <meta name="description" content="Документация для мобильного приложения Виртуальная Арт-Галерея">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/themes/vue.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
 </head>
 <body>
   <div id="app"></div>
   <script>
     window.$docsify = {
       name: 'Виртуальная Арт-Галерея',
-      repo: 'MaryZhminkovskaya/VAG_TRMP', 
+      repo: 'MaryZhminkovskaya/VAG_Mobile',
+      basePath: '/Техническая%20документация/Жминьковская/docs/', 
       loadSidebar: true,
-      subMaxLevel: 2
+      subMaxLevel: 3,
+      auto2top: true,
+      search: {
+        placeholder: 'Поиск в документации...'
+      }
     }
   </script>
-  <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
 </body>
 </html>
