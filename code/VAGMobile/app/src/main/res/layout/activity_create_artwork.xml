@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Progress Bar -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Image Selection Section -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Artwork Image"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <ImageView
+            android:id="@+id/ivArtworkImage"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="8dp"
+            android:background="@color/gray"
+            android:scaleType="centerCrop"
+            android:src="@android:drawable/ic_menu_gallery" />
+
+        <Button
+            android:id="@+id/btnSelectImage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="24dp"
+            android:text="Select Image" />
+
+        <!-- Title -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Title"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/etTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:hint="Enter artwork title"
+            android:background="@drawable/edit_text_background"
+            android:padding="12dp" />
+
+        <!-- Description -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Description"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <EditText
+            android:id="@+id/etDescription"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:layout_marginBottom="16dp"
+            android:gravity="top"
+            android:hint="Enter artwork description"
+            android:inputType="textMultiLine"
+            android:maxLines="5"
+            android:background="@drawable/edit_text_background"
+            android:padding="12dp" />
+
+        <!-- Categories Section -->
+        <!-- В разделе категорий замените на: -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:hint="Categories">
+
+            <AutoCompleteTextView
+                android:id="@+id/autoCompleteCategories"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Tap to select categories"
+                android:inputType="text"
+                android:completionHint="Select from available categories"
+                android:dropDownHeight="300dp" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Selected Categories -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Selected Categories:"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/chipContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:orientation="horizontal"
+            android:padding="4dp" />
+
+        <TextView
+            android:id="@+id/tvSelectedCategories"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No categories selected"
+            android:textSize="12sp"
+            android:textColor="?android:attr/textColorSecondary"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Create Button -->
+        <Button
+            android:id="@+id/btnCreateArtwork"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Create Artwork"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:backgroundTint="@color/purple_500"
+            android:textColor="@color/white" />
+
+    </LinearLayout>
+</ScrollView>
