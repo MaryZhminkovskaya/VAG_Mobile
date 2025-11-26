@@ -3,18 +3,20 @@ package com.example.vagmobile.ui.activity;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+
 import com.example.vagmobile.R;
 import com.example.vagmobile.ui.fragment.ArtworksFragment;
 import com.example.vagmobile.ui.fragment.HomeFragment;
 import com.example.vagmobile.ui.fragment.CategoriesFragment;
 import com.example.vagmobile.ui.fragment.ProfileFragment;
+import com.example.vagmobile.ui.fragment.DocumentationFragment;
 import com.example.vagmobile.util.SharedPreferencesHelper;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.example.vagmobile.ui.fragment.DocumentationFragment;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -74,8 +76,7 @@ public class MainActivity extends AppCompatActivity {
                     selectedFragment = new CategoriesFragment();
                 } else if (itemId == R.id.nav_profile) {
                     selectedFragment = new ProfileFragment();
-                }
-                else if (itemId == R.id.nav_documentation) {
+                } else if (itemId == R.id.nav_documentation) {
                     selectedFragment = new DocumentationFragment();
                 }
 
@@ -104,24 +105,18 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        // Получаем текущий фрагмент
-        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
-
-        if (currentFragment instanceof DocumentationFragment) {
-            DocumentationFragment docsFragment = (DocumentationFragment) currentFragment;
-            if (docsFragment.canGoBack()) {
-                docsFragment.goBack();
-                return;
-            }
-        }
-
-        // Если мы на главном фрагменте, выходим из приложения
-        if (bottomNavigationView.getSelectedItemId() == R.id.nav_home) {
-            super.onBackPressed(); // Добавьте вызов super
-            finishAffinity();
+        // Если в back stack есть фрагменты, обрабатываем навигацию
+        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+            getSupportFragmentManager().popBackStack();
         } else {
-            // Иначе переходим на главный фрагмент
-            bottomNavigationView.setSelectedItemId(R.id.nav_home);
+            // Если мы на главном фрагменте, выходим из приложения
+            if (bottomNavigationView.getSelectedItemId() == R.id.nav_home) {
+                super.onBackPressed();
+                finishAffinity();
+            } else {
+                // Иначе переходим на главный фрагмент
+                bottomNavigationView.setSelectedItemId(R.id.nav_home);
+            }
         }
     }
 }
