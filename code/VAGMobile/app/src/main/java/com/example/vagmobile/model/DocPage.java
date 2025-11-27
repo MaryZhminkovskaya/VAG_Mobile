@@ -18,16 +18,4 @@ public class DocPage implements Serializable {
     public String getRawUrl() {
         return rawUrl;
     }
-
-    // Добавьте этот метод для удобства
-    public String getPath() {
-        if (rawUrl.contains("https://raw.githubusercontent.com/MaryZhminkovskaya/VAG_Mobile/Mary/docs/")) {
-            String path = rawUrl.substring("https://raw.githubusercontent.com/MaryZhminkovskaya/VAG_Mobile/Mary/docs/".length());
-            if (path.endsWith("README.md")) {
-                return path.substring(0, path.length() - 9);
-            }
-            return path;
-        }
-        return null;
-    }
 }

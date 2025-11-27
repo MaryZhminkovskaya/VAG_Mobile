@@ -47,14 +47,12 @@ public class DocumentationDetailFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Инициализируем Markwon с поддержкой ссылок
         markwon = Markwon.builder(requireContext())
                 .usePlugin(CorePlugin.create())
                 .usePlugin(GlideImagesPlugin.create(requireContext()))
                 .usePlugin(LinkifyPlugin.create())
                 .build();
 
-        // Создаем кастомный обработчик ссылок
         linkMovementMethod = new CustomLinkMovementMethod();
     }
 
@@ -75,10 +73,7 @@ public class DocumentationDetailFragment extends Fragment {
             progressBar = view.findViewById(R.id.progressBar);
 
             titleTextView.setText(docPage.getTitle());
-
-            // Настраиваем обработчик ссылок
             setupLinkHandler();
-
             setupViewModel();
             viewModel.loadMarkdownContent(docPage.getRawUrl());
         }
@@ -89,13 +84,7 @@ public class DocumentationDetailFragment extends Fragment {
 
         viewModel.getCurrentContent().observe(getViewLifecycleOwner(), content -> {
             if (content != null) {
-                Log.d(TAG, "Original content length: " + content.length());
-
-                // Обрабатываем markdown
                 String processedContent = MarkdownHelper.processMarkdown(content);
-                Log.d(TAG, "Processed content length: " + processedContent.length());
-
-                // Отображаем markdown
                 markwon.setMarkdown(contentTextView, processedContent);
                 contentTextView.setVisibility(View.VISIBLE);
             }
@@ -117,28 +106,15 @@ public class DocumentationDetailFragment extends Fragment {
     }
 
     private void setupLinkHandler() {
-        // Устанавливаем кастомный обработчик ссылок
-        linkMovementMethod.setLinkClickListener(new CustomLinkMovementMethod.LinkClickListener() {
-            @Override
-            public void onLinkClick(String url) {
-                Log.d(TAG, "Link clicked: " + url);
-                handleLinkClick(url);
-            }
-        });
+        linkMovementMethod.setLinkClickListener(url -> handleLinkClick(url));
         contentTextView.setMovementMethod(linkMovementMethod);
     }
 
     private void handleLinkClick(String url) {
         try {
-            Log.d(TAG, "Handling link click for URL: " + url);
-
-            // Ищем соответствующую страницу документации
             DocPage targetPage = findDocPageByUrl(url);
 
             if (targetPage != null) {
-                Log.d(TAG, "Found internal page: " + targetPage.getTitle());
-
-                // Открываем страницу внутри приложения
                 DocumentationDetailFragment detailFragment = DocumentationDetailFragment.newInstance(targetPage);
                 getParentFragmentManager()
                         .beginTransaction()
@@ -146,9 +122,6 @@ public class DocumentationDetailFragment extends Fragment {
                         .addToBackStack("documentation")
                         .commit();
             } else {
-                Log.d(TAG, "External link, opening in browser: " + url);
-
-                // Если это внешняя ссылка, открываем в браузере
                 android.content.Intent browserIntent = new android.content.Intent(
                         android.content.Intent.ACTION_VIEW,
                         android.net.Uri.parse(url)
@@ -156,9 +129,6 @@ public class DocumentationDetailFragment extends Fragment {
                 startActivity(browserIntent);
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error handling link click", e);
-
-            // В случае ошибки открываем в браузере
             android.content.Intent browserIntent = new android.content.Intent(
                     android.content.Intent.ACTION_VIEW,
                     android.net.Uri.parse(url)
@@ -170,47 +140,17 @@ public class DocumentationDetailFragment extends Fragment {
     private DocPage findDocPageByUrl(String url) {
         if (url == null || viewModel.docPages == null) return null;
 
-        Log.d(TAG, "Searching for page with URL: " + url);
-
         for (DocPage page : viewModel.docPages) {
-            Log.d(TAG, "Checking page: " + page.getTitle() + " - " + page.getRawUrl());
-
-            // Прямое сравнение URL
             if (url.equals(page.getRawUrl())) {
                 return page;
             }
 
-            // Сравнение без README.md
             String normalizedUrl = url.replace("README.md", "");
             String normalizedPageUrl = page.getRawUrl().replace("README.md", "");
             if (normalizedUrl.equals(normalizedPageUrl)) {
                 return page;
             }
-
-            // Сравнение путей
-            if (extractPath(url).equals(extractPath(page.getRawUrl()))) {
-                return page;
-            }
         }
-
         return null;
-    }
-
-    private String extractPath(String url) {
-        if (url == null) return "";
-
-        // Извлекаем путь из URL
-        String baseUrl = "https://raw.githubusercontent.com/MaryZhminkovskaya/VAG_Mobile/Mary/docs/";
-        if (url.startsWith(baseUrl)) {
-            String path = url.substring(baseUrl.length());
-            if (path.endsWith("README.md")) {
-                path = path.substring(0, path.length() - 9);
-            }
-            if (path.endsWith("/")) {
-                path = path.substring(0, path.length() - 1);
-            }
-            return path;
-        }
-        return url;
     }
 }

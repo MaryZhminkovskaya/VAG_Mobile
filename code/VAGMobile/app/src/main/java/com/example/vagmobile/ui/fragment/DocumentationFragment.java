@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.vagmobile.R;
 import com.example.vagmobile.model.DocPage;
-// Импорт из правильного пути
 import com.example.vagmobile.ui.adapter.DocumentationAdapter;
 import com.example.vagmobile.viewmodel.DocumentationViewModel;
 

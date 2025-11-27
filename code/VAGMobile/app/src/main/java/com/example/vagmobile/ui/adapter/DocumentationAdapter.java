@@ -43,11 +43,6 @@ public class DocumentationAdapter extends RecyclerView.Adapter<DocumentationAdap
         return pages.size();
     }
 
-    public void setPages(List<DocPage> newPages) {
-        this.pages = new ArrayList<>(newPages);
-        notifyDataSetChanged();
-    }
-
     public interface OnDocPageClickListener {
         void onDocPageClick(DocPage docPage);
     }
