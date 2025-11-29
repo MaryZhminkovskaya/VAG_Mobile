@@ -4,7 +4,6 @@ import com.example.vag.model.Artwork;
 import com.example.vag.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,105 +15,63 @@ import java.util.Optional;
 @Repository
 public interface ArtworkRepository extends JpaRepository<Artwork, Long> {
 
-    @EntityGraph(attributePaths = {"user", "categories"})
-    Page<Artwork> findAll(Pageable pageable);
+    // Существующие методы
+    List<Artwork> findAll();
+    Optional<Artwork> findById(Long id);
 
-    @EntityGraph(attributePaths = {"user", "categories"})
-    @Query("SELECT a FROM Artwork a WHERE a.status = :status")
-    List<Artwork> findByStatus(@Param("status") String status);
-
-    @EntityGraph(attributePaths = {"user", "categories"})
-    List<Artwork> findByUser_Id(Long userId);
-
-    @EntityGraph(attributePaths = {"user", "categories", "exhibitions"})
-    @Query("SELECT a FROM Artwork a WHERE a.user.id = :userId")
-    List<Artwork> findByUserWithDetails(@Param("userId") Long userId);
-
-    @Query(
-            value = "SELECT DISTINCT a FROM Artwork a " +
-                    "JOIN FETCH a.user " +
-                    "JOIN a.categories c " +
-                    "WHERE c.id = :categoryId AND a.status = 'APPROVED'",
-            countQuery = "SELECT COUNT(DISTINCT a) FROM Artwork a " +
-                    "JOIN a.categories c " +
-                    "WHERE c.id = :categoryId AND a.status = 'APPROVED'"
-    )
-    Page<Artwork> findByCategoryId(@Param("categoryId") Long categoryId, Pageable pageable);
-
-    @EntityGraph(attributePaths = {"user", "categories"})
-    @Query("SELECT DISTINCT a FROM Artwork a JOIN a.exhibitions e WHERE e.id = :exhibitionId")
-    List<Artwork> findByExhibitionId(@Param("exhibitionId") Long exhibitionId);
-
-    @Query("SELECT DISTINCT a FROM Artwork a " +
-            "LEFT JOIN FETCH a.user " +
-            "LEFT JOIN FETCH a.comments c " +
-            "LEFT JOIN FETCH c.user " +
-            "WHERE a.id = :id")
-    Optional<Artwork> findByIdWithComments(@Param("id") Long id);
-
-    @Query("SELECT DISTINCT a FROM Artwork a " +
-            "LEFT JOIN FETCH a.categories " +
-            "LEFT JOIN FETCH a.user " +
-            "LEFT JOIN FETCH a.exhibitions " +
-            "WHERE a.id = :id")
+    // Методы для поиска с категориями и комментариями
+    @Query("SELECT a FROM Artwork a LEFT JOIN FETCH a.categories WHERE a.id = :id")
     Optional<Artwork> findByIdWithCategories(@Param("id") Long id);
 
-    @Query(
-            value = "SELECT DISTINCT a FROM Artwork a " +
-                    "LEFT JOIN FETCH a.user " +
-                    "LEFT JOIN FETCH a.categories " +
-                    "WHERE a.status = 'APPROVED' " +
-                    "ORDER BY a.id DESC",
-            countQuery = "SELECT COUNT(DISTINCT a) FROM Artwork a " +
-                    "WHERE a.status = 'APPROVED'"
-    )
-    Page<Artwork> findApprovedArtworks(Pageable pageable);
+    @Query("SELECT a FROM Artwork a LEFT JOIN FETCH a.comments WHERE a.id = :id")
+    Artwork findByIdWithComments(@Param("id") Long id);
 
-    @Query("SELECT CASE WHEN COUNT(l) > 0 THEN true ELSE false END FROM Like l WHERE l.artwork = :artwork AND l.user = :user")
-    boolean existsByArtworkAndUser(
-            @Param("artwork") Artwork artwork,
-            @Param("user") User user
-    );
-    @Query("SELECT COUNT(DISTINCT a) FROM Artwork a " +
-            "JOIN a.categories c " +
-            "WHERE c.id = :categoryId AND a.status = 'APPROVED'")
-    long countApprovedArtworksByCategoryId(@Param("categoryId") Long categoryId);
-
-
-    @EntityGraph(attributePaths = {"user", "categories"})
-    @Query("SELECT a FROM Artwork a WHERE a.status = :status")
-    Page<Artwork> findByStatus(@Param("status") String status, Pageable pageable);
+    // Методы для пагинации
+    Page<Artwork> findAll(Pageable pageable);
+    Page<Artwork> findByStatus(String status, Pageable pageable);
     Page<Artwork> findByUser(User user, Pageable pageable);
-    @Query("SELECT a FROM Artwork a WHERE a.user = :user AND a.status = :status")
-    Page<Artwork> findByUserAndStatus(
-            @Param("user") User user,
-            @Param("status") String status,
-            Pageable pageable);
+    Page<Artwork> findByUserAndStatus(User user, String status, Pageable pageable);
+
+    // Методы для поиска по статусу
+    List<Artwork> findByStatus(String status);
+
+    // ИСПРАВЛЕНО: убрали JOIN FETCH из count запроса
+    Page<Artwork> findByStatusOrderByDateCreationDesc(String status, Pageable pageable);
+
+    // Методы для поиска по категории
+    @Query("SELECT a FROM Artwork a JOIN a.categories c WHERE c.id = :categoryId AND a.status = :status")
+    Page<Artwork> findByCategoryIdAndStatus(@Param("categoryId") Long categoryId, @Param("status") String status, Pageable pageable);
+
+    @Query("SELECT COUNT(a) FROM Artwork a JOIN a.categories c WHERE c.id = :categoryId AND a.status = 'APPROVED'")
+    Long countApprovedArtworksByCategoryId(@Param("categoryId") Long categoryId);
+
+    Long countByCategoriesId(Long categoryId);
+
+    // Методы для поиска по пользователю
+    @Query("SELECT a FROM Artwork a LEFT JOIN FETCH a.categories WHERE a.user = :user")
+    List<Artwork> findByUserWithDetails(@Param("user") User user);
+
+    // Методы для поиска по лайкам
+    @Query("SELECT a FROM Artwork a JOIN a.artworkLikes l WHERE l.user.id = :userId")
+    Page<Artwork> findLikedArtworks(@Param("userId") Long userId, Pageable pageable);
 
     @Query("SELECT a FROM Artwork a JOIN a.artworkLikes l WHERE l.user = :user")
-    Page<Artwork> findLikedByUser(@Param("user") User user, Pageable pageable);
+    List<Artwork> findLikedArtworksByUser(@Param("user") User user);
 
-    @Query("SELECT a FROM Artwork a JOIN a.exhibitions e WHERE e.id = :exhibitionId")
-    Page<Artwork> findByExhibitionId(@Param("exhibitionId") Long exhibitionId, Pageable pageable);
+    // Методы для поиска по выставкам
+    List<Artwork> findByExhibitionsId(Long exhibitionId);
+    Page<Artwork> findByExhibitionsId(Long exhibitionId, Pageable pageable);
 
-    @Query("SELECT DISTINCT a FROM Artwork a LEFT JOIN FETCH a.user WHERE a.id IN :ids")
-    List<Artwork> findAllByIdWithUser(@Param("ids") List<Long> ids);
-    
-    @Query(value = "SELECT DISTINCT a FROM Artwork a " +
-           "LEFT JOIN FETCH a.user " +
-           "ORDER BY a.id DESC",
-           countQuery = "SELECT COUNT(DISTINCT a) FROM Artwork a")
-    Page<Artwork> findAllPaginated(Pageable pageable);
-    
-    @Query(value = "SELECT a FROM Artwork a WHERE a.status = :status",
-           countQuery = "SELECT COUNT(a) FROM Artwork a WHERE a.status = :status")
-    Page<Artwork> findByStatusPaginated(@Param("status") String status, Pageable pageable);
+    // Методы для поиска
+    @Query("SELECT a FROM Artwork a WHERE (LOWER(a.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(a.description) LIKE LOWER(CONCAT('%', :query, '%'))) AND a.status = 'APPROVED'")
+    Page<Artwork> searchApproved(@Param("query") String query, Pageable pageable);
 
-    @Query("SELECT a FROM Artwork a WHERE a.status = 'APPROVED' AND " +
-            "(LOWER(a.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-            "LOWER(a.description) LIKE LOWER(CONCAT('%', :query, '%')))")
-    Page<Artwork> searchApprovedArtworks(@Param("query") String query, Pageable pageable);
+    // ИСПРАВЛЕНО: метод для загрузки с пользователем (только для списка, не для count)
+    @Query("SELECT a FROM Artwork a JOIN FETCH a.user WHERE a.status = 'APPROVED' ORDER BY a.dateCreation DESC")
+    List<Artwork> findApprovedArtworksWithUser();
 
-    @Query("SELECT COUNT(a) FROM Artwork a JOIN a.categories c WHERE c.id = :categoryId")
-    long countArtworksByCategoryId(@Param("categoryId") Long categoryId);
+    // ДОБАВЛЕНО: метод для пагинации с пользователем (без JOIN FETCH в count)
+    @Query(value = "SELECT a FROM Artwork a WHERE a.status = 'APPROVED' ORDER BY a.dateCreation DESC",
+            countQuery = "SELECT COUNT(a) FROM Artwork a WHERE a.status = 'APPROVED'")
+    Page<Artwork> findApprovedArtworksWithUserPaged(Pageable pageable);
 }

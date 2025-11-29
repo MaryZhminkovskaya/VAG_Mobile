@@ -34,6 +34,7 @@ public class MobileAdminController {
     }
 
     @GetMapping("/artworks")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<?> getAllArtworksForAdmin(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -44,11 +45,11 @@ public class MobileAdminController {
             System.out.println("=== GET ALL ARTWORKS FOR ADMIN ===");
             System.out.println("AuthHeader: " + authHeader);
             System.out.println("Page: " + page + ", Size: " + size + ", Status: " + status);
-            
+
             // Проверяем токен и получаем пользователя
             User currentUser = mobileAuthController.getUserFromToken(authHeader);
             System.out.println("Current user: " + (currentUser != null ? currentUser.getUsername() : "null"));
-            
+
             if (currentUser == null || !currentUser.hasRole("ADMIN")) {
                 System.out.println("Access denied - user is null or not admin");
                 return ResponseEntity.status(403).body(Map.of(
@@ -56,19 +57,14 @@ public class MobileAdminController {
                         "message", "Access denied"
                 ));
             }
-            
+
             System.out.println("User is admin, proceeding...");
 
             Pageable pageable = PageRequest.of(page, size);
-            Page<Artwork> artworkPage;
+            Page<Artwork> artworkPage = artworkService.findAllPaginated(pageable);
 
-            if (status != null && !status.isEmpty() && !"ALL".equalsIgnoreCase(status)) {
-                artworkPage = artworkService.findByStatus(status, pageable);
-            } else {
-                artworkPage = artworkService.findAllPaginated(pageable);
-            }
-
-            List<ArtworkDTO> artworkDTOs = artworkMapper.toDTOList(artworkPage.getContent());
+            // Используем DTO для безопасной сериализации
+            List<ArtworkDTO> artworkDTOs = artworkMapper.toSimpleDTOList(artworkPage.getContent());
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -79,6 +75,7 @@ public class MobileAdminController {
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
                     "message", "Failed to fetch artworks: " + e.getMessage()
@@ -87,6 +84,7 @@ public class MobileAdminController {
     }
 
     @PostMapping("/artworks/{id}/approve")
+    @org.springframework.transaction.annotation.Transactional
     public ResponseEntity<?> approveArtwork(@PathVariable Long id,
                                             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
@@ -114,8 +112,9 @@ public class MobileAdminController {
     }
 
     @PostMapping("/artworks/{id}/reject")
+    @org.springframework.transaction.annotation.Transactional
     public ResponseEntity<?> rejectArtwork(@PathVariable Long id,
-                                            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+                                           @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
             // Проверяем токен и получаем пользователя
             User currentUser = mobileAuthController.getUserFromToken(authHeader);
@@ -141,6 +140,7 @@ public class MobileAdminController {
     }
 
     @GetMapping("/artworks/stats")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<?> getArtworkStats(@RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
             // Проверяем токен и получаем пользователя

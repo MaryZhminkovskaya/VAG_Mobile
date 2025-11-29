@@ -108,8 +108,7 @@ public interface ApiService {
     Call<Map<String, Object>> getAdminArtworks(
             @Header("Authorization") String authHeader,
             @Query("page") int page,
-            @Query("size") int size,
-            @Query("status") String status
+            @Query("size") int size
     );
 
     @POST("vag/api/mobile/admin/artworks/{id}/approve")

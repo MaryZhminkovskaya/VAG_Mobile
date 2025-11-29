@@ -1,6 +1,9 @@
 package com.example.vag.mapper;
 
-import com.example.vag.dto.*;
+import com.example.vag.dto.ArtworkDTO;
+import com.example.vag.dto.CategoryDTO;
+import com.example.vag.dto.CommentDTO;
+import com.example.vag.dto.UserDTO;
 import com.example.vag.model.Artwork;
 import com.example.vag.model.Category;
 import com.example.vag.model.Comment;
@@ -23,27 +26,28 @@ public class ArtworkMapper {
         dto.setTitle(artwork.getTitle());
         dto.setDescription(artwork.getDescription());
         dto.setImagePath(artwork.getImagePath());
+        dto.setDateCreation(artwork.getDateCreation());
         dto.setStatus(artwork.getStatus());
         dto.setLikes(artwork.getLikes());
         dto.setViews(artwork.getViews());
-        dto.setDateCreation(artwork.getDateCreation()); // Используем getDateCreation()
-        dto.setLiked(artwork.getLiked()); // Используем getLiked()
+        dto.setLiked(artwork.getLiked());
 
-        // Преобразование пользователя
+        // Безопасная обработка пользователя
         if (artwork.getUser() != null) {
-            dto.setUser(toUserDTO(artwork.getUser()));
+            UserDTO userDTO = toUserDTO(artwork.getUser());
+            dto.setUser(userDTO);
         }
 
-        // Преобразование категорий
-        if (artwork.getCategories() != null) {
+        // Безопасная обработка категорий
+        if (artwork.getCategories() != null && !artwork.getCategories().isEmpty()) {
             List<CategoryDTO> categoryDTOs = artwork.getCategories().stream()
                     .map(this::toCategoryDTO)
                     .collect(Collectors.toList());
             dto.setCategories(categoryDTOs);
         }
 
-        // Преобразование комментариев
-        if (artwork.getComments() != null) {
+        // Безопасная обработка комментариев
+        if (artwork.getComments() != null && !artwork.getComments().isEmpty()) {
             List<CommentDTO> commentDTOs = artwork.getComments().stream()
                     .map(this::toCommentDTO)
                     .collect(Collectors.toList());
@@ -53,9 +57,35 @@ public class ArtworkMapper {
         return dto;
     }
 
+    public ArtworkDTO toSimpleDTO(Artwork artwork) {
+        if (artwork == null) {
+            return null;
+        }
+
+        ArtworkDTO dto = new ArtworkDTO();
+        dto.setId(artwork.getId());
+        dto.setTitle(artwork.getTitle());
+        dto.setDescription(artwork.getDescription());
+        dto.setImagePath(artwork.getImagePath());
+        dto.setDateCreation(artwork.getDateCreation());
+        dto.setStatus(artwork.getStatus());
+        dto.setLikes(artwork.getLikes());
+        dto.setViews(artwork.getViews());
+        dto.setLiked(artwork.getLiked());
+
+        // Только базовые поля, без вложенных объектов
+        return dto;
+    }
+
     public List<ArtworkDTO> toDTOList(List<Artwork> artworks) {
         return artworks.stream()
                 .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<ArtworkDTO> toSimpleDTOList(List<Artwork> artworks) {
+        return artworks.stream()
+                .map(this::toSimpleDTO)
                 .collect(Collectors.toList());
     }
 
@@ -68,10 +98,7 @@ public class ArtworkMapper {
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
-
-        if (user.getRole() != null) {
-            dto.setRole(user.getRole().getName().name());
-        }
+        dto.setRole(user.getRole() != null ? user.getRole().getName().name() : null);
 
         return dto;
     }
@@ -85,10 +112,7 @@ public class ArtworkMapper {
         dto.setId(category.getId());
         dto.setName(category.getName());
         dto.setDescription(category.getDescription());
-
-        if (category.getApprovedArtworksCount() != null) {
-            dto.setApprovedArtworksCount(category.getApprovedArtworksCount());
-        }
+        dto.setApprovedArtworksCount(category.getApprovedArtworksCount());
 
         return dto;
     }
@@ -107,45 +131,12 @@ public class ArtworkMapper {
         CommentDTO dto = new CommentDTO();
         dto.setId(comment.getId());
         dto.setContent(comment.getContent());
-        dto.setDateCreated(comment.getDateCreated()); // Используем getDateCreated()
+        dto.setDateCreated(comment.getDateCreated());
 
         if (comment.getUser() != null) {
             dto.setUser(toUserDTO(comment.getUser()));
         }
 
         return dto;
-    }
-
-
-    public ArtworkDTO toSimpleDTO(Artwork artwork) {
-        if (artwork == null) {
-            return null;
-        }
-
-        ArtworkDTO dto = new ArtworkDTO();
-        dto.setId(artwork.getId());
-        dto.setTitle(artwork.getTitle());
-        dto.setDescription(artwork.getDescription());
-        dto.setImagePath(artwork.getImagePath());
-        dto.setStatus(artwork.getStatus());
-        dto.setLikes(artwork.getLikes());
-        dto.setViews(artwork.getViews());
-        dto.setDateCreation(artwork.getDateCreation());
-        dto.setLiked(artwork.getLiked());
-
-        if (artwork.getUser() != null) {
-            dto.setUser(toUserDTO(artwork.getUser()));
-        }
-
-        // Не включаем категории и комментарии для упрощенного DTO
-        // чтобы избежать циклических ссылок и улучшить производительность
-
-        return dto;
-    }
-
-    public List<ArtworkDTO> toSimpleDTOList(List<Artwork> artworks) {
-        return artworks.stream()
-                .map(this::toSimpleDTO)
-                .collect(Collectors.toList());
     }
 }

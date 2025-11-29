@@ -33,8 +33,8 @@ public class MobileAuthFilter extends GenericFilterBean {
 
         String path = httpRequest.getRequestURI();
 
-        // Проверяем только мобильные API endpoints
-        if (path.startsWith("/api/mobile/")) {
+        // Проверяем только мобильные API endpoints (с учетом context path)
+        if (path.contains("/api/mobile/")) {
             String authHeader = httpRequest.getHeader("Authorization");
 
             System.out.println("=== MOBILE AUTH FILTER ===");
@@ -79,15 +79,16 @@ public class MobileAuthFilter extends GenericFilterBean {
     }
 
     private boolean requiresAuthentication(String path) {
-        return path.startsWith("/api/mobile/artworks/create") ||
-                path.startsWith("/api/mobile/artworks/") &&
-                        (path.contains("/like") || path.contains("/unlike") || path.contains("/comment")) ||
-                path.startsWith("/api/mobile/users/profile") ||
-                path.startsWith("/api/mobile/users/liked") ||
-                path.startsWith("/api/mobile/admin/") ||
-                (path.startsWith("/api/mobile/categories") &&
-                        !path.equals("/api/mobile/categories") &&
-                        !path.matches("/api/mobile/categories/\\d+/artworks"));
+        // Проверяем с учетом context path (может быть /vag/api/mobile/...)
+        return path.contains("/api/mobile/artworks/create") ||
+                (path.contains("/api/mobile/artworks/") &&
+                        (path.contains("/like") || path.contains("/unlike") || path.contains("/comment"))) ||
+                path.contains("/api/mobile/users/profile") ||
+                path.contains("/api/mobile/users/liked") ||
+                path.contains("/api/mobile/admin/") ||
+                (path.contains("/api/mobile/categories") &&
+                        !path.endsWith("/api/mobile/categories") &&
+                        !path.matches(".*/api/mobile/categories/\\d+/artworks"));
     }
 
     private void handleUnauthorized(HttpServletResponse response, String message) throws IOException {

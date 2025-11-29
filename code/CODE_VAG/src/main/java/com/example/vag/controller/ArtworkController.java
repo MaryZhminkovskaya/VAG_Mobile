@@ -7,7 +7,6 @@ import com.example.vag.service.CategoryService;
 import com.example.vag.service.UserService;
 import com.example.vag.service.ExhibitionService;
 import com.example.vag.util.FileUploadUtil;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -26,7 +25,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Controller
@@ -48,26 +46,28 @@ public class ArtworkController {
     }
 
     @GetMapping("/list")
+    @Transactional(readOnly = true)
     public String listArtworks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "12") int size,
             Model model) {
 
         page = Math.max(0, page);
-        
+
         Page<Artwork> artworkPage = artworkService.findPaginatedApprovedArtworks(PageRequest.of(page, size));
         model.addAttribute("artworks", artworkPage);
         return "artwork/list";
     }
 
     @GetMapping("/details/{id}")
+    @Transactional(readOnly = true)
     public String viewArtwork(@PathVariable("id") Long id, Model model) {
         Artwork artwork = artworkService.findByIdWithComments(id);
         User currentUser = null;
         try {
             currentUser = userService.getCurrentUser();
         } catch (Exception e) {
-            
+            // Пользователь не аутентифицирован
         }
 
         boolean isApproved = Artwork.ArtworkStatus.APPROVED.name().equals(artwork.getStatus());
@@ -118,12 +118,12 @@ public class ArtworkController {
         }
 
         Artwork savedArtwork = artworkService.create(artwork, imageFile, currentUser);
-        
+
         if (exhibitionId != null) {
             Exhibition exhibition = exhibitionService.findById(exhibitionId).orElseThrow();
             Long currentUserId = currentUser.getId();
             Long exhibitionUserId = exhibition.getUser().getId();
-            
+
             if (!exhibition.isAuthorOnly() || currentUserId.equals(exhibitionUserId)) {
                 exhibition.getArtworks().add(savedArtwork);
                 savedArtwork.getExhibitions().add(exhibition);
@@ -132,10 +132,12 @@ public class ArtworkController {
                 return "redirect:/exhibition/details/" + exhibitionId;
             }
         }
-        
+
         return "redirect:/user/profile?created";
     }
+
     @GetMapping("/edit/{id}")
+    @Transactional(readOnly = true)
     public String showEditForm(@PathVariable Long id, Model model) {
         Artwork existingArtwork = artworkService.findByIdWithCategories(id).orElseThrow();
         User currentUser = userService.getCurrentUser();
@@ -155,8 +157,8 @@ public class ArtworkController {
         return "artwork/edit";
     }
 
-
     @PostMapping("/comment/{id}")
+    @Transactional
     public String addComment(@PathVariable Long id,
                              @RequestParam String content,
                              RedirectAttributes redirectAttributes) {
@@ -164,7 +166,6 @@ public class ArtworkController {
         artworkService.addComment(id, user, content);
         return "redirect:/artwork/details/" + id;
     }
-
 
     @PostMapping("/edit")
     @Transactional
@@ -193,7 +194,7 @@ public class ArtworkController {
         existingArtwork.setCategories(new HashSet<>(categories));
         existingArtwork.setTitle(artwork.getTitle());
         existingArtwork.setDescription(artwork.getDescription());
-        
+
         existingArtwork.setStatus(Artwork.ArtworkStatus.PENDING.name());
 
         if (imageFile != null && !imageFile.isEmpty()) {
@@ -211,6 +212,7 @@ public class ArtworkController {
     }
 
     @PostMapping("/delete/{id}")
+    @Transactional
     public String deleteArtwork(@PathVariable Long id) {
         Artwork artwork = artworkService.findById(id).orElseThrow();
         User currentUser = userService.getCurrentUser();
@@ -225,6 +227,7 @@ public class ArtworkController {
     }
 
     @PostMapping("/like/{id}")
+    @Transactional
     public String likeArtwork(@PathVariable Long id) {
         User user = userService.getCurrentUser();
         artworkService.likeArtwork(id, user);
@@ -232,6 +235,7 @@ public class ArtworkController {
     }
 
     @PostMapping("/unlike/{id}")
+    @Transactional
     public String unlikeArtwork(@PathVariable Long id) {
         User user = userService.getCurrentUser();
         artworkService.unlikeArtwork(id, user);
@@ -239,20 +243,20 @@ public class ArtworkController {
     }
 
     @GetMapping("/artworks")
+    @Transactional(readOnly = true)
     public String showArtworks(Model model, @RequestParam(defaultValue = "0") int page) {
         int pageSize = 12;
-        
+
         page = Math.max(0, page);
-        
+
         Pageable pageable = PageRequest.of(page, pageSize, Sort.by("id").descending());
         Page<Artwork> artworkPage = artworkService.getApprovedArtworks(pageable);
-        
+
         if (page > 0 && artworkPage.getContent().isEmpty()) {
             return "redirect:/artwork/artworks?page=" + (page - 1);
         }
-        
+
         model.addAttribute("artworks", artworkPage);
         return "artwork/list";
     }
-
 }

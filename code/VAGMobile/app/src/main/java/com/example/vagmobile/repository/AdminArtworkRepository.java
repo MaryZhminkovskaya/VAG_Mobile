@@ -44,14 +44,15 @@ public class AdminArtworkRepository {
 
         String authHeader = getAuthHeader();
         System.out.println("AdminArtworkRepository: AuthHeader: " + authHeader);
-        System.out.println("AdminArtworkRepository: Request URL: /vag/api/mobile/admin/artworks?page=" + page + "&size=" + size + "&status=" + status);
-        
-        apiService.getAdminArtworks(authHeader, page, size, status).enqueue(new Callback<Map<String, Object>>() {
+        System.out.println("AdminArtworkRepository: Request URL: /vag/api/mobile/admin/artworks?page=" + page + "&size=" + size);
+
+        // Всегда загружаем все публикации без фильтрации по статусу
+        apiService.getAdminArtworks(authHeader, page, size).enqueue(new Callback<Map<String, Object>>() {
             @Override
             public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
                 System.out.println("AdminArtworkRepository: Response code: " + response.code());
                 System.out.println("AdminArtworkRepository: Response successful: " + response.isSuccessful());
-                
+
                 if (response.isSuccessful() && response.body() != null) {
                     System.out.println("AdminArtworkRepository: Response body: " + response.body());
                     result.setValue(response.body());
@@ -61,7 +62,7 @@ public class AdminArtworkRepository {
                     try {
                         if (response.errorBody() != null) {
                             String errorBody = response.errorBody().string();
-                            System.out.println("AdminArtworkRepository: Error body (first 500 chars): " + 
+                            System.out.println("AdminArtworkRepository: Error body (first 500 chars): " +
                                 (errorBody.length() > 500 ? errorBody.substring(0, 500) : errorBody));
                             // Если это HTML, значит сервер перенаправил на страницу логина
                             if (errorBody.contains("<html") || errorBody.contains("<!DOCTYPE")) {

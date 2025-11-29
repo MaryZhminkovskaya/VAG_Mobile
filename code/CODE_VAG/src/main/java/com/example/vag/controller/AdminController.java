@@ -76,23 +76,19 @@ public class AdminController {
         Pageable pageable = PageRequest.of(page, size);
         Page<Artwork> artworkPage;
 
-        if (status != null && !status.isEmpty()) {
-            artworkPage = artworkService.findByStatus(status.toUpperCase(), pageable);
-            System.out.println("Выбран статус фильтрации: " + status);
-        } else {
-            artworkPage = artworkService.findAllPaginated(pageable);
+        // Всегда показываем все публикации без фильтрации
+        artworkPage = artworkService.findAllPaginated(pageable);
 
-            System.out.println("Найдено " + artworkPage.getTotalElements() + " публикаций");
+        System.out.println("Найдено " + artworkPage.getTotalElements() + " публикаций");
 
-            Map<String, Long> statusCounts = new HashMap<>();
-            for (Artwork artwork : artworkPage.getContent()) {
-                String stat = artwork.getStatus();
-                statusCounts.put(stat, statusCounts.getOrDefault(stat, 0L) + 1);
-            }
-
-            statusCounts.forEach((stat, count) ->
-                    System.out.println("Статус " + stat + ": " + count + " публикаций"));
+        Map<String, Long> statusCounts = new HashMap<>();
+        for (Artwork artwork : artworkPage.getContent()) {
+            String stat = artwork.getStatus();
+            statusCounts.put(stat, statusCounts.getOrDefault(stat, 0L) + 1);
         }
+
+        statusCounts.forEach((stat, count) ->
+                System.out.println("Статус " + stat + ": " + count + " публикаций"));
 
         model.addAttribute("artworks", artworkPage);
         return "admin/artworks";

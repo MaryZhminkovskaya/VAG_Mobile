@@ -17,9 +17,9 @@ public class MobileAuthController {
 
     private final UserService userService;
 
-    // Простое хранилище токенов (в продакшене используйте Redis или БД)
-    private final Map<String, User> tokenStore = new ConcurrentHashMap<>();
-    private final Map<Long, String> userTokenStore = new ConcurrentHashMap<>();
+    // Статическое хранилище токенов
+    private static final Map<String, User> tokenStore = new ConcurrentHashMap<>();
+    private static final Map<Long, String> userTokenStore = new ConcurrentHashMap<>();
 
     public MobileAuthController(UserService userService) {
         this.userService = userService;
@@ -43,7 +43,11 @@ public class MobileAuthController {
             tokenStore.put(token, user);
             userTokenStore.put(user.getId(), token);
 
+            System.out.println("=== TOKEN SAVED ===");
             System.out.println("Token generated: " + token);
+            System.out.println("Token store size after save: " + tokenStore.size());
+            System.out.println("User ID: " + user.getId());
+            System.out.println("User username: " + user.getUsername());
 
             AuthResponse authResponse = new AuthResponse();
             authResponse.setSuccess(true);
@@ -51,7 +55,7 @@ public class MobileAuthController {
             authResponse.setId(user.getId());
             authResponse.setUsername(user.getUsername());
             authResponse.setEmail(user.getEmail());
-            authResponse.setRole(user.getRole().getName().name()); // Убедитесь, что это строка
+            authResponse.setRole(user.getRole().getName().name());
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -115,20 +119,24 @@ public class MobileAuthController {
         }
     }
 
-    // Метод для проверки токена
+    // Метод для проверки токена с исправлением LazyInitializationException
     public User getUserFromToken(String authHeader) {
         try {
             String token = extractToken(authHeader);
             System.out.println("=== TOKEN VALIDATION ===");
             System.out.println("Token: " + token);
             System.out.println("Token store size: " + tokenStore.size());
-            System.out.println("Token store keys: " + tokenStore.keySet());
 
             if (token != null && tokenStore.containsKey(token)) {
-                User user = tokenStore.get(token);
-                System.out.println("User found: " + user.getUsername());
-                System.out.println("User role: " + user.getRole().getName().name());
-                return user;
+                User userFromStore = tokenStore.get(token);
+
+                // Вместо прямого возврата, загружаем пользователя из базы с инициализированными полями
+                User managedUser = userService.findById(userFromStore.getId())
+                        .orElseThrow(() -> new RuntimeException("User not found in database"));
+
+                System.out.println("User found: " + managedUser.getUsername());
+                System.out.println("User role: " + managedUser.getRole().getName().name());
+                return managedUser;
             } else {
                 System.out.println("Token not found in store");
                 return null;
@@ -145,6 +153,6 @@ public class MobileAuthController {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             return authHeader.substring(7);
         }
-        return authHeader; // на случай если токен пришел без Bearer
+        return authHeader;
     }
 }

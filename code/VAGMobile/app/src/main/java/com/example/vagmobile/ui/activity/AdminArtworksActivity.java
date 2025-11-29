@@ -45,22 +45,8 @@ public class AdminArtworksActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         statusSpinner = findViewById(R.id.statusSpinner);
 
-        // Обработчик изменения фильтра статуса
-        statusSpinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
-                String status = (String) parent.getItemAtPosition(position);
-                if ("All".equals(status)) {
-                    loadArtworks(null);
-                } else {
-                    loadArtworks(status);
-                }
-            }
-
-            @Override
-            public void onNothingSelected(android.widget.AdapterView<?> parent) {
-            }
-        });
+        // Фильтрация отключена - всегда загружаем все публикации
+        // Обработчик спиннера удален
     }
 
     private void setupRecyclerView() {
@@ -112,7 +98,7 @@ public class AdminArtworksActivity extends AppCompatActivity {
                 Boolean success = (Boolean) result.get("success");
                 if (success != null && success) {
                     Toast.makeText(this, "Artwork approved successfully", Toast.LENGTH_SHORT).show();
-                    loadArtworks(getSelectedStatus());
+                    loadArtworks(null);
                 } else {
                     String message = (String) result.get("message");
                     Toast.makeText(this, "Failed to approve artwork: " + message, Toast.LENGTH_SHORT).show();
@@ -126,7 +112,7 @@ public class AdminArtworksActivity extends AppCompatActivity {
                 Boolean success = (Boolean) result.get("success");
                 if (success != null && success) {
                     Toast.makeText(this, "Artwork rejected successfully", Toast.LENGTH_SHORT).show();
-                    loadArtworks(getSelectedStatus());
+                    loadArtworks(null);
                 } else {
                     String message = (String) result.get("message");
                     Toast.makeText(this, "Failed to reject artwork: " + message, Toast.LENGTH_SHORT).show();
@@ -137,12 +123,13 @@ public class AdminArtworksActivity extends AppCompatActivity {
 
     private void loadArtworks(String status) {
         progressBar.setVisibility(View.VISIBLE);
-        adminArtworkViewModel.getAdminArtworks(0, 20, status);
+        // Всегда передаем null, чтобы загрузить все публикации без фильтрации
+        adminArtworkViewModel.getAdminArtworks(0, 20, null);
     }
 
     private String getSelectedStatus() {
-        String status = (String) statusSpinner.getSelectedItem();
-        return "All".equals(status) ? null : status;
+        // Фильтрация отключена, всегда возвращаем null
+        return null;
     }
 
     private void approveArtwork(Long artworkId) {

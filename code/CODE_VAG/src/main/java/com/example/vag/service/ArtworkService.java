@@ -27,8 +27,8 @@ public interface ArtworkService {
     void unlikeArtwork(Long artworkId, User user);
     boolean isLikedByUser(Artwork artwork, User user);
     void addComment(Long artworkId, User user, String content);
-    public Artwork findByIdWithComments(Long id);
-    long countApprovedArtworksByCategoryId(Long categoryId);
+    Artwork findByIdWithComments(Long id);
+    long countApprovedArtworksByCategoryId(Long categoryId); // Изменено с Long на long
     Page<Artwork> getApprovedArtworks(Pageable pageable);
     Optional<Artwork> findByIdWithCategories(Long id);
     Page<Artwork> findAll(Pageable pageable);
@@ -42,6 +42,4 @@ public interface ArtworkService {
     Page<Artwork> searchApprovedArtworks(String query, Pageable pageable);
     long countArtworksByCategoryId(Long categoryId);
     Artwork createWithCategories(Artwork artwork, MultipartFile imageFile, User user, List<Long> categoryIds) throws IOException;
-
-
 }
