@@ -45,6 +45,7 @@ public class ArtworkDetailActivity extends AppCompatActivity {
     private CommentAdapter commentAdapter;
     private List<Comment> commentList = new ArrayList<>();
     private SharedPreferencesHelper prefs;
+    private boolean isLikeInProgress = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,36 +120,30 @@ public class ArtworkDetailActivity extends AppCompatActivity {
 
         // Observer для toggle like
         artworkViewModel.getToggleLikeResult().observe(this, result -> {
-            Log.d("ArtworkDetail", "ToggleLike result: " + result);
+            if (result != null && Boolean.TRUE.equals((Boolean) result.get("success"))) {
 
-            if (result != null) {
-                Boolean success = (Boolean) result.get("success");
-                if (success != null && success) {
-                    // Успешно - перезагружаем данные публикации
-                    loadArtwork();
-                    String message = artwork.isLiked() ? "Лайк убран" : "Лайк добавлен";
-                    Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
-                } else {
-                    String message = (String) result.get("message");
-                    Toast.makeText(this, "Failed to toggle like: " + message, Toast.LENGTH_SHORT).show();
+                if (artwork != null) {
+                    boolean newState = !artwork.isLiked();
+                    artwork.setLiked(newState);
+                    artwork.setLikes(newState ? artwork.getLikes() + 1 : artwork.getLikes() - 1);
+
+                    updateLikeButton();
+                    tvLikes.setText(artwork.getLikes() + " лайков");
                 }
-            }
-        });
 
-        artworkViewModel.getAddCommentResult().observe(this, result -> {
-            btnComment.setEnabled(true); // Разблокируем кнопку после ответа
+                loadArtwork(); // на всякий случай
 
-            if (result != null) {
-                Boolean success = (Boolean) result.get("success");
-                if (success != null && success) {
-                    etComment.setText("");
-                    loadArtwork(); // Перезагружаем данные
-                    Toast.makeText(this, "Comment added", Toast.LENGTH_SHORT).show();
-                } else {
-                    String message = (String) result.get("message");
-                    Toast.makeText(this, "Failed to add comment: " + message, Toast.LENGTH_SHORT).show();
-                }
+                Toast.makeText(this,
+                        artwork.isLiked() ? "Лайк добавлен" : "Лайк убран",
+                        Toast.LENGTH_SHORT).show();
+            } else {
+                String msg = result != null ? (String) result.get("message") : "Ошибка";
+                Toast.makeText(this, "Не удалось: " + msg, Toast.LENGTH_SHORT).show();
             }
+
+            // Разблокировка кнопки
+            isLikeInProgress = false;
+            btnLike.setEnabled(true);
         });
     }
 
@@ -163,6 +158,10 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         tvTitle.setText(artwork.getTitle());
         tvDescription.setText(artwork.getDescription());
         tvLikes.setText(artwork.getLikes() + " лайков");
+
+        Log.d("LIKE_DEBUG", "=== updateUI() вызван ===");
+        Log.d("LIKE_DEBUG", "artwork.isLiked() = " + artwork.isLiked());
+        Log.d("LIKE_DEBUG", "artwork.getLikes() = " + artwork.getLikes());
 
         // Отображение категорий
         if (artwork.hasCategories()) {
@@ -271,7 +270,7 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         artwork.setDescription((String) artworkData.get("description"));
         artwork.setImagePath((String) artworkData.get("imagePath"));
 
-        // Безопасное преобразование лайков
+// Безопасное преобразование лайков
         Object likesObj = artworkData.get("likes");
         if (likesObj != null) {
             if (likesObj instanceof Double) {
@@ -281,14 +280,14 @@ public class ArtworkDetailActivity extends AppCompatActivity {
             } else if (likesObj instanceof Long) {
                 artwork.setLikes(((Long) likesObj).intValue());
             }
+        } else {
+            artwork.setLikes(0); // на всякий случай
         }
 
         artwork.setStatus((String) artworkData.get("status"));
 
-        if (artworkData.get("liked") != null) {
-            artwork.setLiked((Boolean) artworkData.get("liked"));
-        }
-
+// ВОТ ЭТА СТРОКА — САМАЯ ГЛАВНАЯ! (ты забыла её вставить)
+        artwork.setLiked(Boolean.TRUE.equals(artworkData.get("liked")));
         // Парсинг пользователя
         if (artworkData.get("user") != null) {
             Map<String, Object> userData = (Map<String, Object>) artworkData.get("user");
