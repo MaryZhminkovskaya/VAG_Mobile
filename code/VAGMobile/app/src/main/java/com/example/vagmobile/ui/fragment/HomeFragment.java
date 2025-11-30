@@ -1,16 +1,7 @@
 package com.example.vagmobile.ui.fragment;
 
-import androidx.lifecycle.ViewModelProvider;
-
 import android.content.Intent;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,41 +9,112 @@ import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.example.vagmobile.R;
 import com.example.vagmobile.model.Artwork;
 import com.example.vagmobile.model.User;
 import com.example.vagmobile.ui.activity.ArtworkDetailActivity;
+import com.example.vagmobile.ui.activity.ArtistArtworksActivity;
+import com.example.vagmobile.ui.activity.MainActivity;
 import com.example.vagmobile.ui.adapter.ArtworkAdapter;
+import com.example.vagmobile.ui.adapter.ArtistsAdapter;
 import com.example.vagmobile.viewmodel.ArtworkViewModel;
+import com.example.vagmobile.viewmodel.UserViewModel;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 public class HomeFragment extends Fragment {
-    private ArtworkViewModel artworkViewModel;
-    private ArtworkAdapter artworkAdapter;
-    private List<Artwork> artworkList = new ArrayList<>();
-    private RecyclerView recyclerView;
-    private ProgressBar progressBar;
-    private TextView tvEmpty;
 
+    private ArtworkViewModel artworkViewModel;
+    private UserViewModel userViewModel;
+
+    private RecyclerView rvFeaturedArtworks, rvFeaturedArtists;
+    private ArtworkAdapter featuredArtworkAdapter;
+    private ArtistsAdapter featuredArtistsAdapter;
+    private List<Artwork> featuredArtworks = new ArrayList<>();
+    private List<User> featuredArtists = new ArrayList<>();
+    private ProgressBar progressBar;
+    private TextView tvArtworksEmpty, tvArtistsEmpty;
+
+    @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        recyclerView = view.findViewById(R.id.recyclerView);
+        initViews(view);
+        setupRecyclerViews();
+        loadFeaturedContent();
+
+        return view;
+    }
+
+    private void initViews(View view) {
+        rvFeaturedArtworks = view.findViewById(R.id.rvFeaturedArtworks);
+        rvFeaturedArtists = view.findViewById(R.id.rvFeaturedArtists);
         progressBar = view.findViewById(R.id.progressBar);
-        tvEmpty = view.findViewById(R.id.tvEmpty);
+        tvArtworksEmpty = view.findViewById(R.id.tvArtworksEmpty);
+        tvArtistsEmpty = view.findViewById(R.id.tvArtistsEmpty);
 
-        // Настройка RecyclerView
-        GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 2);
-        recyclerView.setLayoutManager(layoutManager);
-        artworkAdapter = new ArtworkAdapter(artworkList, this::onArtworkClick);
-        recyclerView.setAdapter(artworkAdapter);
+        TextView tvSeeAllArtworks = view.findViewById(R.id.tvSeeAllArtworks);
+        TextView tvSeeAllArtists = view.findViewById(R.id.tvSeeAllArtists);
 
-        // Наблюдаем за данными
-        artworkViewModel = new ViewModelProvider(requireActivity(), ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().getApplication())).get(ArtworkViewModel.class);
+        tvSeeAllArtworks.setOnClickListener(v -> {
+            // Переход ко всем публикациям
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).bottomNavigationView.setSelectedItemId(R.id.nav_gallery);
+            }
+        });
 
+        tvSeeAllArtists.setOnClickListener(v -> {
+            // Переход ко всем художникам
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).bottomNavigationView.setSelectedItemId(R.id.nav_artists);
+            }
+        });
+    }
+
+    private void setupRecyclerViews() {
+        // Настройка для публикаций
+        featuredArtworkAdapter = new ArtworkAdapter(featuredArtworks, artwork -> {
+            Intent intent = new Intent(getActivity(), ArtworkDetailActivity.class);
+            intent.putExtra("artwork_id", artwork.getId());
+            startActivity(intent);
+        });
+
+        LinearLayoutManager artworksLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
+        rvFeaturedArtworks.setLayoutManager(artworksLayoutManager);
+        rvFeaturedArtworks.setAdapter(featuredArtworkAdapter);
+
+        // Настройка для художников
+        featuredArtistsAdapter = new ArtistsAdapter(featuredArtists, artist -> {
+            Intent intent = new Intent(getActivity(), ArtistArtworksActivity.class);
+            intent.putExtra("artist_id", artist.getId());
+            intent.putExtra("artist_name", artist.getUsername());
+            startActivity(intent);
+        });
+
+        LinearLayoutManager artistsLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
+        rvFeaturedArtists.setLayoutManager(artistsLayoutManager);
+        rvFeaturedArtists.setAdapter(featuredArtistsAdapter);
+    }
+
+    private void loadFeaturedContent() {
+        progressBar.setVisibility(View.VISIBLE);
+
+        artworkViewModel = new ViewModelProvider(requireActivity()).get(ArtworkViewModel.class);
+        userViewModel = new ViewModelProvider(requireActivity()).get(UserViewModel.class);
+
+        // Загрузка случайных публикаций
         artworkViewModel.getArtworksResult().observe(getViewLifecycleOwner(), result -> {
             progressBar.setVisibility(View.GONE);
 
@@ -61,43 +123,94 @@ public class HomeFragment extends Fragment {
                 if (success != null && success) {
                     List<Map<String, Object>> artworksData = (List<Map<String, Object>>) result.get("artworks");
                     if (artworksData != null && !artworksData.isEmpty()) {
-                        artworkList.clear();
+                        List<Artwork> allArtworks = new ArrayList<>();
                         for (Map<String, Object> artworkData : artworksData) {
                             Artwork artwork = convertToArtwork(artworkData);
                             if (artwork != null) {
-                                artworkList.add(artwork);
+                                allArtworks.add(artwork);
                             }
                         }
-                        artworkAdapter.notifyDataSetChanged();
 
-                        // Показываем RecyclerView и скрываем сообщение о пустоте
-                        recyclerView.setVisibility(View.VISIBLE);
-                        tvEmpty.setVisibility(View.GONE);
+                        // Выбираем 4 случайные публикации
+                        featuredArtworks.clear();
+                        if (allArtworks.size() > 4) {
+                            Collections.shuffle(allArtworks);
+                            featuredArtworks.addAll(allArtworks.subList(0, 4));
+                        } else {
+                            featuredArtworks.addAll(allArtworks);
+                        }
+                        featuredArtworkAdapter.notifyDataSetChanged();
 
-                        Log.d("HomeFragment", "Loaded " + artworkList.size() + " artworks");
+                        tvArtworksEmpty.setVisibility(View.GONE);
+                        rvFeaturedArtworks.setVisibility(View.VISIBLE);
+                        Log.d("HomeFragment", "Loaded " + featuredArtworks.size() + " featured artworks");
                     } else {
-                        // Нет данных
-                        recyclerView.setVisibility(View.GONE);
-                        tvEmpty.setVisibility(View.VISIBLE);
-                        tvEmpty.setText("No artworks found");
+                        tvArtworksEmpty.setVisibility(View.VISIBLE);
+                        rvFeaturedArtworks.setVisibility(View.GONE);
                     }
                 } else {
                     String message = (String) result.get("message");
                     Toast.makeText(getContext(), "Failed to load artworks: " + message, Toast.LENGTH_SHORT).show();
-                    recyclerView.setVisibility(View.GONE);
-                    tvEmpty.setVisibility(View.VISIBLE);
-                    tvEmpty.setText("Error loading artworks");
+                    tvArtworksEmpty.setVisibility(View.VISIBLE);
+                    rvFeaturedArtworks.setVisibility(View.GONE);
                 }
             }
         });
 
-        // Загружаем данные
-        progressBar.setVisibility(View.VISIBLE);
-        recyclerView.setVisibility(View.GONE);
-        tvEmpty.setVisibility(View.GONE);
-        artworkViewModel.getArtworks(0, 20);
+        // Загрузка случайных художников - ИСПРАВЛЕННАЯ ЧАСТЬ
+        userViewModel.getArtistsResult().observe(getViewLifecycleOwner(), result -> {
+            if (result != null) {
+                Boolean success = (Boolean) result.get("success");
+                if (success != null && success) {
+                    // ИСПРАВЛЕНИЕ: Правильно получаем список пользователей
+                    Object usersObj = result.get("users");
+                    if (usersObj instanceof List) {
+                        List<?> usersList = (List<?>) usersObj;
+                        List<User> allArtists = new ArrayList<>();
 
-        return view;
+                        for (Object userObj : usersList) {
+                            if (userObj instanceof User) {
+                                // Если это уже объект User, просто добавляем
+                                allArtists.add((User) userObj);
+                            } else if (userObj instanceof Map) {
+                                // Если это Map, конвертируем в User
+                                User user = convertToUser((Map<String, Object>) userObj);
+                                if (user != null) {
+                                    allArtists.add(user);
+                                }
+                            }
+                        }
+
+                        // Выбираем 4 случайных художника
+                        featuredArtists.clear();
+                        if (allArtists.size() > 4) {
+                            Collections.shuffle(allArtists);
+                            featuredArtists.addAll(allArtists.subList(0, 4));
+                        } else {
+                            featuredArtists.addAll(allArtists);
+                        }
+                        featuredArtistsAdapter.notifyDataSetChanged();
+
+                        tvArtistsEmpty.setVisibility(View.GONE);
+                        rvFeaturedArtists.setVisibility(View.VISIBLE);
+                        Log.d("HomeFragment", "Loaded " + featuredArtists.size() + " featured artists");
+                    } else {
+                        tvArtistsEmpty.setVisibility(View.VISIBLE);
+                        rvFeaturedArtists.setVisibility(View.GONE);
+                        Log.d("HomeFragment", "No users data found in response");
+                    }
+                } else {
+                    String message = (String) result.get("message");
+                    Toast.makeText(getContext(), "Failed to load artists: " + message, Toast.LENGTH_SHORT).show();
+                    tvArtistsEmpty.setVisibility(View.VISIBLE);
+                    rvFeaturedArtists.setVisibility(View.GONE);
+                }
+            }
+        });
+
+        // Запускаем загрузку данных
+        artworkViewModel.getArtworks(0, 50);
+        userViewModel.getAllArtists();
     }
 
     private Artwork convertToArtwork(Map<String, Object> artworkData) {
@@ -126,15 +239,10 @@ public class HomeFragment extends Fragment {
             // Пользователь
             if (artworkData.get("user") != null) {
                 Map<String, Object> userData = (Map<String, Object>) artworkData.get("user");
-                User user = new User();
-                if (userData.get("id") != null) {
-                    user.setId(((Number) userData.get("id")).longValue());
-                }
-                user.setUsername((String) userData.get("username"));
+                User user = convertToUser(userData);
                 artwork.setUser(user);
             }
 
-            Log.d("HomeFragment", "Converted artwork: " + artwork.getTitle());
             return artwork;
         } catch (Exception e) {
             Log.e("HomeFragment", "Error converting artwork: " + e.getMessage());
@@ -142,10 +250,39 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private void onArtworkClick(Artwork artwork) {
-        // Обработка клика на публикацию
-        Intent intent = new Intent(getContext(), ArtworkDetailActivity.class);
-        intent.putExtra("artwork_id", artwork.getId());
-        startActivity(intent);
+    private User convertToUser(Map<String, Object> userData) {
+        try {
+            User user = new User();
+
+            // Безопасное преобразование ID
+            Object idObj = userData.get("id");
+            if (idObj != null) {
+                if (idObj instanceof Double) {
+                    user.setId(((Double) idObj).longValue());
+                } else if (idObj instanceof Integer) {
+                    user.setId(((Integer) idObj).longValue());
+                } else if (idObj instanceof Long) {
+                    user.setId((Long) idObj);
+                }
+            }
+
+            user.setUsername((String) userData.get("username"));
+            user.setEmail((String) userData.get("email"));
+
+            // Количество работ
+            Object countObj = userData.get("artworksCount");
+            if (countObj != null) {
+                if (countObj instanceof Double) {
+                    user.setArtworksCount(((Double) countObj).intValue());
+                } else if (countObj instanceof Integer) {
+                    user.setArtworksCount((Integer) countObj);
+                }
+            }
+
+            return user;
+        } catch (Exception e) {
+            Log.e("HomeFragment", "Error converting user: " + e.getMessage());
+            return null;
+        }
     }
 }

@@ -15,8 +15,27 @@ public class UserViewModel extends ViewModel {
     private MutableLiveData<Map<String, Object>> likedArtworksResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> updateProfileResult = new MutableLiveData<>();
 
+    // LiveData для списка художников
+    private MutableLiveData<Map<String, Object>> artistsResult = new MutableLiveData<>();
+    private MutableLiveData<Map<String, Object>> artistsWithArtworksResult = new MutableLiveData<>();
+
     public UserViewModel() {
         userRepository = new UserRepository();
+    }
+
+    // ОБНОВЛЕННЫЙ МЕТОД: Получение всех художников через artworks
+    public void getAllArtists() {
+        userRepository.getAllArtists().observeForever(result -> {
+            artistsResult.setValue(result);
+        });
+    }
+
+    // Метод для получения художников с публикациями (можно оставить для будущего использования)
+    public void getArtistsWithArtworks() {
+        // Пока используем тот же метод, что и для getAllArtists
+        userRepository.getAllArtists().observeForever(result -> {
+            artistsWithArtworksResult.setValue(result);
+        });
     }
 
     public void getCurrentUser() {
@@ -32,21 +51,24 @@ public class UserViewModel extends ViewModel {
     }
 
     public void getUserArtworks(Long userId, int page, int size) {
-        userRepository.getUserArtworks(userId, page, size).observeForever(result -> {
-            userArtworksResult.setValue(result);
-        });
+        // TODO: Implement this method
     }
 
     public void getLikedArtworks(int page, int size) {
-        userRepository.getLikedArtworks(page, size).observeForever(result -> {
-            likedArtworksResult.setValue(result);
-        });
+        // TODO: Implement this method
     }
 
     public void updateProfile(User user) {
-        userRepository.updateProfile(user).observeForever(result -> {
-            updateProfileResult.setValue(result);
-        });
+        // TODO: Implement this method
+    }
+
+    // Геттер для списка художников
+    public LiveData<Map<String, Object>> getArtistsResult() {
+        return artistsResult;
+    }
+
+    public LiveData<Map<String, Object>> getArtistsWithArtworksResult() {
+        return artistsWithArtworksResult;
     }
 
     public LiveData<Map<String, Object>> getCurrentUserResult() {

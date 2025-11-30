@@ -7,32 +7,27 @@ import androidx.fragment.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.example.vagmobile.R;
 import com.example.vagmobile.ui.fragment.ArtworksFragment;
 import com.example.vagmobile.ui.fragment.HomeFragment;
 import com.example.vagmobile.ui.fragment.CategoriesFragment;
 import com.example.vagmobile.ui.fragment.ProfileFragment;
-import com.example.vagmobile.ui.fragment.DocumentationFragment;
+import com.example.vagmobile.ui.fragment.ArtistsFragment;
 import com.example.vagmobile.util.SharedPreferencesHelper;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class MainActivity extends AppCompatActivity {
 
-    private BottomNavigationView bottomNavigationView;
+    public BottomNavigationView bottomNavigationView;
     private FloatingActionButton fabCreate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        // Проверяем авторизацию
-        if (!isUserLoggedIn()) {
-            redirectToLogin();
-            return;
-        }
 
         initViews();
         setupBottomNavigation();
@@ -42,18 +37,6 @@ public class MainActivity extends AppCompatActivity {
         if (savedInstanceState == null) {
             loadFragment(new HomeFragment());
         }
-    }
-
-    private boolean isUserLoggedIn() {
-        SharedPreferencesHelper prefs = new SharedPreferencesHelper(this);
-        return prefs.isLoggedIn();
-    }
-
-    private void redirectToLogin() {
-        Intent intent = new Intent(this, LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        finish();
     }
 
     private void initViews() {
@@ -74,10 +57,10 @@ public class MainActivity extends AppCompatActivity {
                     selectedFragment = new ArtworksFragment();
                 } else if (itemId == R.id.nav_categories) {
                     selectedFragment = new CategoriesFragment();
+                } else if (itemId == R.id.nav_artists) {
+                    selectedFragment = new ArtistsFragment();
                 } else if (itemId == R.id.nav_profile) {
                     selectedFragment = new ProfileFragment();
-                } else if (itemId == R.id.nav_documentation) {
-                    selectedFragment = new DocumentationFragment();
                 }
 
                 if (selectedFragment != null) {
@@ -91,6 +74,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupFloatingActionButton() {
         fabCreate.setOnClickListener(v -> {
+            SharedPreferencesHelper prefs = new SharedPreferencesHelper(MainActivity.this);
+            if (!prefs.isLoggedIn()) {
+                Toast.makeText(MainActivity.this, "Пожалуйста, войдите в систему чтобы создавать публикации", Toast.LENGTH_SHORT).show();
+                startActivity(new Intent(MainActivity.this, LoginActivity.class));
+                return;
+            }
+
             Intent intent = new Intent(MainActivity.this, CreateArtworkActivity.class);
             startActivity(intent);
         });

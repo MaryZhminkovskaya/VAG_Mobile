@@ -54,7 +54,18 @@ public class ArtworkController {
 
         page = Math.max(0, page);
 
+        // ИСПРАВЛЕНО: Используем правильный метод для получения одобренных публикаций
         Page<Artwork> artworkPage = artworkService.findPaginatedApprovedArtworks(PageRequest.of(page, size));
+
+        // ДОБАВЛЕНО: Отладочная информация
+        System.out.println("=== WEB ARTWORKS LIST ===");
+        System.out.println("Total artworks: " + artworkPage.getTotalElements());
+        artworkPage.getContent().forEach(artwork -> {
+            System.out.println("Artwork: " + artwork.getTitle() +
+                    ", Status: " + artwork.getStatus() +
+                    ", User: " + (artwork.getUser() != null ? artwork.getUser().getUsername() : "null"));
+        });
+
         model.addAttribute("artworks", artworkPage);
         return "artwork/list";
     }
@@ -117,7 +128,15 @@ public class ArtworkController {
             return "artwork/create";
         }
 
-        Artwork savedArtwork = artworkService.create(artwork, imageFile, currentUser);
+        // ИСПРАВЛЕНО: Логируем информацию о файле
+        System.out.println("=== WEB ARTWORK CREATION ===");
+        System.out.println("Original filename: " + imageFile.getOriginalFilename());
+        System.out.println("File size: " + imageFile.getSize());
+
+        // Используем сервис для создания artwork
+        Artwork savedArtwork = artworkService.createWithCategories(artwork, imageFile, currentUser, categoryIds);
+
+        System.out.println("Artwork created with image path: " + savedArtwork.getImagePath());
 
         if (exhibitionId != null) {
             Exhibition exhibition = exhibitionService.findById(exhibitionId).orElseThrow();

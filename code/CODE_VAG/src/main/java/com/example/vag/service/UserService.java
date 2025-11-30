@@ -16,9 +16,9 @@ public interface UserService {
     Optional<User> findByUsername(String username);
     Optional<User> findByEmail(String email);
     void delete(User user);
-    User update(User user);
-    User getCurrentUser();
+    User update(User updatedUser);
     User authenticate(String username, String password);
+    User getCurrentUser();
 
-
+    List<User> findRandomArtists(int count);
 }

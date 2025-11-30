@@ -1,166 +1,213 @@
 package com.example.vag.service.impl;
 
-import com.example.vag.model.Artwork;
-import com.example.vag.model.Category;
-import com.example.vag.model.User;
+import com.example.vag.model.*;
 import com.example.vag.repository.ArtworkRepository;
 import com.example.vag.repository.CategoryRepository;
 import com.example.vag.repository.LikeRepository;
+import com.example.vag.repository.CommentRepository; // ДОБАВЛЕНО
 import com.example.vag.service.ArtworkService;
 import com.example.vag.util.FileUploadUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
 @Service
-@Transactional
 public class ArtworkServiceImpl implements ArtworkService {
 
     private final ArtworkRepository artworkRepository;
     private final CategoryRepository categoryRepository;
     private final LikeRepository likeRepository;
+    private final CommentRepository commentRepository; // ДОБАВЛЕНО
     private final FileUploadUtil fileUploadUtil;
 
     public ArtworkServiceImpl(ArtworkRepository artworkRepository,
                               CategoryRepository categoryRepository,
                               LikeRepository likeRepository,
+                              CommentRepository commentRepository, // ДОБАВЛЕНО
                               FileUploadUtil fileUploadUtil) {
         this.artworkRepository = artworkRepository;
         this.categoryRepository = categoryRepository;
         this.likeRepository = likeRepository;
+        this.commentRepository = commentRepository; // ДОБАВЛЕНО
         this.fileUploadUtil = fileUploadUtil;
     }
 
+    // ОБНОВЛЕНО: Методы для работы с пользователем
+
+    @Transactional(readOnly = true)
     @Override
-    @Transactional
-    public Artwork createWithCategories(Artwork artwork, MultipartFile imageFile, User user, List<Long> categoryIds) throws IOException {
-        try {
-            // Загружаем категории в той же транзакции
-            List<Category> categories = categoryRepository.findAllByIds(categoryIds);
-
-            if (categories.isEmpty()) {
-                throw new RuntimeException("No valid categories found");
-            }
-
-            artwork.setUser(user);
-            artwork.getCategories().addAll(categories);
-            artwork.setStatus(Artwork.ArtworkStatus.PENDING.name());
-
-            // Сохраняем изображение - используем правильный метод
-            if (imageFile != null && !imageFile.isEmpty()) {
-                String imagePath = fileUploadUtil.saveFile(user.getId(), imageFile);
-                artwork.setImagePath(imagePath);
-            }
-
-            return artworkRepository.save(artwork);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create artwork: " + e.getMessage(), e);
-        }
+    public Page<Artwork> findPaginatedApprovedArtworks(Pageable pageable) {
+        return artworkRepository.findByStatusWithUser("APPROVED", pageable);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public Artwork findByIdWithComments(Long id) {
+        // ИСПРАВЛЕНО: Используем метод с полной загрузкой всех данных
+        return artworkRepository.findByIdWithUserAndCommentsAndCategories(id)
+                .orElseThrow(() -> new RuntimeException("Artwork not found"));
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Page<Artwork> findAllPaginated(Pageable pageable) {
+        return artworkRepository.findAllWithUser(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Page<Artwork> searchApprovedArtworks(String query, Pageable pageable) {
+        return artworkRepository.searchApprovedWithUser(query, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Page<Artwork> findByCategoryId(Long categoryId, Pageable pageable) {
+        return artworkRepository.findByCategoryIdWithUser(categoryId, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Page<Artwork> findLikedArtworks(User user, Pageable pageable) {
+        return artworkRepository.findLikedArtworksWithUser(user.getId(), pageable);
+    }
+
+    // ИСПРАВЛЕНО: Методы с правильными типами возврата
+    @Override
+    public long countApprovedArtworksByCategoryId(Long categoryId) {
+        Long count = artworkRepository.countApprovedArtworksByCategoryId(categoryId);
+        return count != null ? count : 0L;
+    }
+
+    @Override
+    public long countArtworksByCategoryId(Long categoryId) {
+        Long count = artworkRepository.countByCategoriesId(categoryId);
+        return count != null ? count : 0L;
+    }
+
+    // ДОБАВЛЕНО: Отсутствующий метод create
     @Override
     @Transactional
     public Artwork create(Artwork artwork, MultipartFile imageFile, User user) throws IOException {
-        if (artwork.getCategoryIds() == null || artwork.getCategoryIds().isEmpty()) {
-            throw new RuntimeException("Category IDs are required");
+        artwork.setUser(user);
+        artwork.setStatus("PENDING");
+        artwork.setLikes(0);
+        artwork.setViews(0);
+        artwork.setDateCreation(LocalDate.now());
+
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String fileName = StringUtils.cleanPath(imageFile.getOriginalFilename());
+            String safeFileName = fileName.replace(" ", "_").replaceAll("[^a-zA-Z0-9._-]", "");
+            String relativePath = "artwork-images/" + user.getId() + "/" + safeFileName;
+            artwork.setImagePath(relativePath);
+
+            fileUploadUtil.saveFile(user.getId(), safeFileName, imageFile);
         }
-        return createWithCategories(artwork, imageFile, user, artwork.getCategoryIds());
+
+        return artworkRepository.save(artwork);
     }
 
+    // Существующие методы остаются без изменений
     @Override
-    @Transactional(readOnly = true)
     public List<Artwork> findAll() {
         return artworkRepository.findAll();
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Optional<Artwork> findById(Long id) {
         return artworkRepository.findById(id);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Optional<Artwork> findByIdWithCategories(Long id) {
-        return artworkRepository.findByIdWithCategories(id);
+    public Artwork save(Artwork artwork) {
+        return artworkRepository.save(artwork);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Artwork findByIdWithComments(Long id) {
-        Artwork artwork = artworkRepository.findByIdWithComments(id);
-        if (artwork == null) {
-            throw new RuntimeException("Artwork not found with id: " + id);
-        }
-        return artwork;
+    public void delete(Artwork artwork) {
+        artworkRepository.delete(artwork);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<Artwork> findAllPaginated(Pageable pageable) {
-        return artworkRepository.findAll(pageable);
+    public List<Artwork> findByStatus(String status) {
+        return artworkRepository.findByStatus(status);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<Artwork> findPaginatedApprovedArtworks(Pageable pageable) {
-        return artworkRepository.findByStatusOrderByDateCreationDesc("APPROVED", pageable);
+    public Page<Artwork> findByStatus(String status, Pageable pageable) {
+        return artworkRepository.findByStatus(status, pageable);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<Artwork> findByCategoryId(Long categoryId, Pageable pageable) {
-        return artworkRepository.findByCategoryIdAndStatus(categoryId, "APPROVED", pageable);
+    public Page<Artwork> findByUser(User user, Pageable pageable) {
+        return artworkRepository.findByUser(user, pageable);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<Artwork> searchApprovedArtworks(String query, Pageable pageable) {
-        return artworkRepository.searchApproved(query, pageable);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public List<Artwork> findByUserWithDetails(User user) {
         return artworkRepository.findByUserWithDetails(user);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<Artwork> findLikedArtworks(User user, Pageable pageable) {
-        return artworkRepository.findLikedArtworks(user.getId(), pageable);
+    @Transactional
+    public void likeArtwork(Long artworkId, User user) {
+        Optional<Artwork> artworkOpt = artworkRepository.findById(artworkId);
+        if (artworkOpt.isPresent()) {
+            Artwork artwork = artworkOpt.get();
+
+            // ИСПРАВЛЕНО: Проверяем, не лайкнул ли уже пользователь
+            boolean alreadyLiked = likeRepository.existsByArtworkAndUser(artwork, user);
+            if (!alreadyLiked) {
+                artwork.setLikes(artwork.getLikes() + 1);
+                artworkRepository.save(artwork);
+
+                // Сохраняем информацию о лайке
+                Like like = new Like();
+                like.setArtwork(artwork);
+                like.setUser(user);
+                likeRepository.save(like);
+
+                System.out.println("User " + user.getUsername() + " liked artwork " + artworkId);
+            } else {
+                System.out.println("User " + user.getUsername() + " already liked artwork " + artworkId);
+            }
+        }
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<Artwork> findLikedArtworks(User user) {
-        return artworkRepository.findLikedArtworksByUser(user);
-    }
+    @Transactional
+    public void unlikeArtwork(Long artworkId, User user) {
+        Optional<Artwork> artworkOpt = artworkRepository.findById(artworkId);
+        if (artworkOpt.isPresent()) {
+            Artwork artwork = artworkOpt.get();
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<Artwork> findByStatus(String status) {
-        return artworkRepository.findByStatus(status);
-    }
+            // ИСПРАВЛЕНО: Находим и удаляем лайк
+            Optional<Like> likeOpt = likeRepository.findByArtworkAndUser(artwork, user);
+            if (likeOpt.isPresent()) {
+                Like like = likeOpt.get();
+                likeRepository.delete(like);
 
-    // УДАЛИТЕ этот метод - он дублируется
-    // @Override
-    // @Transactional(readOnly = true)
-    // public Long countApprovedArtworksByCategoryId(Long categoryId) {
-    //     return artworkRepository.countApprovedArtworksByCategoryId(categoryId);
-    // }
+                if (artwork.getLikes() > 0) {
+                    artwork.setLikes(artwork.getLikes() - 1);
+                    artworkRepository.save(artwork);
+                }
 
-    @Override
-    @Transactional(readOnly = true)
-    public long countArtworksByCategoryId(Long categoryId) {
-        Long count = artworkRepository.countByCategoriesId(categoryId);
-        return count != null ? count : 0L;
+                System.out.println("User " + user.getUsername() + " unliked artwork " + artworkId);
+            } else {
+                System.out.println("User " + user.getUsername() + " didn't like artwork " + artworkId);
+            }
+        }
     }
 
     @Override
@@ -171,111 +218,133 @@ public class ArtworkServiceImpl implements ArtworkService {
 
     @Override
     @Transactional
-    public Artwork save(Artwork artwork) {
-        return artworkRepository.save(artwork);
-    }
-
-    @Override
-    @Transactional
-    public void delete(Artwork artwork) {
-        artworkRepository.delete(artwork);
-    }
-
-    @Override
-    @Transactional
-    public void likeArtwork(Long artworkId, User user) {
-        Artwork artwork = artworkRepository.findById(artworkId)
-                .orElseThrow(() -> new RuntimeException("Artwork not found"));
-        // Implementation for like
-        artwork.setLikes(artwork.getLikes() + 1);
-        artworkRepository.save(artwork);
-    }
-
-    @Override
-    @Transactional
-    public void unlikeArtwork(Long artworkId, User user) {
-        Artwork artwork = artworkRepository.findById(artworkId)
-                .orElseThrow(() -> new RuntimeException("Artwork not found"));
-        // Implementation for unlike
-        artwork.setLikes(Math.max(0, artwork.getLikes() - 1));
-        artworkRepository.save(artwork);
-    }
-
-    @Override
-    @Transactional
     public void addComment(Long artworkId, User user, String content) {
-        // Implementation for adding comment
         Artwork artwork = artworkRepository.findById(artworkId)
                 .orElseThrow(() -> new RuntimeException("Artwork not found"));
-        // Add comment logic here
+
+        // ИСПРАВЛЕНО: Создаем и сохраняем комментарий
+        Comment comment = new Comment();
+        comment.setContent(content);
+        comment.setUser(user);
+        comment.setArtwork(artwork);
+        comment.setDateCreated(LocalDateTime.now());
+
+        commentRepository.save(comment);
+
+        // Добавляем комментарий к публикации
+        if (artwork.getComments() == null) {
+            artwork.setComments(new ArrayList<>());
+        }
+        artwork.getComments().add(comment);
+
+        artworkRepository.save(artwork);
+
+        System.out.println("Comment added by " + user.getUsername() + " to artwork " + artworkId);
     }
 
     @Override
-    @Transactional
     public void approveArtwork(Long id) {
-        Artwork artwork = artworkRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Artwork not found"));
-        artwork.setStatus(Artwork.ArtworkStatus.APPROVED.name());
-        artworkRepository.save(artwork);
+        Optional<Artwork> artworkOpt = artworkRepository.findById(id);
+        if (artworkOpt.isPresent()) {
+            Artwork artwork = artworkOpt.get();
+            artwork.setStatus("APPROVED");
+            artworkRepository.save(artwork);
+        }
     }
 
     @Override
-    @Transactional
     public void rejectArtwork(Long id) {
-        Artwork artwork = artworkRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Artwork not found"));
-        artwork.setStatus(Artwork.ArtworkStatus.REJECTED.name());
-        artworkRepository.save(artwork);
-    }
-
-    // Остальные методы интерфейса
-    @Override
-    @Transactional(readOnly = true)
-    public List<Artwork> findByExhibitionId(Long exhibitionId) {
-        return artworkRepository.findByExhibitionsId(exhibitionId);
+        Optional<Artwork> artworkOpt = artworkRepository.findById(id);
+        if (artworkOpt.isPresent()) {
+            Artwork artwork = artworkOpt.get();
+            artwork.setStatus("REJECTED");
+            artworkRepository.save(artwork);
+        }
     }
 
     @Override
-    @Transactional(readOnly = true)
+    public Optional<Artwork> findByIdWithCategories(Long id) {
+        return artworkRepository.findByIdWithCategories(id);
+    }
+
+    @Override
     public Page<Artwork> getApprovedArtworks(Pageable pageable) {
-        return findPaginatedApprovedArtworks(pageable);
+        return artworkRepository.findByStatus("APPROVED", pageable);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Page<Artwork> findAll(Pageable pageable) {
         return artworkRepository.findAll(pageable);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<Artwork> findByStatus(String status, Pageable pageable) {
-        return artworkRepository.findByStatus(status, pageable);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<Artwork> findByUser(User user, Pageable pageable) {
-        return artworkRepository.findByUser(user, pageable);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
     public Page<Artwork> findByUserAndStatus(User user, String status, Pageable pageable) {
         return artworkRepository.findByUserAndStatus(user, status, pageable);
     }
 
     @Override
-    @Transactional(readOnly = true)
+    public List<Artwork> findLikedArtworks(User user) {
+        return artworkRepository.findLikedArtworksByUser(user);
+    }
+
+    @Override
     public Page<Artwork> findByExhibitionId(Long exhibitionId, Pageable pageable) {
         return artworkRepository.findByExhibitionsId(exhibitionId, pageable);
     }
 
-    // ЕДИНСТВЕННЫЙ метод countApprovedArtworksByCategoryId
     @Override
-    @Transactional(readOnly = true)
-    public long countApprovedArtworksByCategoryId(Long categoryId) {
-        Long count = artworkRepository.countApprovedArtworksByCategoryId(categoryId);
-        return count != null ? count : 0L;
+    public List<Artwork> findByExhibitionId(Long exhibitionId) {
+        return artworkRepository.findByExhibitionsId(exhibitionId);
+    }
+
+    @Override
+    @Transactional
+    public Artwork createWithCategories(Artwork artwork, MultipartFile imageFile, User user, List<Long> categoryIds) throws IOException {
+        artwork.setUser(user);
+        artwork.setStatus("PENDING");
+        artwork.setLikes(0);
+        artwork.setViews(0);
+        artwork.setDateCreation(LocalDate.now());
+
+        // Устанавливаем категории
+        if (categoryIds != null && !categoryIds.isEmpty()) {
+            List<Category> categories = categoryRepository.findAllById(categoryIds);
+            artwork.setCategories(new HashSet<>(categories));
+        }
+
+        if (imageFile != null && !imageFile.isEmpty()) {
+            // ИСПРАВЛЕНО: Используем метод с сохранением оригинального имени
+            String relativePath = fileUploadUtil.saveFileWithOriginalName(user.getId(), imageFile);
+            artwork.setImagePath(relativePath);
+
+            System.out.println("=== ARTWORK CREATION DEBUG ===");
+            System.out.println("Original filename: " + imageFile.getOriginalFilename());
+            System.out.println("Saved image path: " + relativePath);
+            System.out.println("Final filename in DB: " + FileUploadUtil.getFileNameFromPath(relativePath));
+        }
+
+        return artworkRepository.save(artwork);
+    }
+
+    public void incrementViews(Long artworkId) {
+        try {
+            Artwork artwork = artworkRepository.findById(artworkId)
+                    .orElseThrow(() -> new RuntimeException("Artwork not found"));
+
+            // Увеличиваем счетчик просмотров
+            artwork.setViews(artwork.getViews() + 1);
+            artworkRepository.save(artwork);
+
+            System.out.println("Incremented views for artwork " + artworkId + ". Current views: " + artwork.getViews());
+        } catch (Exception e) {
+            System.out.println("Error incrementing views for artwork " + artworkId + ": " + e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
+    public List<Artwork> findRandomArtworks(int count) {
+        List<Artwork> artworks = artworkRepository.findRandomApprovedArtworks(count);
+        return artworks.size() > count ? artworks.subList(0, count) : artworks;
     }
 }

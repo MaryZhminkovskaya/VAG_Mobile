@@ -74,4 +74,71 @@ public interface ArtworkRepository extends JpaRepository<Artwork, Long> {
     @Query(value = "SELECT a FROM Artwork a WHERE a.status = 'APPROVED' ORDER BY a.dateCreation DESC",
             countQuery = "SELECT COUNT(a) FROM Artwork a WHERE a.status = 'APPROVED'")
     Page<Artwork> findApprovedArtworksWithUserPaged(Pageable pageable);
+
+    // ДОБАВЛЕНО: Методы для загрузки artwork с пользователем
+
+    // Для списка artwork с пользователем и категориями
+    @Query("SELECT a FROM Artwork a " +
+            "LEFT JOIN FETCH a.user " +
+            "LEFT JOIN FETCH a.categories " +
+            "WHERE a.status = :status")
+    List<Artwork> findByStatusWithUserAndCategories(@Param("status") String status);
+
+    // Для пагинации artwork с пользователем
+    @Query(value = "SELECT a FROM Artwork a " +
+            "LEFT JOIN FETCH a.user " +
+            "WHERE a.status = :status",
+            countQuery = "SELECT COUNT(a) FROM Artwork a WHERE a.status = :status")
+    Page<Artwork> findByStatusWithUser(@Param("status") String status, Pageable pageable);
+
+    // Для детального просмотра artwork с пользователем, комментариями и категориями
+    @Query("SELECT a FROM Artwork a " +
+            "LEFT JOIN FETCH a.user " +
+            "LEFT JOIN FETCH a.categories " +
+            "LEFT JOIN FETCH a.comments c " +
+            "LEFT JOIN FETCH c.user " +
+            "WHERE a.id = :id")
+    Optional<Artwork> findByIdWithUserAndCommentsAndCategories(@Param("id") Long id);
+
+    // Для администратора - все artwork с пользователем
+    @Query(value = "SELECT a FROM Artwork a " +
+            "LEFT JOIN FETCH a.user",
+            countQuery = "SELECT COUNT(a) FROM Artwork a")
+    Page<Artwork> findAllWithUser(Pageable pageable);
+
+    // Для поиска с пользователем
+    @Query(value = "SELECT a FROM Artwork a " +
+            "LEFT JOIN FETCH a.user " +
+            "WHERE (LOWER(a.title) LIKE LOWER(CONCAT('%', :query, '%')) " +
+            "OR LOWER(a.description) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+            "AND a.status = 'APPROVED'",
+            countQuery = "SELECT COUNT(a) FROM Artwork a " +
+                    "WHERE (LOWER(a.title) LIKE LOWER(CONCAT('%', :query, '%')) " +
+                    "OR LOWER(a.description) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+                    "AND a.status = 'APPROVED'")
+    Page<Artwork> searchApprovedWithUser(@Param("query") String query, Pageable pageable);
+
+    // Для категорий с пользователем
+    @Query(value = "SELECT a FROM Artwork a " +
+            "LEFT JOIN FETCH a.user " +
+            "JOIN a.categories c " +
+            "WHERE c.id = :categoryId AND a.status = 'APPROVED'",
+            countQuery = "SELECT COUNT(a) FROM Artwork a " +
+                    "JOIN a.categories c " +
+                    "WHERE c.id = :categoryId AND a.status = 'APPROVED'")
+    Page<Artwork> findByCategoryIdWithUser(@Param("categoryId") Long categoryId, Pageable pageable);
+
+    // Для лайков с пользователем
+    @Query(value = "SELECT a FROM Artwork a " +
+            "LEFT JOIN FETCH a.user " +
+            "JOIN a.artworkLikes l " +
+            "WHERE l.user.id = :userId",
+            countQuery = "SELECT COUNT(a) FROM Artwork a " +
+                    "JOIN a.artworkLikes l " +
+                    "WHERE l.user.id = :userId")
+    Page<Artwork> findLikedArtworksWithUser(@Param("userId") Long userId, Pageable pageable);
+
+    @Query("SELECT a FROM Artwork a WHERE a.status = 'APPROVED' ORDER BY FUNCTION('RAND')")
+    List<Artwork> findRandomApprovedArtworks(@Param("count") int count);
+
 }

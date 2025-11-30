@@ -1,9 +1,11 @@
 package com.example.vagmobile.model;
 
 import com.google.gson.annotations.SerializedName;
+
+import java.io.Serializable;
 import java.util.Date;
 
-public class Comment {
+public class Comment implements Serializable {
     @SerializedName("id")
     private Long id;
 

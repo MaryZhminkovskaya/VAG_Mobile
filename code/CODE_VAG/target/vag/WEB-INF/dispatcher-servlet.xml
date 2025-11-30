@@ -26,7 +26,10 @@
     <mvc:annotation-driven/>
     <mvc:resources mapping="/resources/**" location="/resources/"/>
     <mvc:default-servlet-handler/>
-    <mvc:resources mapping="/uploads/**" location="file:${catalina.base}/webapps/vag/uploads/"/>
+
+    <!-- ИСПРАВЛЕНО: Правильная конфигурация статических ресурсов -->
+    <mvc:resources mapping="/uploads/**" location="file:D:/Java/apache-tomcat-9.0.97/webapps/vag/uploads/"/>
+    <mvc:resources mapping="/vag/uploads/**" location="file:D:/Java/apache-tomcat-9.0.97/webapps/vag/uploads/"/>
 
     <bean id="templateResolver" class="org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver">
         <property name="prefix" value="/WEB-INF/views/"/>
@@ -222,7 +225,7 @@
             <security:concurrency-control max-sessions="1" error-if-maximum-exceeded="true"/>
         </security:session-management>
 
-        <!-- Кастомные фильтры с разными позициями -->
+        <!-- ИСПРАВЛЕНО: Разные порядки для фильтров -->
         <security:custom-filter ref="corsFilter" before="BASIC_AUTH_FILTER"/>
         <security:custom-filter ref="mobileAuthFilter" after="CORS_FILTER"/>
 
@@ -231,7 +234,9 @@
         <security:intercept-url pattern="/index" access="permitAll"/>
         <security:intercept-url pattern="/auth/**" access="permitAll"/>
         <security:intercept-url pattern="/resources/**" access="permitAll"/>
+        <!-- ИСПРАВЛЕНО: Добавлены оба варианта для uploads -->
         <security:intercept-url pattern="/uploads/**" access="permitAll"/>
+        <security:intercept-url pattern="/vag/uploads/**" access="permitAll"/>
 
         <!-- Веб-эндпоинты -->
         <security:intercept-url pattern="/artwork/details/**" access="permitAll"/>

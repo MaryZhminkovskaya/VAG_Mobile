@@ -2,7 +2,9 @@ package com.example.vagmobile.model;
 
 import com.google.gson.annotations.SerializedName;
 
-public class User {
+import java.io.Serializable;
+
+public class User implements Serializable {
     @SerializedName("id")
     private Long id;
 
@@ -18,10 +20,18 @@ public class User {
     @SerializedName("role")
     private Object role;
 
-    // Конструкторы
+    private Integer artworksCount;
+
+    public Integer getArtworksCount() {
+        return artworksCount;
+    }
+
+    public void setArtworksCount(Integer artworksCount) {
+        this.artworksCount = artworksCount;
+    }
+
     public User() {}
 
-    // Геттеры и сеттеры
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

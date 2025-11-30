@@ -1,121 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:padding="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:orientation="vertical">
 
         <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center" />
+            android:layout_gravity="center"
+            android:visibility="gone" />
 
         <ImageView
             android:id="@+id/ivArtwork"
             android:layout_width="match_parent"
-            android:layout_height="300dp"
+            android:layout_height="250dp"
             android:scaleType="centerCrop"
-            android:background="@color/gray" />
+            android:src="@android:drawable/ic_menu_gallery"
+            android:layout_marginBottom="16dp" />
 
         <TextView
             android:id="@+id/tvTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Title"
+            android:text="Artwork Title"
             android:textSize="24sp"
             android:textStyle="bold"
-            android:layout_marginTop="16dp" />
+            android:layout_marginBottom="8dp" />
 
         <TextView
             android:id="@+id/tvArtist"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Artist"
+            android:text="By Artist"
             android:textSize="16sp"
-            android:layout_marginTop="8dp" />
+            android:textColor="#666"
+            android:layout_marginBottom="16dp" />
+
+        <!-- TextView для категорий -->
+        <TextView
+            android:id="@+id/tvCategories"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Категории"
+            android:textSize="14sp"
+            android:textColor="#888"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/tvDescription"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Description"
-            android:textSize="14sp"
-            android:layout_marginTop="16dp" />
+            android:text="Artwork Description"
+            android:textSize="16sp"
+            android:layout_marginBottom="16dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:layout_marginTop="16dp">
+            android:layout_marginBottom="16dp">
 
             <TextView
                 android:id="@+id/tvLikes"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="0 likes" />
-
-            <TextView
-                android:id="@+id/tvViews"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="0 views"
-                android:gravity="end" />
+                android:text="0 лайков"
+                android:textSize="14sp"
+                android:layout_marginEnd="16dp" />
 
         </LinearLayout>
 
-        <LinearLayout
+        <!-- Кнопка лайка - меняет текст в зависимости от состояния -->
+        <Button
+            android:id="@+id/btnLike"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="16dp">
-
-            <Button
-                android:id="@+id/btnLike"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Like"
-                android:layout_marginEnd="8dp" />
-
-            <Button
-                android:id="@+id/btnComment"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Comment"
-                android:layout_marginStart="8dp" />
-
-        </LinearLayout>
+            android:text="Поставить лайк"
+            android:layout_marginBottom="16dp"
+            android:textSize="16sp" />
 
         <EditText
             android:id="@+id/etComment"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:layout_marginTop="16dp"
-            android:gravity="top"
-            android:hint="Add a comment..."
-            android:inputType="textMultiLine" />
+            android:layout_height="wrap_content"
+            android:hint="Добавить комментарий..."
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btnComment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Добавить комментарий"
+            android:layout_marginBottom="24dp" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Comments"
+            android:text="Комментарии"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:layout_marginTop="24dp" />
+            android:layout_marginBottom="8dp" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerViewComments"
             android:layout_width="match_parent"
-            android:layout_height="400dp"
-            android:layout_marginTop="8dp" />
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp" />
 
     </LinearLayout>
 

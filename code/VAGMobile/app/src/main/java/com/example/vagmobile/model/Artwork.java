@@ -1,10 +1,13 @@
 package com.example.vagmobile.model;
 
 import com.google.gson.annotations.SerializedName;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
-public class Artwork {
+public class Artwork implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @SerializedName("id")
     private Long id;
 
@@ -79,4 +82,28 @@ public class Artwork {
 
     public boolean isLiked() { return liked; }
     public void setLiked(boolean liked) { this.liked = liked; }
+
+    // НОВЫЕ МЕТОДЫ ДЛЯ КАТЕГОРИЙ
+    public String getCategoriesString() {
+        if (categories == null || categories.isEmpty()) {
+            return "Без категории";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < categories.size(); i++) {
+            Category category = categories.get(i);
+            if (category.getName() != null) {
+                if (i > 0) {
+                    sb.append(", ");
+                }
+                sb.append(category.getName());
+            }
+        }
+
+        return sb.toString();
+    }
+
+    public boolean hasCategories() {
+        return categories != null && !categories.isEmpty();
+    }
 }

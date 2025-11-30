@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Заголовок категории -->
+    <!-- Заголовок и описание категории -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -20,7 +20,8 @@
             android:layout_height="wrap_content"
             android:text="Category Name"
             android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:textColor="#333" />
 
         <TextView
             android:id="@+id/tvCategoryDescription"
@@ -29,7 +30,18 @@
             android:text="Category Description"
             android:textSize="14sp"
             android:textColor="#666"
-            android:layout_marginTop="8dp" />
+            android:layout_marginTop="8dp"
+            android:lineSpacingExtra="4dp" />
+
+        <TextView
+            android:id="@+id/tvArtworksCount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="0 публикаций"
+            android:textSize="12sp"
+            android:textColor="#888"
+            android:layout_marginTop="12dp"
+            android:textStyle="italic" />
 
     </LinearLayout>
 
@@ -41,18 +53,32 @@
         android:layout_gravity="center"
         android:visibility="gone" />
 
-    <!-- Список публикаций -->
+    <!-- Заголовок для списка публикаций -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Artworks in this category:"
+        android:text="Публикации в этой категории:"
         android:textSize="16sp"
         android:textStyle="bold"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginBottom="8dp"
+        android:textColor="#333" />
 
+    <!-- Список публикаций -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <!-- Сообщение если нет публикаций -->
+    <TextView
+        android:id="@+id/tvEmpty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="В этой категории пока нет публикаций"
+        android:textSize="14sp"
+        android:textColor="#666"
+        android:gravity="center"
+        android:padding="32dp"
+        android:visibility="gone" />
 
 </LinearLayout>

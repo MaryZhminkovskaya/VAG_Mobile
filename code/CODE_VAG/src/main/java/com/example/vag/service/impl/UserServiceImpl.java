@@ -172,4 +172,11 @@ public class UserServiceImpl implements UserService {
         return null;
     }
 
+    @Override
+    public List<User> findRandomArtists(int count) {
+        // Используем native query или ограничиваем результат в коде
+        List<User> artists = userRepository.findRandomArtists(count);
+        // Ограничиваем результат до нужного количества
+        return artists.size() > count ? artists.subList(0, count) : artists;
+    }
 }

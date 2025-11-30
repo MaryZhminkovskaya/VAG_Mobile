@@ -14,13 +14,13 @@
     <div class="artwork-image">
         <img th:src="@{/uploads/{path}(path=${artwork.imagePath})}" id="artwork-img" onclick="openFullscreen(this)"/>
     </div>
-    
+
     <!-- Модальное окно для полноэкранного просмотра -->
     <div id="fullscreen-modal" class="fullscreen-modal">
         <span class="close-modal" onclick="closeFullscreen()">&times;</span>
         <img id="fullscreen-img" class="fullscreen-content">
     </div>
-    
+
     <!-- Обертка для контента под изображением -->
     <div class="artwork-content-wrapper">
         <!-- Левая колонка с информацией -->
@@ -42,7 +42,7 @@
                     <form th:action="@{/artwork/unlike/{id}(id=${artwork.id})}" method="post" th:unless="${!isLiked}">
                         <button type="submit" class="btn btn-unlike">Не нравится</button>
                     </form>
-                </div>                    
+                </div>
             </div>
 
             <div class="artwork-description">
@@ -53,7 +53,7 @@
                 <a th:href="@{/auth/login}" class="btn btn-primary">Войдите, чтобы оценить</a>
             </div>
         </div>
-        
+
         <!-- Правая колонка с комментариями -->
         <div class="comments-section">
             <h2>Комментарии</h2>
@@ -99,21 +99,21 @@
     function openFullscreen(img) {
         const modal = document.getElementById("fullscreen-modal");
         const fullscreenImg = document.getElementById("fullscreen-img");
-        
+
         modal.style.display = "block";
         fullscreenImg.src = img.src;
-        
+
         // Добавляем обработчик нажатия клавиши Escape
         document.addEventListener('keydown', handleEscKeyPress);
     }
-    
+
     function closeFullscreen() {
         document.getElementById("fullscreen-modal").style.display = "none";
-        
+
         // Удаляем обработчик нажатия клавиши Escape
         document.removeEventListener('keydown', handleEscKeyPress);
     }
-    
+
     function handleEscKeyPress(event) {
         if (event.key === "Escape") {
             closeFullscreen();

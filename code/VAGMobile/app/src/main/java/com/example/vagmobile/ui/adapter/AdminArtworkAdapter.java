@@ -1,5 +1,6 @@
 package com.example.vagmobile.ui.adapter;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.example.vagmobile.R;
 import com.example.vagmobile.model.Artwork;
+import com.example.vagmobile.ui.activity.AdminArtworkDetailActivity;
 
 import java.util.List;
 
@@ -46,9 +48,12 @@ public class AdminArtworkAdapter extends RecyclerView.Adapter<AdminArtworkAdapte
         holder.tvTitle.setText(artwork.getTitle());
         holder.tvDescription.setText(artwork.getDescription());
         holder.tvStatus.setText("Status: " + artwork.getStatus());
-        
-        if (artwork.getUser() != null) {
+
+        // Отображение реального пользователя
+        if (artwork.getUser() != null && artwork.getUser().getUsername() != null) {
             holder.tvArtist.setText("By: " + artwork.getUser().getUsername());
+        } else {
+            holder.tvArtist.setText("By: Unknown User");
         }
 
         // Загрузка изображения
@@ -88,6 +93,14 @@ public class AdminArtworkAdapter extends RecyclerView.Adapter<AdminArtworkAdapte
                 actionListener.onReject(artwork);
             }
         });
+
+        // Добавляем клик на весь элемент для детального просмотра
+        holder.itemView.setOnClickListener(v -> {
+            // Передаем ID вместо объекта artwork для гарантированной загрузки корректных данных
+            Intent intent = new Intent(v.getContext(), AdminArtworkDetailActivity.class);
+            intent.putExtra("artwork_id", artwork.getId());
+            v.getContext().startActivity(intent);
+        });
     }
 
     @Override
@@ -112,4 +125,3 @@ public class AdminArtworkAdapter extends RecyclerView.Adapter<AdminArtworkAdapte
         }
     }
 }
-

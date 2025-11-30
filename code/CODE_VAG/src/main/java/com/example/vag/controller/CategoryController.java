@@ -48,11 +48,28 @@ public class CategoryController {
                                @RequestParam(defaultValue = "0") int page,
                                @RequestParam(defaultValue = "12") int size,
                                Model model) {
-        Category category = categoryService.findById(id).orElseThrow();
-        Page<Artwork> artworkPage = artworkService.findByCategoryId(id, PageRequest.of(page, size));
+        try {
+            Category category = categoryService.findById(id).orElseThrow();
 
-        model.addAttribute("category", category);
-        model.addAttribute("artworks", artworkPage);
-        return "category/details";
+            // ИСПРАВЛЕНО: Загружаем публикации с пользователями и категориями
+            Page<Artwork> artworkPage = artworkService.findByCategoryId(id, PageRequest.of(page, size));
+
+            // Принудительно инициализируем данные
+            artworkPage.getContent().forEach(artwork -> {
+                if (artwork.getUser() != null) {
+                    artwork.getUser().getUsername(); // Инициализируем пользователя
+                }
+                if (artwork.getCategories() != null) {
+                    artwork.getCategories().size(); // Инициализируем категории
+                }
+            });
+
+            model.addAttribute("category", category);
+            model.addAttribute("artworks", artworkPage);
+            return "category/details";
+        } catch (Exception e) {
+            // Обработка ошибок
+            return "error/404";
+        }
     }
 }
