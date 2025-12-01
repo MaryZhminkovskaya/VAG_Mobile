@@ -194,6 +194,19 @@ public class UserArtworksActivity extends AppCompatActivity {
                 }
             }
         });
+        artworkViewModel.getDeleteResult().observe(this, result -> {
+            progressBar.setVisibility(View.GONE);
+
+            if (result != null && Boolean.TRUE.equals((Boolean) result.get("success"))) {
+                Toast.makeText(this, "Публикация удалена", Toast.LENGTH_SHORT).show();
+
+                // Перезагружаем список — публикация исчезнет мгновенно
+                loadUserArtworks();
+            } else {
+                String message = result != null ? (String) result.get("message") : "Неизвестная ошибка";
+                Toast.makeText(this, "Ошибка удаления: " + message, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void loadUserArtworks() {
@@ -272,16 +285,14 @@ public class UserArtworksActivity extends AppCompatActivity {
 
     public void onDeleteArtwork(Artwork artwork) {
         if (!isOwnProfile) {
-            Toast.makeText(this, "Вы можете удалять только свои публикации",
-                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Вы можете удалять только свои публикации", Toast.LENGTH_SHORT).show();
             return;
         }
 
         new AlertDialog.Builder(this)
                 .setTitle("Удалить публикацию")
-                .setMessage("Вы уверены, что хотите удалить эту публикацию?")
+                .setMessage("Это действие нельзя отменить. Удалить навсегда?")
                 .setPositiveButton("Удалить", (dialog, which) -> {
-                    deletingArtworkId = artwork.getId();
                     deleteArtwork(artwork.getId());
                 })
                 .setNegativeButton("Отмена", null)
@@ -290,7 +301,7 @@ public class UserArtworksActivity extends AppCompatActivity {
 
     private void deleteArtwork(Long artworkId) {
         progressBar.setVisibility(View.VISIBLE);
-        userViewModel.deleteArtwork(artworkId);
+        artworkViewModel.deleteArtwork(artworkId); // ← вот и всё!
     }
 
     private Artwork convertToArtwork(Map<String, Object> artworkData) {
@@ -342,4 +353,6 @@ public class UserArtworksActivity extends AppCompatActivity {
 
         return artwork;
     }
+
+
 }

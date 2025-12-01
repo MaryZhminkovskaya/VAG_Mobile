@@ -267,4 +267,34 @@ public class FileUploadUtil {
         }
         return normalizedPath;
     }
+
+    public void deleteFile(String relativePath) {
+        if (relativePath == null || relativePath.trim().isEmpty()) {
+            System.out.println("deleteFile: путь пустой — ничего не удаляем");
+            return;
+        }
+
+        try {
+            // Нормализуем путь (убираем лишние /uploads/ и т.д.)
+            String normalizedPath = normalizeImagePath(relativePath);
+            Path fullPath = Paths.get(UPLOAD_BASE + normalizedPath).normalize();
+
+            // Защита от атак типа ../../
+            if (!fullPath.startsWith(Paths.get(UPLOAD_BASE).normalize())) {
+                System.err.println("ОШИБКА БЕЗОПАСНОСТИ: Попытка удалить файл за пределами uploads! Путь: " + fullPath);
+                return;
+            }
+
+            if (Files.exists(fullPath)) {
+                Files.delete(fullPath);
+                System.out.println("Файл успешно удалён: " + fullPath);
+            } else {
+                System.out.println("Файл не найден (уже удалён?): " + fullPath);
+            }
+        } catch (Exception e) {
+            System.err.println("Не удалось удалить файл: " + relativePath);
+            e.printStackTrace();
+            // НЕ бросаем исключение — удаление публикации важнее, чем ошибка удаления файла
+        }
+    }
 }

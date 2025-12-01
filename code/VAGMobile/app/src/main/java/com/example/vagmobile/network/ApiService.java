@@ -164,5 +164,9 @@ public interface ApiService {
             @Query("page") int page,
             @Query("size") int size
     );
-
+    @DELETE("vag/api/mobile/artworks/{id}")
+    Call<Map<String, Object>> deleteArtwork(
+            @Header("Authorization") String authHeader,
+            @Path("id") Long id
+    );
 }

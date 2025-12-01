@@ -18,7 +18,7 @@ public class ArtworkViewModel extends AndroidViewModel {
     private MutableLiveData<Map<String, Object>> addCommentResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> searchResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> categoryArtworksResult = new MutableLiveData<>();
-
+    private final MutableLiveData<Map<String, Object>> deleteResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> artworkForAdminResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> allUserArtworksResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> createResult = new MutableLiveData<>();
@@ -118,5 +118,14 @@ public class ArtworkViewModel extends AndroidViewModel {
     public void getAllUserArtworks(Long userId, int page, int size) {
         artworkRepository.getAllUserArtworks(userId, page, size)
                 .observeForever(result -> allUserArtworksResult.setValue(result));
+    }
+
+    public LiveData<Map<String, Object>> getDeleteResult() {
+        return deleteResult;
+    }
+
+    public void deleteArtwork(Long artworkId) {
+        artworkRepository.deleteArtwork(artworkId)
+                .observeForever(deleteResult::setValue);
     }
 }

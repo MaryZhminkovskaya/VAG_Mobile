@@ -352,4 +352,31 @@ public class ArtworkServiceImpl implements ArtworkService {
     public Page<Artwork> findAllByUserId(Long userId, Pageable pageable) {
         return artworkRepository.findByUserIdOrderByDateCreationDesc(userId, pageable);
     }
+
+    // ArtworkServiceImpl.java
+    @Transactional
+    public void deleteArtworkCompletely(Long artworkId, User currentUser) {
+        Artwork artwork = artworkRepository.findById(artworkId)
+                .orElseThrow(() -> new RuntimeException("Работа не найдена"));
+
+        // Проверка прав: только автор или админ
+        if (!artwork.getUser().getId().equals(currentUser.getId()) &&
+                !currentUser.hasRole("ADMIN")) {
+            throw new RuntimeException("Нет прав на удаление");
+        }
+
+        // 1. Удаляем файл с диска
+        if (artwork.getImagePath() != null) {
+            fileUploadUtil.deleteFile(artwork.getImagePath());
+        }
+
+        // 2. Удаляем ВСЕ лайки (через отдельный репозиторий или SQL)
+        likeRepository.deleteAllByArtworkId(artworkId);
+
+        // 3. Удаляем ВСЕ комментарии
+        commentRepository.deleteAllByArtworkId(artworkId);
+
+        // 4. Удаляем сам Artwork — каскадно удалит связи с категориями
+        artworkRepository.delete(artwork);
+    }
 }

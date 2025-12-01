@@ -573,4 +573,42 @@ public class ArtworkRepository {
                 });
         return result;
     }
+    public MutableLiveData<Map<String, Object>> deleteArtwork(Long artworkId) {
+        MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
+
+        String authHeader = getAuthHeader();  // ← используем уже готовый метод!
+        if (authHeader == null) {
+            Map<String, Object> err = new HashMap<>();
+            err.put("success", false);
+            err.put("message", "Токен отсутствует");
+            result.setValue(err);
+            return result;
+        }
+
+        // Используем уже готовый getApiServiceWithAuth() — он сам добавляет заголовок
+        getApiServiceWithAuth().deleteArtwork(authHeader, artworkId)
+                .enqueue(new Callback<Map<String, Object>>() {
+                    @Override
+                    public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            result.setValue(response.body());
+                        } else {
+                            Map<String, Object> err = new HashMap<>();
+                            err.put("success", false);
+                            err.put("message", "Ошибка сервера: " + response.code());
+                            result.setValue(err);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                        Map<String, Object> err = new HashMap<>();
+                        err.put("success", false);
+                        err.put("message", "Нет интернета");
+                        result.setValue(err);
+                    }
+                });
+
+        return result;
+    }
 }

@@ -52,4 +52,6 @@ public interface ArtworkService {
     List<Artwork> findRandomArtworks(int count);
 
     Page<Artwork> findAllByUserId(Long userId, Pageable pageable);
+
+    void deleteArtworkCompletely(Long artworkId, User currentUser);
 }

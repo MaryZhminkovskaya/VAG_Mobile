@@ -45,4 +45,7 @@ public interface LikeRepository extends JpaRepository<Like, Long> {
     // Дополнительный метод для проверки существования лайка
     @Query("SELECT CASE WHEN COUNT(l) > 0 THEN true ELSE false END FROM Like l WHERE l.artwork = :artwork AND l.user = :user")
     boolean existsByArtworkIdAndUserId(@Param("artwork") Artwork artwork, @Param("user") User user);
+    @Modifying
+    @Query("DELETE FROM Like l WHERE l.artwork.id = :artworkId")
+    void deleteAllByArtworkId(@Param("artworkId") Long artworkId);
 }

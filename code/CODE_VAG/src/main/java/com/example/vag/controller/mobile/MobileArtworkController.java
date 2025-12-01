@@ -283,4 +283,27 @@ public class MobileArtworkController {
 
         return ResponseEntity.ok(response);
     }
+
+    @DeleteMapping("/artworks/{id}")
+    public ResponseEntity<?> deleteArtwork(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String authHeader) {
+
+        User currentUser = getCurrentUser(authHeader);
+        if (currentUser == null) {
+            return ResponseEntity.status(401)
+                    .body(Map.of("success", false, "message", "Требуется авторизация"));
+        }
+
+        try {
+            artworkService.deleteArtworkCompletely(id, currentUser);
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Публикация полностью удалена"
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
 }
