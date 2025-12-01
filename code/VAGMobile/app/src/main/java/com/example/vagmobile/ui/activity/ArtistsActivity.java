@@ -126,6 +126,18 @@ public class ArtistsActivity extends AppCompatActivity {
         user.setUsername((String) userData.get("username"));
         user.setEmail((String) userData.get("email"));
 
+        // ДОБАВЬТЕ ЭТО:
+        Object countObj = userData.get("artworksCount");
+        if (countObj != null) {
+            if (countObj instanceof Double) {
+                user.setArtworksCount(((Double) countObj).intValue());
+            } else if (countObj instanceof Integer) {
+                user.setArtworksCount((Integer) countObj);
+            } else if (countObj instanceof Long) {
+                user.setArtworksCount(((Long) countObj).intValue());
+            }
+        }
+
         return user;
     }
 }

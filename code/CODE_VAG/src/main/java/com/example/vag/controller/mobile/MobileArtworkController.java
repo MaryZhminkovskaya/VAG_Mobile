@@ -248,4 +248,39 @@ public class MobileArtworkController {
             return ResponseEntity.badRequest().body(response);
         }
     }
+
+    @GetMapping("/users/{userId}/artworks/all")
+    public ResponseEntity<?> getAllUserArtworks(
+            @PathVariable Long userId,
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        User currentUser = getCurrentUser(authHeader);
+        if (currentUser == null) {
+            return ResponseEntity.status(401).body(Map.of("success", false, "message", "Требуется аутентификация"));
+        }
+
+        // Разрешаем видеть ВСЕ свои работы + админу — все чужие
+        boolean isOwnProfile = currentUser.getId().equals(userId);
+        boolean isAdmin = currentUser.hasRole("ADMIN");
+
+        if (!isOwnProfile && !isAdmin) {
+            return ResponseEntity.status(403).body(Map.of("success", false, "message", "Доступ запрещён"));
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Artwork> artworksPage = artworkService.findAllByUserId(userId, pageable); // новый метод в сервисе
+
+        List<ArtworkDTO> dtos = artworkMapper.toSimpleDTOList(artworksPage.getContent());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("artworks", dtos);
+        response.put("totalPages", artworksPage.getTotalPages());
+        response.put("currentPage", artworksPage.getNumber());
+        response.put("totalItems", artworksPage.getTotalElements());
+
+        return ResponseEntity.ok(response);
+    }
 }

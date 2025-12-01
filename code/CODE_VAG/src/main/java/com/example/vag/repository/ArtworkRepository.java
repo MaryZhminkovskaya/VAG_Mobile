@@ -140,5 +140,6 @@ public interface ArtworkRepository extends JpaRepository<Artwork, Long> {
 
     @Query("SELECT a FROM Artwork a WHERE a.status = 'APPROVED' ORDER BY FUNCTION('RAND')")
     List<Artwork> findRandomApprovedArtworks(@Param("count") int count);
-
+    @Query("SELECT a FROM Artwork a WHERE a.user.id = :userId ORDER BY a.dateCreation DESC")
+    Page<Artwork> findByUserIdOrderByDateCreationDesc(@Param("userId") Long userId, Pageable pageable);
 }

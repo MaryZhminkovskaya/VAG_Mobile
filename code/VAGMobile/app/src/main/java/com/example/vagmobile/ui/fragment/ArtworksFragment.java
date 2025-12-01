@@ -53,11 +53,24 @@ public class ArtworksFragment extends Fragment {
     }
 
     private void setupRecyclerView() {
-        artworkAdapter = new ArtworkAdapter(artworkList, artwork -> {
-            Intent intent = new Intent(getActivity(), ArtworkDetailActivity.class);
-            intent.putExtra("artwork_id", artwork.getId());
-            startActivity(intent);
-        });
+        artworkAdapter = new ArtworkAdapter(artworkList, new ArtworkAdapter.OnArtworkClickListener() {
+            @Override
+            public void onArtworkClick(Artwork artwork) {
+                Intent intent = new Intent(getActivity(), ArtworkDetailActivity.class);
+                intent.putExtra("artwork_id", artwork.getId());
+                startActivity(intent);
+            }
+
+            @Override
+            public void onEditClick(Artwork artwork) {
+                // Не используется для просмотра всех публикаций
+            }
+
+            @Override
+            public void onDeleteClick(Artwork artwork) {
+                // Не используется для просмотра всех публикаций
+            }
+        }, false); // false - не показываем кнопки действий для публичного просмотра
 
         GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 2);
         recyclerView.setLayoutManager(layoutManager);
@@ -186,5 +199,4 @@ public class ArtworksFragment extends Fragment {
 
         return user;
     }
-
 }

@@ -77,11 +77,24 @@ public class CategoryDetailActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView() {
-        artworkAdapter = new ArtworkAdapter(artworkList, artwork -> {
-            Intent intent = new Intent(CategoryDetailActivity.this, ArtworkDetailActivity.class);
-            intent.putExtra("artwork_id", artwork.getId());
-            startActivity(intent);
-        });
+        artworkAdapter = new ArtworkAdapter(artworkList, new ArtworkAdapter.OnArtworkClickListener() {
+            @Override
+            public void onArtworkClick(Artwork artwork) {
+                Intent intent = new Intent(CategoryDetailActivity.this, ArtworkDetailActivity.class);
+                intent.putExtra("artwork_id", artwork.getId());
+                startActivity(intent);
+            }
+
+            @Override
+            public void onEditClick(Artwork artwork) {
+                // Не используется для просмотра категорий
+            }
+
+            @Override
+            public void onDeleteClick(Artwork artwork) {
+                // Не используется для просмотра категорий
+            }
+        }, false); // false - не показываем кнопки действий для просмотра категорий
 
         GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
         recyclerView.setLayoutManager(layoutManager);
@@ -213,9 +226,9 @@ public class CategoryDetailActivity extends AppCompatActivity {
 
         if (artworkData.get("categories") != null && artworkData.get("categories") instanceof List) {
             List<Map<String, Object>> categoriesData = (List<Map<String, Object>>) artworkData.get("categories");
-            List<com.example.vagmobile.model.Category> categories = new ArrayList<>();
+            List<Category> categories = new ArrayList<>();
             for (Map<String, Object> categoryData : categoriesData) {
-                com.example.vagmobile.model.Category category = new com.example.vagmobile.model.Category();
+                Category category = new Category();
 
                 Object idObj = categoryData.get("id");
                 if (idObj != null) {

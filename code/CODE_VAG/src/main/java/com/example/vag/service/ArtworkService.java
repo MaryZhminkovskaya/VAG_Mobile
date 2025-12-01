@@ -50,4 +50,6 @@ public interface ArtworkService {
 
     void incrementViews(Long artworkId);
     List<Artwork> findRandomArtworks(int count);
+
+    Page<Artwork> findAllByUserId(Long userId, Pageable pageable);
 }

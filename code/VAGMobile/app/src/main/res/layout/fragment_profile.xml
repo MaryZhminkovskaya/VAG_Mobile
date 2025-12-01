@@ -2,142 +2,12 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/white"
-    android:padding="5dp">
+    android:padding="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
-
-        <!-- User Info Card -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/card_background"
-            android:padding="5dp"
-            android:layout_marginBottom="5dp">
-
-            <TextView
-                android:id="@+id/tv_username"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Username"
-                android:textSize="20sp"
-                android:textStyle="bold"
-                android:textColor="@android:color/black" />
-
-            <TextView
-                android:id="@+id/tv_email"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="email@example.com"
-                android:textSize="14sp"
-                android:textColor="@android:color/darker_gray"
-                android:layout_marginTop="5dp" />
-
-        </LinearLayout>
-
-        <!-- Logged In User Layout -->
-        <LinearLayout
-            android:id="@+id/logged_in_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-            <!-- Profile Actions -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/card_background"
-                android:padding="8dp"
-                android:layout_marginBottom="5dp">
-
-                <Button
-                    android:id="@+id/btn_view_profile"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Просмотреть профиль"
-                    android:backgroundTint="@color/purple_500"
-                    android:textColor="@android:color/white"
-                    android:layout_margin="4dp" />
-
-                <Button
-                    android:id="@+id/btn_liked_artworks"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Понравившиеся публикации"
-                    android:backgroundTint="@color/purple_500"
-                    android:textColor="@android:color/white"
-                    android:layout_margin="4dp" />
-
-                <Button
-                    android:id="@+id/btn_documentation"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Документация"
-                    android:backgroundTint="@color/purple_500"
-                    android:textColor="@android:color/white"
-                    android:layout_margin="4dp" />
-
-            </LinearLayout>
-
-            <!-- Admin Actions (Visible only for admins) -->
-            <LinearLayout
-                android:id="@+id/admin_section"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:background="@drawable/card_background"
-                android:padding="5dp"
-                android:layout_marginBottom="5dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Администрирование"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:padding="12dp"
-                    android:background="@color/purple_200"
-                    android:textColor="@android:color/black" />
-
-                <Button
-                    android:id="@+id/btn_admin_categories"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Управление категориями"
-                    android:backgroundTint="@color/teal_700"
-                    android:textColor="@android:color/white"
-                    android:layout_margin="4dp"
-                    android:visibility="gone" />
-
-                <Button
-                    android:id="@+id/btn_admin_artworks"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Модерация публикаций"
-                    android:backgroundTint="@color/teal_700"
-                    android:textColor="@android:color/white"
-                    android:layout_margin="4dp"
-                    android:visibility="gone" />
-
-            </LinearLayout>
-
-            <!-- Logout Button -->
-            <Button
-                android:id="@+id/btn_logout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Выйти"
-                android:backgroundTint="@android:color/holo_red_dark"
-                android:textColor="@android:color/white"
-                android:layout_marginTop="5dp" />
-
-        </LinearLayout>
 
         <!-- Guest Layout -->
         <LinearLayout
@@ -145,40 +15,147 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:gravity="center"
-            android:padding="32dp"
             android:visibility="gone">
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Вы не авторизованы"
-                android:textSize="18sp"
+                android:text="Вы не вошли в систему"
+                android:textSize="20sp"
                 android:textStyle="bold"
                 android:gravity="center"
-                android:textColor="@android:color/black"
-                android:layout_marginBottom="16dp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Войдите в систему для доступа ко всем функциям"
-                android:textSize="14sp"
-                android:gravity="center"
-                android:textColor="@android:color/darker_gray"
-                android:layout_marginBottom="24dp" />
+                android:padding="16dp" />
 
             <Button
                 android:id="@+id/btn_login"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Войти"
-                android:backgroundTint="@color/purple_500"
-                android:textColor="@android:color/white"
-                android:paddingStart="32dp"
-                android:paddingEnd="32dp" />
-
+                android:text="Войти в систему"
+                android:layout_marginTop="16dp" />
         </LinearLayout>
 
+        <!-- Logged In Layout -->
+        <LinearLayout
+            android:id="@+id/logged_in_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/card_background"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/tv_username"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_email"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    android:layout_marginTop="8dp" />
+
+                <TextView
+                    android:id="@+id/tv_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    android:layout_marginTop="8dp"
+                    android:padding="8dp"
+                    android:background="@android:color/transparent" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="16dp">
+
+                <Button
+                    android:id="@+id/btn_edit_profile"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Редактировать профиль"
+                    android:layout_marginBottom="8dp" />
+
+                <Button
+                    android:id="@+id/btn_my_artworks"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Мои публикации"
+                    android:layout_marginBottom="8dp" />
+
+                <Button
+                    android:id="@+id/btn_view_profile"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Посмотреть профиль"
+                    android:layout_marginBottom="8dp" />
+
+                <Button
+                    android:id="@+id/btn_liked_artworks"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Понравившиеся"
+                    android:layout_marginBottom="8dp" />
+
+                <Button
+                    android:id="@+id/btn_documentation"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Документация"
+                    android:layout_marginBottom="16dp" />
+            </LinearLayout>
+
+            <!-- Admin Section -->
+            <LinearLayout
+                android:id="@+id/admin_section"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginTop="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Админ панель"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:padding="8dp"
+                    android:background="#3F51B5"
+                    android:textColor="@android:color/white" />
+
+                <Button
+                    android:id="@+id/btn_admin_categories"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Управление категориями"
+                    android:layout_marginTop="8dp" />
+
+                <Button
+                    android:id="@+id/btn_admin_artworks"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Управление публикациями"
+                    android:layout_marginTop="8dp" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/btn_logout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Выйти"
+                android:layout_marginTop="24dp"
+                android:backgroundTint="#FF4081" />
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>

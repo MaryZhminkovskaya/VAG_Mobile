@@ -25,7 +25,6 @@ public class MobileAuthController {
         this.userService = userService;
     }
 
-    // ДОБАВЛЕНО: Метод регистрации
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> registerRequest) {
         try {
@@ -84,6 +83,7 @@ public class MobileAuthController {
             User registeredUser = userService.register(newUser);
 
             System.out.println("User registered successfully: " + registeredUser.getUsername());
+            System.out.println("User description: " + registeredUser.getDescription());
             System.out.println("User role: " + registeredUser.getRole().getName().name());
 
             // Автоматически логиним пользователя после регистрации
@@ -97,6 +97,7 @@ public class MobileAuthController {
             authResponse.setId(registeredUser.getId());
             authResponse.setUsername(registeredUser.getUsername());
             authResponse.setEmail(registeredUser.getEmail());
+            authResponse.setDescription(registeredUser.getDescription()); // ДОБАВЛЕНО
             authResponse.setRole(registeredUser.getRole().getName().name());
 
             Map<String, Object> response = new HashMap<>();
@@ -130,6 +131,7 @@ public class MobileAuthController {
 
             // Убедитесь, что роль установлена правильно
             System.out.println("User role: " + user.getRole().getName().name());
+            System.out.println("User description: " + user.getDescription());
 
             String token = UUID.randomUUID().toString();
             tokenStore.put(token, user);
@@ -140,6 +142,7 @@ public class MobileAuthController {
             System.out.println("Token store size after save: " + tokenStore.size());
             System.out.println("User ID: " + user.getId());
             System.out.println("User username: " + user.getUsername());
+            System.out.println("User description: " + user.getDescription());
 
             AuthResponse authResponse = new AuthResponse();
             authResponse.setSuccess(true);
@@ -147,6 +150,7 @@ public class MobileAuthController {
             authResponse.setId(user.getId());
             authResponse.setUsername(user.getUsername());
             authResponse.setEmail(user.getEmail());
+            authResponse.setDescription(user.getDescription()); // ДОБАВЛЕНО
             authResponse.setRole(user.getRole().getName().name());
 
             Map<String, Object> response = new HashMap<>();
@@ -197,6 +201,8 @@ public class MobileAuthController {
                 Map<String, Object> response = new HashMap<>();
                 response.put("authenticated", true);
                 response.put("username", user.getUsername());
+                response.put("email", user.getEmail());
+                response.put("description", user.getDescription()); // ДОБАВЛЕНО
                 response.put("role", user.getRole().getName().name());
                 return ResponseEntity.ok(response);
             } else {
@@ -226,13 +232,8 @@ public class MobileAuthController {
                 User managedUser = userService.findById(userFromStore.getId())
                         .orElseThrow(() -> new RuntimeException("User not found in database"));
 
-                // ИСПРАВЛЕНО: Инициализируем необходимые поля
-                managedUser.getUsername(); // Принудительная загрузка
-                if (managedUser.getRole() != null) {
-                    managedUser.getRole().getName(); // Принудительная загрузка роли
-                }
-
                 System.out.println("User found: " + managedUser.getUsername());
+                System.out.println("User description: " + managedUser.getDescription());
                 System.out.println("User role: " + (managedUser.getRole() != null ? managedUser.getRole().getName().name() : "null"));
                 return managedUser;
             } else {

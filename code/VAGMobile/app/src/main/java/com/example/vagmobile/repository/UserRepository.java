@@ -225,4 +225,86 @@ public class UserRepository {
 
         return result;
     }
+
+    public MutableLiveData<Map<String, Object>> updateProfile(String username, String email, String description) {
+        MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
+
+        String authHeader = getAuthHeader();
+        if (authHeader == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Authentication required");
+            result.setValue(error);
+            return result;
+        }
+
+        Map<String, String> profileData = new HashMap<>();
+        profileData.put("username", username);
+        profileData.put("email", email);
+        if (description != null) {
+            profileData.put("description", description);
+        }
+
+        apiService.updateProfile(authHeader, profileData).enqueue(new Callback<Map<String, Object>>() {
+            @Override
+            public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    result.setValue(response.body());
+                } else {
+                    Map<String, Object> error = new HashMap<>();
+                    error.put("success", false);
+                    error.put("message", "Failed to update profile: " + response.message());
+                    result.setValue(error);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "Network error: " + t.getMessage());
+                result.setValue(error);
+            }
+        });
+
+        return result;
+    }
+
+    // Метод для удаления публикации
+    public MutableLiveData<Map<String, Object>> deleteArtwork(Long artworkId) {
+        MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
+
+        String authHeader = getAuthHeader();
+        if (authHeader == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Authentication required");
+            result.setValue(error);
+            return result;
+        }
+
+        apiService.deleteUserArtwork(authHeader, artworkId).enqueue(new Callback<Map<String, Object>>() {
+            @Override
+            public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    result.setValue(response.body());
+                } else {
+                    Map<String, Object> error = new HashMap<>();
+                    error.put("success", false);
+                    error.put("message", "Failed to delete artwork: " + response.message());
+                    result.setValue(error);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "Network error: " + t.getMessage());
+                result.setValue(error);
+            }
+        });
+
+        return result;
+    }
 }

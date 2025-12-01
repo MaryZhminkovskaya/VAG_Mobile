@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
@@ -28,6 +29,7 @@ import com.example.vagmobile.ui.adapter.CommentAdapter;
 import com.example.vagmobile.util.SharedPreferencesHelper;
 import com.example.vagmobile.viewmodel.ArtworkViewModel;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -53,6 +55,7 @@ public class ArtworkDetailActivity extends AppCompatActivity {
     private List<Comment> commentList = new ArrayList<>();
     private SharedPreferencesHelper prefs;
     private boolean isLikeInProgress = false;
+    private SharedPreferences likePrefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +64,7 @@ public class ArtworkDetailActivity extends AppCompatActivity {
 
         prefs = new SharedPreferencesHelper(this);
         artworkId = getIntent().getLongExtra("artwork_id", -1);
+        likePrefs = getSharedPreferences("likes_prefs", MODE_PRIVATE);
 
         if (artworkId == -1) {
             Toast.makeText(this, "Публикация не найдена", Toast.LENGTH_SHORT).show();
@@ -91,7 +95,6 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         btnLike.setOnClickListener(v -> toggleLike());
         btnComment.setOnClickListener(v -> addComment());
 
-        // Скрываем кнопки если пользователь не авторизован
         if (!prefs.isLoggedIn()) {
             btnLike.setVisibility(View.GONE);
             btnComment.setVisibility(View.GONE);
@@ -117,6 +120,11 @@ public class ArtworkDetailActivity extends AppCompatActivity {
                     Map<String, Object> artworkData = (Map<String, Object>) result.get("artwork");
                     if (artworkData != null) {
                         artwork = convertToArtwork(artworkData);
+
+                        // НЕ проверяем сохраненное состояние из SharedPreferences
+                        // Полагаемся только на данные с сервера
+                        Log.d("LIKE_DEBUG", "Загружена публикация с сервера - artwork.isLiked(): " + artwork.isLiked());
+
                         updateUI();
                     }
                 } else {
@@ -126,7 +134,6 @@ public class ArtworkDetailActivity extends AppCompatActivity {
             }
         });
 
-        // Observer для toggle like
         artworkViewModel.getToggleLikeResult().observe(this, result -> {
             isLikeInProgress = false;
             btnLike.setEnabled(true);
@@ -154,11 +161,11 @@ public class ArtworkDetailActivity extends AppCompatActivity {
                         artwork.setLikes(artwork.isLiked() ? artwork.getLikes() + 1 : artwork.getLikes() - 1);
                         updateLikeButton();
                         tvLikes.setText(String.valueOf(artwork.getLikes()));
-
                     }
                 }
             }
         });
+
         artworkViewModel.getAddCommentResult().observe(this, result -> {
             btnComment.setEnabled(true);
 
@@ -236,7 +243,6 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         }
 
         if (artwork.getComments() != null) {
-            List<Comment> newComments = new ArrayList<>();
             List<Comment> tempComments = new ArrayList<>();
 
             for (Comment comment : commentList) {
@@ -247,7 +253,6 @@ public class ArtworkDetailActivity extends AppCompatActivity {
 
             commentList.clear();
             commentList.addAll(artwork.getComments());
-
             commentList.addAll(tempComments);
 
             commentAdapter.notifyDataSetChanged();
@@ -256,17 +261,25 @@ public class ArtworkDetailActivity extends AppCompatActivity {
                 recyclerViewComments.smoothScrollToPosition(commentList.size() - 1);
             }
         }
+
+        updateLikeButton();
     }
 
     private void updateLikeButton() {
         if (artwork == null) return;
 
+        Log.d("LIKE_DEBUG", "updateLikeButton - artworkId: " + artwork.getId() +
+                ", artwork.isLiked(): " + artwork.isLiked() +
+                ", artwork.likes: " + artwork.getLikes());
+
         if (artwork.isLiked()) {
             btnLike.setImageResource(R.drawable.ic_heart_filled);
             btnLike.setColorFilter(Color.RED);
+            Log.d("LIKE_DEBUG", "Setting heart to RED (liked)");
         } else {
             btnLike.setImageResource(R.drawable.ic_heart_outline);
             btnLike.setColorFilter(Color.GRAY);
+            Log.d("LIKE_DEBUG", "Setting heart to GRAY (not liked)");
         }
     }
 
@@ -285,20 +298,26 @@ public class ArtworkDetailActivity extends AppCompatActivity {
             return;
         }
 
-        Log.d("ArtworkDetail", "Переключение лайка - artworkId: " + artworkId + ", сейчас лайкнуто: " + artwork.isLiked());
+        // Получаем текущее состояние лайка
+        boolean currentLiked = artwork.isLiked();
 
-        boolean newLikedState = !artwork.isLiked();
+        Log.d("LIKE_DEBUG", "toggleLike - artworkId: " + artworkId +
+                ", artwork.isLiked(): " + currentLiked +
+                ", artwork.getLikes(): " + artwork.getLikes());
+
+        // Временно обновляем UI для быстрого отклика
+        boolean newLikedState = !currentLiked;
         artwork.setLiked(newLikedState);
         artwork.setLikes(newLikedState ? artwork.getLikes() + 1 : artwork.getLikes() - 1);
 
         updateLikeButton();
         tvLikes.setText(String.valueOf(artwork.getLikes()));
 
-
         isLikeInProgress = true;
         btnLike.setEnabled(false);
 
-        artworkViewModel.toggleLike(artworkId, !newLikedState);
+        // Отправляем запрос на сервер
+        artworkViewModel.toggleLike(artworkId, !newLikedState); // Передаем текущее состояние (до изменения)
     }
 
     private void addComment() {
@@ -314,10 +333,18 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         }
 
         etComment.setText("");
-
         btnComment.setEnabled(false);
-
         artworkViewModel.addComment(artworkId, content);
+    }
+
+    private void saveLikeState(Long artworkId, boolean liked) {
+        SharedPreferences.Editor editor = likePrefs.edit();
+        editor.putBoolean("like_" + artworkId, liked);
+        editor.apply();
+    }
+
+    private boolean getLikeState(Long artworkId) {
+        return likePrefs.getBoolean("like_" + artworkId, false);
     }
 
     private Artwork convertToArtwork(Map<String, Object> artworkData) {
@@ -364,12 +391,64 @@ public class ArtworkDetailActivity extends AppCompatActivity {
 
         artwork.setStatus((String) artworkData.get("status"));
 
+        // ИСПРАВЛЕНО: Получаем состояние лайка
+        boolean liked = false;
+
+        Long currentUserId = prefs.getUserId();
+
+        // 1. Проверяем поле "liked"
         Object likedObj = artworkData.get("liked");
-        if (likedObj instanceof Boolean) {
-            artwork.setLiked((Boolean) likedObj);
-        } else {
-            artwork.setLiked(false);
+        if (likedObj != null) {
+            if (likedObj instanceof Boolean) {
+                liked = (Boolean) likedObj;
+            } else if (likedObj instanceof String) {
+                liked = "true".equalsIgnoreCase((String) likedObj);
+            } else if (likedObj instanceof Integer) {
+                liked = ((Integer) likedObj) == 1;
+            } else if (likedObj instanceof Long) {
+                liked = ((Long) likedObj) == 1;
+            }
         }
+
+        // 2. Проверяем массив пользователей, которые лайкнули
+        if (!liked && currentUserId != null) {
+            Object likedByUsersObj = artworkData.get("likedByUsers");
+            Object likedByObj = artworkData.get("likedBy");
+
+            List<?> likedByList = null;
+            if (likedByUsersObj instanceof List) {
+                likedByList = (List<?>) likedByUsersObj;
+            } else if (likedByObj instanceof List) {
+                likedByList = (List<?>) likedByObj;
+            }
+
+            if (likedByList != null) {
+                // Проверяем, есть ли текущий пользователь в списке лайкнувших
+                for (Object userObj : likedByList) {
+                    Long userId = extractUserId(userObj);
+                    if (userId != null && userId.equals(currentUserId)) {
+                        liked = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // 3. Проверяем поле "likedByCurrentUser"
+        Object likedByCurrentUserObj = artworkData.get("likedByCurrentUser");
+        if (!liked && likedByCurrentUserObj != null) {
+            if (likedByCurrentUserObj instanceof Boolean) {
+                liked = (Boolean) likedByCurrentUserObj;
+            } else if (likedByCurrentUserObj instanceof String) {
+                liked = "true".equalsIgnoreCase((String) likedByCurrentUserObj);
+            }
+        }
+
+        artwork.setLiked(liked);
+        Log.d("LIKE_DEBUG", "convertToArtwork - artworkId: " + artwork.getId() +
+                ", liked: " + liked +
+                ", likedByCurrentUser field: " + likedByCurrentUserObj +
+                ", liked field: " + likedObj);
 
         if (artworkData.get("user") != null) {
             Map<String, Object> userData = (Map<String, Object>) artworkData.get("user");
@@ -407,9 +486,9 @@ public class ArtworkDetailActivity extends AppCompatActivity {
 
         if (artworkData.get("categories") != null) {
             List<Map<String, Object>> categoriesData = (List<Map<String, Object>>) artworkData.get("categories");
-            List<com.example.vagmobile.model.Category> categories = new ArrayList<>();
+            List<Category> categories = new ArrayList<>();
             for (Map<String, Object> categoryData : categoriesData) {
-                com.example.vagmobile.model.Category category = convertToCategory(categoryData);
+                Category category = convertToCategory(categoryData);
                 categories.add(category);
             }
             artwork.setCategories(categories);
@@ -418,6 +497,31 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         return artwork;
     }
 
+    // ДОБАВЛЕНО: Вспомогательный метод для извлечения ID пользователя
+    private Long extractUserId(Object userObj) {
+        if (userObj instanceof Map) {
+            Map<String, Object> userMap = (Map<String, Object>) userObj;
+            Object userIdObj = userMap.get("id");
+            if (userIdObj != null) {
+                if (userIdObj instanceof Double) {
+                    return ((Double) userIdObj).longValue();
+                } else if (userIdObj instanceof Integer) {
+                    return ((Integer) userIdObj).longValue();
+                } else if (userIdObj instanceof Long) {
+                    return (Long) userIdObj;
+                }
+            }
+        } else if (userObj instanceof Number) {
+            if (userObj instanceof Double) {
+                return ((Double) userObj).longValue();
+            } else if (userObj instanceof Integer) {
+                return ((Integer) userObj).longValue();
+            } else if (userObj instanceof Long) {
+                return (Long) userObj;
+            }
+        }
+        return null;
+    }
     private Comment convertToComment(Map<String, Object> commentData) {
         Comment comment = new Comment();
 
@@ -457,8 +561,7 @@ public class ArtworkDetailActivity extends AppCompatActivity {
                 String dateString = (String) dateObj;
                 try {
                     SimpleDateFormat[] formats = {
-                            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.getDefault()),
-                            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()),
+                            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.getDefault()),
                             new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()),
                             new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
                     };
@@ -468,7 +571,8 @@ public class ArtworkDetailActivity extends AppCompatActivity {
                         try {
                             date = format.parse(dateString);
                             break;
-                        } catch (Exception e) {
+                        } catch (ParseException e) {
+                            // Пропускаем и пробуем следующий формат
                         }
                     }
 

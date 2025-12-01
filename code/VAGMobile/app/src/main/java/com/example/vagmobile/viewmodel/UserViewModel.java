@@ -14,13 +14,14 @@ public class UserViewModel extends ViewModel {
     private MutableLiveData<Map<String, Object>> userArtworksResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> likedArtworksResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> updateProfileResult = new MutableLiveData<>();
-
+    private MutableLiveData<Map<String, Object>> deleteArtworkResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> artistsResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> artistsWithArtworksResult = new MutableLiveData<>();
 
     public UserViewModel() {
         userRepository = new UserRepository();
     }
+
     public void getAllArtists() {
         userRepository.getAllArtists().observeForever(result -> {
             artistsResult.setValue(result);
@@ -53,10 +54,19 @@ public class UserViewModel extends ViewModel {
         // TODO: Implement this method
     }
 
-    public void updateProfile(User user) {
-        // TODO: Implement this method
+    public void updateProfile(String username, String email, String description) {
+        userRepository.updateProfile(username, email, description).observeForever(result -> {
+            updateProfileResult.setValue(result);
+        });
     }
 
+    public void deleteArtwork(Long artworkId) {
+        userRepository.deleteArtwork(artworkId).observeForever(result -> {
+            deleteArtworkResult.setValue(result);
+        });
+    }
+
+    // Getters for LiveData
     public LiveData<Map<String, Object>> getArtistsResult() {
         return artistsResult;
     }
@@ -83,5 +93,9 @@ public class UserViewModel extends ViewModel {
 
     public LiveData<Map<String, Object>> getUpdateProfileResult() {
         return updateProfileResult;
+    }
+
+    public LiveData<Map<String, Object>> getDeleteArtworkResult() {
+        return deleteArtworkResult;
     }
 }

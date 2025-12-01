@@ -347,4 +347,9 @@ public class ArtworkServiceImpl implements ArtworkService {
         List<Artwork> artworks = artworkRepository.findRandomApprovedArtworks(count);
         return artworks.size() > count ? artworks.subList(0, count) : artworks;
     }
+
+    @Override
+    public Page<Artwork> findAllByUserId(Long userId, Pageable pageable) {
+        return artworkRepository.findByUserIdOrderByDateCreationDesc(userId, pageable);
+    }
 }

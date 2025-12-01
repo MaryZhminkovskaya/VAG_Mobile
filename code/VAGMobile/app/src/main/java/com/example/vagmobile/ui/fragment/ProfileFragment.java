@@ -1,6 +1,8 @@
 package com.example.vagmobile.ui.fragment;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
@@ -16,12 +18,15 @@ import com.example.vagmobile.ui.activity.ProfileActivity;
 import com.example.vagmobile.ui.activity.AdminCategoriesActivity;
 import com.example.vagmobile.ui.activity.AdminArtworksActivity;
 import com.example.vagmobile.ui.activity.LikedArtworksActivity;
+import com.example.vagmobile.ui.activity.UserArtworksActivity;
+import com.example.vagmobile.ui.activity.EditProfileActivity;
 import com.example.vagmobile.util.SharedPreferencesHelper;
 
 public class ProfileFragment extends Fragment {
 
-    private TextView tvUsername, tvEmail;
-    private Button btnViewProfile, btnLogout, btnAdminCategories, btnAdminArtworks, btnLikedArtworks, btnLogin, btnDocumentation;
+    private TextView tvUsername, tvEmail, tvDescription;
+    private Button btnViewProfile, btnLogout, btnAdminCategories, btnAdminArtworks,
+            btnLikedArtworks, btnLogin, btnDocumentation, btnMyArtworks, btnEditProfile;
     private LinearLayout loggedInLayout, guestLayout, adminSection;
     private SharedPreferencesHelper prefs;
 
@@ -39,6 +44,7 @@ public class ProfileFragment extends Fragment {
     private void initViews(View view) {
         tvUsername = view.findViewById(R.id.tv_username);
         tvEmail = view.findViewById(R.id.tv_email);
+        tvDescription = view.findViewById(R.id.tv_description);
         btnViewProfile = view.findViewById(R.id.btn_view_profile);
         btnLogout = view.findViewById(R.id.btn_logout);
         btnAdminCategories = view.findViewById(R.id.btn_admin_categories);
@@ -46,6 +52,8 @@ public class ProfileFragment extends Fragment {
         btnLikedArtworks = view.findViewById(R.id.btn_liked_artworks);
         btnLogin = view.findViewById(R.id.btn_login);
         btnDocumentation = view.findViewById(R.id.btn_documentation);
+        btnMyArtworks = view.findViewById(R.id.btn_my_artworks);
+        btnEditProfile = view.findViewById(R.id.btn_edit_profile);
 
         loggedInLayout = view.findViewById(R.id.logged_in_layout);
         guestLayout = view.findViewById(R.id.guest_layout);
@@ -77,6 +85,7 @@ public class ProfileFragment extends Fragment {
 
         tvUsername.setText("Гость");
         tvEmail.setText("Войдите в систему для доступа ко всем функциям");
+        tvDescription.setText("");
 
         btnLogin.setOnClickListener(v -> {
             startActivity(new Intent(getActivity(), LoginActivity.class));
@@ -86,9 +95,32 @@ public class ProfileFragment extends Fragment {
     private void loadUserData() {
         String username = prefs.getUsername();
         String email = prefs.getEmail();
+        String description = getDescriptionFromPrefs();
 
         tvUsername.setText(username != null ? username : "Пользователь");
         tvEmail.setText(email != null ? email : "user@example.com");
+
+        // ИСПРАВЛЕНО: Если нет описания, показываем текст
+        if (description != null && !description.trim().isEmpty()) {
+            tvDescription.setText(description);
+        } else {
+            tvDescription.setText("Описание не добавлено");
+            tvDescription.setTextColor(getResources().getColor(android.R.color.darker_gray));
+        }
+    }
+
+    private String getDescriptionFromPrefs() {
+        // ИСПРАВЛЕНО: Используем те же SharedPreferences
+        SharedPreferences sharedPref = getActivity().getSharedPreferences("user_profile", Context.MODE_PRIVATE);
+        return sharedPref.getString("user_description", "");
+    }
+
+    private void saveDescriptionToPrefs(String description) {
+        // ИСПРАВЛЕНО: Используем те же SharedPreferences
+        SharedPreferences sharedPref = getActivity().getSharedPreferences("user_profile", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString("user_description", description);
+        editor.apply();
     }
 
     private void checkAdminRole() {
@@ -110,6 +142,23 @@ public class ProfileFragment extends Fragment {
         btnViewProfile.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), ProfileActivity.class);
             startActivity(intent);
+        });
+
+        btnEditProfile.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), EditProfileActivity.class);
+            startActivity(intent);
+        });
+
+        btnMyArtworks.setOnClickListener(v -> {
+            Long userId = prefs.getUserId();
+            if (userId != null) {
+                Intent intent = new Intent(getActivity(), UserArtworksActivity.class);
+                intent.putExtra("user_id", userId);
+                intent.putExtra("is_own_profile", true);
+                startActivity(intent);
+            } else {
+                Toast.makeText(getContext(), "Ошибка загрузки профиля", Toast.LENGTH_SHORT).show();
+            }
         });
 
         btnLikedArtworks.setOnClickListener(v -> {

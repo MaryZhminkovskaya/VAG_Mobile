@@ -66,11 +66,24 @@ public class ArtistArtworksActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView() {
-        artworkAdapter = new ArtworkAdapter(artworkList, artwork -> {
-            Intent intent = new Intent(ArtistArtworksActivity.this, ArtworkDetailActivity.class);
-            intent.putExtra("artwork_id", artwork.getId());
-            startActivity(intent);
-        });
+        artworkAdapter = new ArtworkAdapter(artworkList, new ArtworkAdapter.OnArtworkClickListener() {
+            @Override
+            public void onArtworkClick(Artwork artwork) {
+                Intent intent = new Intent(ArtistArtworksActivity.this, ArtworkDetailActivity.class);
+                intent.putExtra("artwork_id", artwork.getId());
+                startActivity(intent);
+            }
+
+            @Override
+            public void onEditClick(Artwork artwork) {
+                // Не нужно для просмотра публикаций художника
+            }
+
+            @Override
+            public void onDeleteClick(Artwork artwork) {
+                // Не нужно для просмотра публикаций художника
+            }
+        }, false); // false - не показываем кнопки действий для просмотра чужих публикаций
 
         GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
         recyclerView.setLayoutManager(layoutManager);
@@ -91,8 +104,15 @@ public class ArtistArtworksActivity extends AppCompatActivity {
                         artworkList.clear();
                         for (Map<String, Object> artworkData : artworksData) {
                             Artwork artwork = convertToArtwork(artworkData);
-                            if (artwork.getUser() != null && artwork.getUser().getId().equals(artistId)) {
-                                artworkList.add(artwork);
+
+                            // Проверяем user ID
+                            User user = artwork.getUser();
+                            if (user != null) {
+                                Long userId = user.getId();
+                                if (userId != null && userId.equals(artistId)) {
+                                    // ВАЖНО: Показываем все публикации художника
+                                    artworkList.add(artwork);
+                                }
                             }
                         }
                         artworkAdapter.notifyDataSetChanged();
@@ -138,22 +158,37 @@ public class ArtistArtworksActivity extends AppCompatActivity {
                 artwork.setId(((Double) artworkData.get("id")).longValue());
             } else if (artworkData.get("id") instanceof Long) {
                 artwork.setId((Long) artworkData.get("id"));
+            } else if (artworkData.get("id") instanceof Integer) {
+                artwork.setId(((Integer) artworkData.get("id")).longValue());
             }
         }
 
         artwork.setTitle((String) artworkData.get("title"));
         artwork.setDescription((String) artworkData.get("description"));
         artwork.setImagePath((String) artworkData.get("imagePath"));
+        artwork.setStatus((String) artworkData.get("status"));
 
         if (artworkData.get("likes") != null) {
             if (artworkData.get("likes") instanceof Double) {
                 artwork.setLikes(((Double) artworkData.get("likes")).intValue());
             } else if (artworkData.get("likes") instanceof Integer) {
                 artwork.setLikes((Integer) artworkData.get("likes"));
+            } else if (artworkData.get("likes") instanceof Long) {
+                artwork.setLikes(((Long) artworkData.get("likes")).intValue());
             }
         }
 
-        if (artworkData.get("user") != null) {
+        if (artworkData.get("views") != null) {
+            if (artworkData.get("views") instanceof Double) {
+                artwork.setViews(((Double) artworkData.get("views")).intValue());
+            } else if (artworkData.get("views") instanceof Integer) {
+                artwork.setViews((Integer) artworkData.get("views"));
+            } else if (artworkData.get("views") instanceof Long) {
+                artwork.setViews(((Long) artworkData.get("views")).intValue());
+            }
+        }
+
+        if (artworkData.get("user") != null && artworkData.get("user") instanceof Map) {
             Map<String, Object> userData = (Map<String, Object>) artworkData.get("user");
             User user = new User();
 
@@ -162,11 +197,19 @@ public class ArtistArtworksActivity extends AppCompatActivity {
                     user.setId(((Double) userData.get("id")).longValue());
                 } else if (userData.get("id") instanceof Long) {
                     user.setId((Long) userData.get("id"));
+                } else if (userData.get("id") instanceof Integer) {
+                    user.setId(((Integer) userData.get("id")).longValue());
                 }
             }
 
             user.setUsername((String) userData.get("username"));
+            user.setEmail((String) userData.get("email"));
             artwork.setUser(user);
+        } else {
+            // Создаем пустого пользователя, чтобы избежать NullPointerException
+            User unknownUser = new User();
+            unknownUser.setUsername("Неизвестный художник");
+            artwork.setUser(unknownUser);
         }
 
         return artwork;

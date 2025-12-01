@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -66,11 +67,24 @@ public class ArtworkListActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView() {
-        artworkAdapter = new ArtworkAdapter(artworkList, artwork -> {
-            Intent intent = new Intent(ArtworkListActivity.this, ArtworkDetailActivity.class);
-            intent.putExtra("artwork_id", artwork.getId());
-            startActivity(intent);
-        });
+        artworkAdapter = new ArtworkAdapter(artworkList, new ArtworkAdapter.OnArtworkClickListener() {
+            @Override
+            public void onArtworkClick(Artwork artwork) {
+                Intent intent = new Intent(ArtworkListActivity.this, ArtworkDetailActivity.class);
+                intent.putExtra("artwork_id", artwork.getId());
+                startActivity(intent);
+            }
+
+            @Override
+            public void onEditClick(Artwork artwork) {
+                // Не используется для обычного просмотра
+            }
+
+            @Override
+            public void onDeleteClick(Artwork artwork) {
+                // Не используется для обычного просмотра
+            }
+        }, false); // false - не показываем кнопки действий для обычного просмотра
 
         GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
         recyclerView.setLayoutManager(layoutManager);
@@ -95,7 +109,7 @@ public class ArtworkListActivity extends AppCompatActivity {
     }
 
     private void handleArtworksResult(Map<String, Object> result) {
-        progressBar.setVisibility(android.view.View.GONE);
+        progressBar.setVisibility(View.GONE);
 
         if (result != null) {
             Boolean success = (Boolean) result.get("success");
@@ -124,7 +138,7 @@ public class ArtworkListActivity extends AppCompatActivity {
     }
 
     private void loadArtworks() {
-        progressBar.setVisibility(android.view.View.VISIBLE);
+        progressBar.setVisibility(View.VISIBLE);
 
         if (categoryId != -1) {
             categoryViewModel.getCategoryArtworks(categoryId, 0, 20);

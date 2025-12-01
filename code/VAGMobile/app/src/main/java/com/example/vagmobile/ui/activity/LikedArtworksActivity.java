@@ -52,11 +52,24 @@ public class LikedArtworksActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView() {
-        artworkAdapter = new ArtworkAdapter(artworkList, artwork -> {
-            Intent intent = new Intent(LikedArtworksActivity.this, ArtworkDetailActivity.class);
-            intent.putExtra("artwork_id", artwork.getId());
-            startActivity(intent);
-        });
+        artworkAdapter = new ArtworkAdapter(artworkList, new ArtworkAdapter.OnArtworkClickListener() {
+            @Override
+            public void onArtworkClick(Artwork artwork) {
+                Intent intent = new Intent(LikedArtworksActivity.this, ArtworkDetailActivity.class);
+                intent.putExtra("artwork_id", artwork.getId());
+                startActivity(intent);
+            }
+
+            @Override
+            public void onEditClick(Artwork artwork) {
+                // Не используется для просмотра избранного
+            }
+
+            @Override
+            public void onDeleteClick(Artwork artwork) {
+                // Не используется для просмотра избранного
+            }
+        }, false); // false - не показываем кнопки действий для просмотра избранного
 
         GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
         recyclerView.setLayoutManager(layoutManager);

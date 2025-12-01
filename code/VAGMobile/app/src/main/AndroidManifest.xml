@@ -84,6 +84,14 @@
             android:name=".ui.activity.ArtistArtworksActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.activity.EditProfileActivity"
+            android:exported="false"/>
+
+        <!-- ДОБАВЛЕНО: UserArtworksActivity -->
+        <activity
+            android:name=".ui.activity.UserArtworksActivity"
+            android:exported="false"/>
 
     </application>
 

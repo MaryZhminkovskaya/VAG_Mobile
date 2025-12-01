@@ -2,6 +2,7 @@ package com.example.vagmobile.viewmodel;
 
 import android.app.Application;
 import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import com.example.vagmobile.repository.ArtworkRepository;
 import okhttp3.MultipartBody;
@@ -19,7 +20,7 @@ public class ArtworkViewModel extends AndroidViewModel {
     private MutableLiveData<Map<String, Object>> categoryArtworksResult = new MutableLiveData<>();
 
     private MutableLiveData<Map<String, Object>> artworkForAdminResult = new MutableLiveData<>();
-
+    private MutableLiveData<Map<String, Object>> allUserArtworksResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> createResult = new MutableLiveData<>();
 
     public ArtworkViewModel(Application application) {
@@ -103,5 +104,19 @@ public class ArtworkViewModel extends AndroidViewModel {
 
     public void createArtwork(String title, String description, String categoryIds, MultipartBody.Part image) {
         artworkRepository.createArtwork(title, description, categoryIds, image).observeForever(createResult::setValue);
+    }
+
+
+    public void loadUserArtworks(Long userId) {
+        artworkRepository.getUserArtworks(userId, 0, 100);
+    }
+
+    public LiveData<Map<String, Object>> getAllUserArtworksResult() {
+        return allUserArtworksResult;
+    }
+
+    public void getAllUserArtworks(Long userId, int page, int size) {
+        artworkRepository.getAllUserArtworks(userId, page, size)
+                .observeForever(result -> allUserArtworksResult.setValue(result));
     }
 }

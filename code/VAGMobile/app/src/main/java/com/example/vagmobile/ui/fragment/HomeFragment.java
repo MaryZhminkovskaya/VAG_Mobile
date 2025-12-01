@@ -22,7 +22,8 @@ import com.example.vagmobile.model.Artwork;
 import com.example.vagmobile.model.User;
 import com.example.vagmobile.ui.activity.ArtworkDetailActivity;
 import com.example.vagmobile.ui.activity.ArtistArtworksActivity;
-import com.example.vagmobile.ui.activity.MainActivity;
+import com.example.vagmobile.ui.activity.ArtworkListActivity;
+import com.example.vagmobile.ui.activity.ArtistsActivity;
 import com.example.vagmobile.ui.adapter.ArtworkAdapter;
 import com.example.vagmobile.ui.adapter.ArtistsAdapter;
 import com.example.vagmobile.viewmodel.ArtworkViewModel;
@@ -68,25 +69,38 @@ public class HomeFragment extends Fragment {
         TextView tvSeeAllArtworks = view.findViewById(R.id.tvSeeAllArtworks);
         TextView tvSeeAllArtists = view.findViewById(R.id.tvSeeAllArtists);
 
+        // Исправленная навигация
         tvSeeAllArtworks.setOnClickListener(v -> {
-            if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).bottomNavigationView.setSelectedItemId(R.id.nav_gallery);
-            }
+            Intent intent = new Intent(getActivity(), ArtworkListActivity.class);
+            intent.putExtra("list_type", "all");
+            startActivity(intent);
         });
 
         tvSeeAllArtists.setOnClickListener(v -> {
-            if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).bottomNavigationView.setSelectedItemId(R.id.nav_artists);
-            }
+            startActivity(new Intent(getActivity(), ArtistsActivity.class));
         });
     }
 
     private void setupRecyclerViews() {
-        featuredArtworkAdapter = new ArtworkAdapter(featuredArtworks, artwork -> {
-            Intent intent = new Intent(getActivity(), ArtworkDetailActivity.class);
-            intent.putExtra("artwork_id", artwork.getId());
-            startActivity(intent);
-        });
+        // Исправленный конструктор ArtworkAdapter с 3 параметрами
+        featuredArtworkAdapter = new ArtworkAdapter(featuredArtworks, new ArtworkAdapter.OnArtworkClickListener() {
+            @Override
+            public void onArtworkClick(Artwork artwork) {
+                Intent intent = new Intent(getActivity(), ArtworkDetailActivity.class);
+                intent.putExtra("artwork_id", artwork.getId());
+                startActivity(intent);
+            }
+
+            @Override
+            public void onEditClick(Artwork artwork) {
+                // Не используется на главной странице
+            }
+
+            @Override
+            public void onDeleteClick(Artwork artwork) {
+                // Не используется на главной странице
+            }
+        }, false); // false - не показываем кнопки действий на главной странице
 
         LinearLayoutManager artworksLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         rvFeaturedArtworks.setLayoutManager(artworksLayoutManager);
