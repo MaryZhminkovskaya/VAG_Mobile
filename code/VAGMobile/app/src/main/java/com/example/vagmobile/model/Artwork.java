@@ -42,11 +42,8 @@ public class Artwork implements Serializable {
     private List<Comment> comments;
 
     private boolean liked;
-
-    // Конструкторы
     public Artwork() {}
 
-    // Геттеры и сеттеры
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

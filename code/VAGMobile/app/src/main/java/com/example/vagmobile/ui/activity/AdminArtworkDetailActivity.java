@@ -19,6 +19,7 @@ import com.example.vagmobile.model.User;
 import com.example.vagmobile.viewmodel.ArtworkViewModel;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +35,6 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_admin_artwork_detail);
 
-        // Получаем artwork_id из intent
         artworkId = getIntent().getLongExtra("artwork_id", -1);
 
         progressBar = findViewById(R.id.progressBar);
@@ -44,7 +44,7 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
             initViewModel();
             loadArtworkDetailsForAdmin(artworkId);
         } else {
-            Toast.makeText(this, "Artwork ID not available", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "ID публикации недоступен", Toast.LENGTH_SHORT).show();
             finish();
         }
     }
@@ -52,7 +52,6 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
     private void initViewModel() {
         artworkViewModel = new ViewModelProvider(this).get(ArtworkViewModel.class);
 
-        // Наблюдатель для загрузки публикации через админский endpoint
         artworkViewModel.getArtworkForAdminResult().observe(this, result -> {
             progressBar.setVisibility(View.GONE);
             contentLayout.setVisibility(View.VISIBLE);
@@ -67,9 +66,8 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
                     }
                 } else {
                     String message = (String) result.get("message");
-                    Toast.makeText(this, "Failed to load artwork details: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Не удалось загрузить детали публикации: " + message, Toast.LENGTH_SHORT).show();
 
-                    // Если админский endpoint не работает, пробуем обычный
                     if (message != null && message.contains("Access denied")) {
                         loadArtworkWithRegularEndpoint(artworkId);
                     }
@@ -77,7 +75,6 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
             }
         });
 
-        // Наблюдатель для обычного endpoint (резервный)
         artworkViewModel.getArtworkResult().observe(this, result -> {
             progressBar.setVisibility(View.GONE);
             contentLayout.setVisibility(View.VISIBLE);
@@ -92,7 +89,7 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
                     }
                 } else {
                     String message = (String) result.get("message");
-                    Toast.makeText(this, "Failed to load artwork: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Не удалось загрузить публикацию: " + message, Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -113,7 +110,6 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
     private Artwork convertToArtwork(Map<String, Object> artworkData) {
         Artwork artwork = new Artwork();
 
-        // Безопасное преобразование ID
         Object idObj = artworkData.get("id");
         if (idObj != null) {
             if (idObj instanceof Double) {
@@ -125,12 +121,11 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
             }
         }
 
-        artwork.setTitle((String) artworkData.get("title"));
-        artwork.setDescription((String) artworkData.get("description"));
-        artwork.setImagePath((String) artworkData.get("imagePath"));
-        artwork.setStatus((String) artworkData.get("status"));
+        artwork.setTitle(artworkData.get("title") != null ? artworkData.get("title").toString() : "Без названия");
+        artwork.setDescription(artworkData.get("description") != null ? artworkData.get("description").toString() : "Нет описания");
+        artwork.setImagePath(artworkData.get("imagePath") != null ? artworkData.get("imagePath").toString() : "");
+        artwork.setStatus(artworkData.get("status") != null ? artworkData.get("status").toString() : "UNKNOWN");
 
-        // Безопасное преобразование лайков
         Object likesObj = artworkData.get("likes");
         if (likesObj != null) {
             if (likesObj instanceof Double) {
@@ -140,9 +135,10 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
             } else if (likesObj instanceof Long) {
                 artwork.setLikes(((Long) likesObj).intValue());
             }
+        } else {
+            artwork.setLikes(0);
         }
 
-        // Безопасное преобразование просмотров
         Object viewsObj = artworkData.get("views");
         if (viewsObj != null) {
             if (viewsObj instanceof Double) {
@@ -152,14 +148,14 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
             } else if (viewsObj instanceof Long) {
                 artwork.setViews(((Long) viewsObj).intValue());
             }
+        } else {
+            artwork.setViews(0);
         }
 
-        // Парсинг пользователя
-        if (artworkData.get("user") != null) {
+        if (artworkData.get("user") != null && artworkData.get("user") instanceof Map) {
             Map<String, Object> userData = (Map<String, Object>) artworkData.get("user");
             User user = new User();
 
-            // Безопасное преобразование ID пользователя
             Object userIdObj = userData.get("id");
             if (userIdObj != null) {
                 if (userIdObj instanceof Double) {
@@ -171,13 +167,17 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
                 }
             }
 
-            user.setUsername((String) userData.get("username"));
-            user.setEmail((String) userData.get("email"));
+            user.setUsername(userData.get("username") != null ? userData.get("username").toString() : "Неизвестно");
+            user.setEmail(userData.get("email") != null ? userData.get("email").toString() : "Н/Д");
             artwork.setUser(user);
+        } else {
+            User defaultUser = new User();
+            defaultUser.setUsername("Неизвестно");
+            defaultUser.setEmail("Н/Д");
+            artwork.setUser(defaultUser);
         }
 
-        // Парсинг категорий
-        if (artworkData.get("categories") != null) {
+        if (artworkData.get("categories") != null && artworkData.get("categories") instanceof List) {
             List<Map<String, Object>> categoriesData = (List<Map<String, Object>>) artworkData.get("categories");
             List<Category> categories = new ArrayList<>();
             for (Map<String, Object> categoryData : categoriesData) {
@@ -194,12 +194,13 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
                     }
                 }
 
-                category.setName((String) categoryData.get("name"));
-                category.setDescription((String) categoryData.get("description"));
+                category.setName(categoryData.get("name") != null ? categoryData.get("name").toString() : "Без названия");
+                category.setDescription(categoryData.get("description") != null ? categoryData.get("description").toString() : "");
                 categories.add(category);
             }
-            // Если в модели Artwork есть поле categories, установите его
-            // artwork.setCategories(categories);
+            artwork.setCategories(categories);
+        } else {
+            artwork.setCategories(new ArrayList<>());
         }
 
         return artwork;
@@ -214,45 +215,51 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
         TextView tvViews = findViewById(R.id.tvViews);
         TextView tvUserEmail = findViewById(R.id.tvUserEmail);
         TextView tvUserId = findViewById(R.id.tvUserId);
+        TextView tvCategories = findViewById(R.id.tvCategories);
         ImageView ivArtwork = findViewById(R.id.ivArtwork);
 
-        // ОТЛАДОЧНЫЙ ВЫВОД
-        System.out.println("AdminArtworkDetailActivity: Displaying artwork - " + artwork.getTitle());
-        System.out.println("AdminArtworkDetailActivity: User object - " + artwork.getUser());
+        System.out.println("AdminArtworkDetailActivity: Отображение публикации - " + artwork.getTitle());
+        System.out.println("AdminArtworkDetailActivity: Пользователь - " + artwork.getUser());
         if (artwork.getUser() != null) {
-            System.out.println("AdminArtworkDetailActivity: User ID - " + artwork.getUser().getId());
-            System.out.println("AdminArtworkDetailActivity: Username - " + artwork.getUser().getUsername());
+            System.out.println("AdminArtworkDetailActivity: ID пользователя - " + artwork.getUser().getId());
+            System.out.println("AdminArtworkDetailActivity: Имя пользователя - " + artwork.getUser().getUsername());
             System.out.println("AdminArtworkDetailActivity: Email - " + artwork.getUser().getEmail());
         }
-        System.out.println("AdminArtworkDetailActivity: Image Path - " + artwork.getImagePath());
-        System.out.println("AdminArtworkDetailActivity: Description - " + artwork.getDescription());
+        System.out.println("AdminArtworkDetailActivity: Путь к изображению - " + artwork.getImagePath());
+        System.out.println("AdminArtworkDetailActivity: Описание - " + artwork.getDescription());
+        System.out.println("AdminArtworkDetailActivity: Категории - " + (artwork.hasCategories() ? artwork.getCategoriesString() : "Нет категорий"));
 
-        tvTitle.setText(artwork.getTitle() != null ? artwork.getTitle() : "No Title");
-        tvDescription.setText(artwork.getDescription() != null ? artwork.getDescription() : "No description");
-        tvStatus.setText("Status: " + (artwork.getStatus() != null ? artwork.getStatus() : "UNKNOWN"));
-        tvLikes.setText("Likes: " + artwork.getLikes());
-        tvViews.setText("Views: " + artwork.getViews());
+        tvTitle.setText(artwork.getTitle());
+        tvDescription.setText(artwork.getDescription());
+        tvStatus.setText("Статус: " + artwork.getStatus());
+        tvLikes.setText("Лайки: " + artwork.getLikes());
+        tvViews.setText("Просмотры: " + artwork.getViews());
 
-        // Детальная информация о пользователе
-        if (artwork.getUser() != null) {
-            tvArtist.setText("Artist: " + (artwork.getUser().getUsername() != null ? artwork.getUser().getUsername() : "Unknown"));
-            tvUserEmail.setText("Email: " + (artwork.getUser().getEmail() != null ? artwork.getUser().getEmail() : "N/A"));
-            tvUserId.setText("User ID: " + (artwork.getUser().getId() != null ? artwork.getUser().getId().toString() : "N/A"));
+        if (artwork.hasCategories()) {
+            tvCategories.setText("Категории: " + artwork.getCategoriesString());
+            tvCategories.setVisibility(View.VISIBLE);
         } else {
-            tvArtist.setText("Artist: Unknown");
-            tvUserEmail.setText("Email: N/A");
-            tvUserId.setText("User ID: N/A");
+            tvCategories.setText("Категории: Без категории");
+            tvCategories.setVisibility(View.VISIBLE);
         }
 
-        // Загрузка изображения
+        if (artwork.getUser() != null) {
+            tvArtist.setText("Художник: " + artwork.getUser().getUsername());
+            tvUserEmail.setText("Email: " + artwork.getUser().getEmail());
+            tvUserId.setText("ID пользователя: " + (artwork.getUser().getId() != null ? artwork.getUser().getId().toString() : "Н/Д"));
+        } else {
+            tvArtist.setText("Художник: Неизвестно");
+            tvUserEmail.setText("Email: Н/Д");
+            tvUserId.setText("ID пользователя: Н/Д");
+        }
+
         if (artwork.getImagePath() != null && !artwork.getImagePath().isEmpty()) {
             String imagePath = artwork.getImagePath();
-            // Убеждаемся, что путь не начинается с /
             if (imagePath.startsWith("/")) {
                 imagePath = imagePath.substring(1);
             }
             String imageUrl = "http://192.168.0.51:8080/vag/uploads/" + imagePath;
-            System.out.println("AdminArtworkDetailActivity: Loading image from URL: " + imageUrl);
+            System.out.println("AdminArtworkDetailActivity: Загрузка изображения с URL: " + imageUrl);
 
             Glide.with(this)
                     .load(imageUrl)
@@ -260,7 +267,7 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
                     .error(R.drawable.ic_error_image)
                     .into(ivArtwork);
         } else {
-            System.out.println("AdminArtworkDetailActivity: ImagePath is null or empty");
+            System.out.println("AdminArtworkDetailActivity: Путь к изображению пуст");
             ivArtwork.setImageResource(R.drawable.ic_image_placeholder);
         }
     }

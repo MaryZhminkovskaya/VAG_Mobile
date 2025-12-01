@@ -15,7 +15,6 @@ public class CategoryViewModel extends AndroidViewModel {
     private MutableLiveData<Map<String, Object>> categoryResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> categoryArtworksResult = new MutableLiveData<>();
 
-    // Новые LiveData для операций CRUD
     private MutableLiveData<Map<String, Object>> createCategoryResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> updateCategoryResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> deleteCategoryResult = new MutableLiveData<>();

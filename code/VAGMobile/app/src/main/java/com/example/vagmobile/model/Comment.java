@@ -21,7 +21,6 @@ public class Comment implements Serializable {
     @SerializedName("artwork")
     private Artwork artwork;
 
-    // Конструкторы, геттеры и сеттеры
     public Comment() {}
 
     public Long getId() { return id; }

@@ -15,24 +15,19 @@ public class UserViewModel extends ViewModel {
     private MutableLiveData<Map<String, Object>> likedArtworksResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> updateProfileResult = new MutableLiveData<>();
 
-    // LiveData для списка художников
     private MutableLiveData<Map<String, Object>> artistsResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> artistsWithArtworksResult = new MutableLiveData<>();
 
     public UserViewModel() {
         userRepository = new UserRepository();
     }
-
-    // ОБНОВЛЕННЫЙ МЕТОД: Получение всех художников через artworks
     public void getAllArtists() {
         userRepository.getAllArtists().observeForever(result -> {
             artistsResult.setValue(result);
         });
     }
 
-    // Метод для получения художников с публикациями (можно оставить для будущего использования)
     public void getArtistsWithArtworks() {
-        // Пока используем тот же метод, что и для getAllArtists
         userRepository.getAllArtists().observeForever(result -> {
             artistsWithArtworksResult.setValue(result);
         });
@@ -62,7 +57,6 @@ public class UserViewModel extends ViewModel {
         // TODO: Implement this method
     }
 
-    // Геттер для списка художников
     public LiveData<Map<String, Object>> getArtistsResult() {
         return artistsResult;
     }

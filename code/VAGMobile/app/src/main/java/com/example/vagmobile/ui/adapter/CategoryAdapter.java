@@ -66,14 +66,40 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.Catego
             tvArtworksCount = itemView.findViewById(R.id.tvArtworksCount);
         }
 
+
         public void bind(Category category) {
             tvCategoryName.setText(category.getName());
             tvCategoryDescription.setText(category.getDescription());
 
-            if (category.getApprovedArtworksCount() != null) {
-                tvArtworksCount.setText(category.getApprovedArtworksCount() + " работ");
+            Long count = category.getApprovedArtworksCount();
+            if (count == null) {
+                count = 0L;
+            }
+
+            String countText;
+            if (count == 0) {
+                countText = "Нет публикаций";
+            } else if (count % 10 == 1 && count % 100 != 11) {
+                countText = count + " публикация";
+            } else if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) {
+                countText = count + " публикации";
             } else {
-                tvArtworksCount.setText("0 работ");
+                countText = count + " публикаций";
+            }
+
+            tvArtworksCount.setText(countText);
+        }
+
+        private String getCountText(long count) {
+            if (count <= 0) {
+                return "0 публикаций";
+            }
+            if (count % 10 == 1 && count % 100 != 11) {
+                return count + " публикация";
+            } else if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20)) {
+                return count + " публикации";
+            } else {
+                return count + " публикаций";
             }
         }
     }

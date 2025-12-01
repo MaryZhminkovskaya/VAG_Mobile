@@ -96,6 +96,16 @@
 
             </LinearLayout>
 
+            <!-- КАТЕГОРИИ (ДОБАВЛЕНО) -->
+            <TextView
+                android:id="@+id/tvCategories"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:textSize="14sp"
+                android:textColor="#666666"
+                android:text="Категории: Загрузка..." />
+
             <!-- Информация о пользователе -->
             <TextView
                 android:layout_width="match_parent"

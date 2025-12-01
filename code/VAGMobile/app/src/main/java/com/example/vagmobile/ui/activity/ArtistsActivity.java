@@ -112,7 +112,6 @@ public class ArtistsActivity extends AppCompatActivity {
     private User convertToUser(Map<String, Object> userData) {
         User user = new User();
 
-        // Безопасное преобразование ID
         Object idObj = userData.get("id");
         if (idObj != null) {
             if (idObj instanceof Double) {

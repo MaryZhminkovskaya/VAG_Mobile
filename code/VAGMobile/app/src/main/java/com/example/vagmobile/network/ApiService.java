@@ -57,7 +57,6 @@ public interface ApiService {
     @GET("vag/api/mobile/artworks/{id}")
     Call<Map<String, Object>> getArtwork(@Path("id") Long id);
 
-    // НОВЫЙ МЕТОД: Получить публикацию для администратора
     @GET("vag/api/mobile/admin/artworks/{id}")
     Call<Map<String, Object>> getArtworkForAdmin(
             @Header("Authorization") String authHeader,
@@ -73,15 +72,11 @@ public interface ApiService {
             @Part MultipartBody.Part imageFile
     );
 
-    // ИСПРАВЛЕНО: Добавлен заголовок авторизации
     @POST("vag/api/mobile/artworks/{id}/like")
     Call<Map<String, Object>> likeArtwork(@Header("Authorization") String authHeader, @Path("id") Long id);
 
-    // ИСПРАВЛЕНО: Добавлен заголовок авторизации
     @POST("vag/api/mobile/artworks/{id}/unlike")
     Call<Map<String, Object>> unlikeArtwork(@Header("Authorization") String authHeader, @Path("id") Long id);
-
-    // ИСПРАВЛЕНО: Добавлен заголовок авторизации
     @Multipart
     @POST("vag/api/mobile/artworks/{id}/comment")
     Call<Map<String, Object>> addComment(
@@ -99,7 +94,6 @@ public interface ApiService {
     @GET("vag/api/mobile/users")
     Call<Map<String, Object>> getAllUsers();
 
-    // Или endpoint для получения пользователей с публикациями
     @GET("vag/api/mobile/users/artists")
     Call<Map<String, Object>> getArtistsWithArtworks();
     @GET("vag/api/mobile/categories/{id}")
@@ -118,7 +112,6 @@ public interface ApiService {
             @Query("size") int size
     );
 
-    // ИСПРАВЛЕНО: Добавлен заголовок авторизации
     @GET("vag/api/mobile/users/liked/artworks")
     Call<Map<String, Object>> getLikedArtworks(
             @Header("Authorization") String authHeader,
@@ -126,7 +119,6 @@ public interface ApiService {
             @Query("size") int size
     );
 
-    // Admin endpoints
     @GET("vag/api/mobile/admin/artworks")
     Call<Map<String, Object>> getAdminArtworks(
             @Header("Authorization") String authHeader,

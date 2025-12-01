@@ -86,7 +86,6 @@ public class CreateArtworkActivity extends AppCompatActivity {
         btnCreateArtwork.setEnabled(false);
         progressBar.setVisibility(View.VISIBLE);
 
-        // Устанавливаем начальный текст для выбранных категорий
         updateSelectedCategoriesText();
     }
 
@@ -94,7 +93,6 @@ public class CreateArtworkActivity extends AppCompatActivity {
         btnSelectImage.setOnClickListener(v -> selectImage());
         btnCreateArtwork.setOnClickListener(v -> createArtwork());
 
-        // Обработчик для скрытия клавиатуры при клике вне полей ввода
         View rootLayout = findViewById(android.R.id.content);
         rootLayout.setOnClickListener(v -> {
             etTitle.clearFocus();
@@ -104,7 +102,6 @@ public class CreateArtworkActivity extends AppCompatActivity {
     }
 
     private void setupCategorySelection() {
-        // Используем кастомный адаптер для правильного отображения
         categoryAdapter = new ArrayAdapter<Category>(this,
                 android.R.layout.simple_dropdown_item_1line, categoryList) {
             @NonNull
@@ -126,7 +123,6 @@ public class CreateArtworkActivity extends AppCompatActivity {
                 Category category = getItem(position);
                 if (category != null) {
                     textView.setText(category.getName());
-                    // Отключаем категории, которые уже выбраны
                     if (selectedCategoryIds.contains(category.getId())) {
                         textView.setTextColor(Color.GRAY);
                         textView.setBackgroundColor(Color.LTGRAY);
@@ -140,9 +136,8 @@ public class CreateArtworkActivity extends AppCompatActivity {
         };
 
         autoCompleteCategories.setAdapter(categoryAdapter);
-        autoCompleteCategories.setThreshold(1); // Показывать предложения после 1 символа
+        autoCompleteCategories.setThreshold(1);
 
-        // Обработчик выбора категории из списка
         autoCompleteCategories.setOnItemClickListener((parent, view, position, id) -> {
             Category selectedCategory = (Category) parent.getItemAtPosition(position);
             if (selectedCategory != null) {
@@ -156,28 +151,24 @@ public class CreateArtworkActivity extends AppCompatActivity {
             }
         });
 
-        // Обработчик фокуса - показывать список при касании
         autoCompleteCategories.setOnFocusChangeListener((v, hasFocus) -> {
             if (hasFocus && categoryList.size() > 0) {
                 autoCompleteCategories.showDropDown();
             }
         });
 
-        // Обработчик касания - показывать список при клике
         autoCompleteCategories.setOnClickListener(v -> {
             if (categoryList.size() > 0) {
                 autoCompleteCategories.showDropDown();
             }
         });
 
-        // Обработчик ввода текста для фильтрации
         autoCompleteCategories.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // Автоматически показывать dropdown при вводе
                 if (s.length() > 0) {
                     autoCompleteCategories.showDropDown();
                 }
@@ -189,7 +180,6 @@ public class CreateArtworkActivity extends AppCompatActivity {
     }
 
     private void addCategoryChip(Category category) {
-        // Создаем TextView как чип
         TextView chipView = new TextView(this);
         chipView.setText(category.getName());
         chipView.setBackgroundResource(R.drawable.chip_background);
@@ -207,16 +197,13 @@ public class CreateArtworkActivity extends AppCompatActivity {
 
         chipView.setTag(category.getId());
 
-        // Добавляем иконку удаления
         chipView.setCompoundDrawablesWithIntrinsicBounds(0, 0, android.R.drawable.ic_menu_close_clear_cancel, 0);
         chipView.setCompoundDrawablePadding(8);
 
-        // Удаление по клику
         chipView.setOnClickListener(v -> {
             chipContainer.removeView(v);
             selectedCategoryIds.remove(category.getId());
             updateSelectedCategoriesText();
-            // Обновляем адаптер, чтобы снова показать удаленную категорию в выпадающем списке
             categoryAdapter.notifyDataSetChanged();
             Toast.makeText(CreateArtworkActivity.this, "Removed: " + category.getName(), Toast.LENGTH_SHORT).show();
         });
@@ -225,7 +212,6 @@ public class CreateArtworkActivity extends AppCompatActivity {
         chipContainer.addView(chipView);
         updateSelectedCategoriesText();
 
-        // Обновляем адаптер, чтобы скрыть выбранную категорию из выпадающего списка
         categoryAdapter.notifyDataSetChanged();
 
         Toast.makeText(this, "Added: " + category.getName(), Toast.LENGTH_SHORT).show();
@@ -260,7 +246,6 @@ public class CreateArtworkActivity extends AppCompatActivity {
             }
         });
 
-        // ИСПРАВЛЕННЫЙ НАБЛЮДАТЕЛЬ: Используем правильный геттер
         artworkViewModel.getCreateResult().observe(this, result -> {
             resetCreateButton();
 
@@ -287,48 +272,36 @@ public class CreateArtworkActivity extends AppCompatActivity {
     }
 
     private Category convertToCategory(Map<String, Object> categoryData) {
-        try {
-            Category category = new Category();
+        Category category = new Category();
 
-            // ID
-            if (categoryData.get("id") != null) {
-                Object idObj = categoryData.get("id");
-                if (idObj instanceof Double) {
-                    category.setId(((Double) idObj).longValue());
-                } else if (idObj instanceof Long) {
-                    category.setId((Long) idObj);
-                } else if (idObj instanceof Integer) {
-                    category.setId(((Integer) idObj).longValue());
-                } else if (idObj instanceof String) {
-                    try {
-                        category.setId(Long.parseLong((String) idObj));
-                    } catch (NumberFormatException e) {
-                        category.setId(0L);
-                    }
-                }
+        Object idObj = categoryData.get("id");
+        if (idObj != null) {
+            if (idObj instanceof Double) {
+                category.setId(((Double) idObj).longValue());
+            } else if (idObj instanceof Integer) {
+                category.setId(((Integer) idObj).longValue());
+            } else if (idObj instanceof Long) {
+                category.setId((Long) idObj);
             }
-
-            // Name
-            if (categoryData.get("name") != null) {
-                category.setName(categoryData.get("name").toString());
-            } else {
-                category.setName("Unnamed Category");
-            }
-
-            // Description
-            if (categoryData.get("description") != null) {
-                category.setDescription(categoryData.get("description").toString());
-            } else {
-                category.setDescription("No description");
-            }
-
-            Log.d("CreateArtwork", "Converted category: " + category.getName() + " (ID: " + category.getId() + ")");
-            return category;
-        } catch (Exception e) {
-            Log.e("CreateArtwork", "Error converting category: " + e.getMessage());
-            e.printStackTrace();
-            return null;
         }
+
+        category.setName(categoryData.get("name") != null ? categoryData.get("name").toString() : "Без названия");
+        category.setDescription(categoryData.get("description") != null ? categoryData.get("description").toString() : "");
+
+        Object countObj = categoryData.get("approvedArtworksCount");
+        if (countObj != null) {
+            if (countObj instanceof Double) {
+                category.setApprovedArtworksCount(((Double) countObj).longValue());
+            } else if (countObj instanceof Integer) {
+                category.setApprovedArtworksCount(((Integer) countObj).longValue());
+            } else if (countObj instanceof Long) {
+                category.setApprovedArtworksCount((Long) countObj);
+            }
+        } else {
+            category.setApprovedArtworksCount(0L);
+        }
+
+        return category;
     }
 
     private void updateSelectedCategoriesText() {
@@ -355,7 +328,6 @@ public class CreateArtworkActivity extends AppCompatActivity {
         String title = etTitle.getText().toString().trim();
         String description = etDescription.getText().toString().trim();
 
-        // Валидация заголовка
         if (title.isEmpty()) {
             etTitle.setError("Please enter title");
             etTitle.requestFocus();
@@ -368,7 +340,6 @@ public class CreateArtworkActivity extends AppCompatActivity {
             return;
         }
 
-        // Валидация описания
         if (description.isEmpty()) {
             etDescription.setError("Please enter description");
             etDescription.requestFocus();
@@ -401,7 +372,6 @@ public class CreateArtworkActivity extends AppCompatActivity {
 
             MultipartBody.Part imagePart = ImageUtils.prepareImagePart("imageFile", imageFile);
 
-            // Правильное преобразование categoryIds
             String categoryIdsString = convertCategoryIdsToString(selectedCategoryIds);
 
             Log.d("CreateArtwork", "Creating artwork with:");
@@ -414,7 +384,6 @@ public class CreateArtworkActivity extends AppCompatActivity {
             btnCreateArtwork.setText("Creating...");
             progressBar.setVisibility(View.VISIBLE);
 
-            // ИСПРАВЛЕННЫЙ ВЫЗОВ: Используем правильный метод
             artworkViewModel.createArtwork(title, description, categoryIdsString, imagePart);
 
         } catch (Exception e) {
@@ -429,7 +398,6 @@ public class CreateArtworkActivity extends AppCompatActivity {
             return "";
         }
 
-        // Формат: "1,2,3" или просто "2" если один элемент
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < categoryIds.size(); i++) {
             if (i > 0) {
@@ -456,7 +424,6 @@ public class CreateArtworkActivity extends AppCompatActivity {
         updateSelectedCategoriesText();
         autoCompleteCategories.setText("");
 
-        // Обновляем адаптер, чтобы показать все категории снова
         if (categoryAdapter != null) {
             categoryAdapter.notifyDataSetChanged();
         }

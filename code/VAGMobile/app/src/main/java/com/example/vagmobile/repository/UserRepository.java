@@ -1,6 +1,9 @@
 package com.example.vagmobile.repository;
 
 import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.MutableLiveData;
 import com.example.vagmobile.network.ApiClient;
 import com.example.vagmobile.network.ApiService;
@@ -36,13 +39,11 @@ public class UserRepository {
         }
         return null;
     }
-// В UserRepository.java обновите метод getAllArtists():
-
     public MutableLiveData<Map<String, Object>> getAllArtists() {
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
 
-        // Используем artworks endpoint, который не требует авторизации для GET запросов
         apiService.getArtworks(0, 100).enqueue(new Callback<Map<String, Object>>() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
                 System.out.println("UserRepository: Artworks response code: " + response.code());
@@ -54,7 +55,6 @@ public class UserRepository {
                     if (success != null && success) {
                         List<Map<String, Object>> artworksData = (List<Map<String, Object>>) responseBody.get("artworks");
                         if (artworksData != null && !artworksData.isEmpty()) {
-                            // Извлекаем уникальных пользователей из публикаций и подсчитываем работы
                             Map<Long, Map<String, Object>> uniqueUsers = new HashMap<>();
                             Map<Long, Integer> artworkCounts = new HashMap<>();
 
@@ -74,10 +74,8 @@ public class UserRepository {
                                         }
 
                                         if (userId != null) {
-                                            // Подсчитываем количество работ
                                             artworkCounts.put(userId, artworkCounts.getOrDefault(userId, 0) + 1);
 
-                                            // Добавляем пользователя только если еще не добавлен
                                             if (!uniqueUsers.containsKey(userId)) {
                                                 uniqueUsers.put(userId, userData);
                                             }
@@ -86,7 +84,6 @@ public class UserRepository {
                                 }
                             }
 
-                            // Добавляем количество работ в данные пользователя
                             List<Map<String, Object>> usersWithCounts = new ArrayList<>();
                             for (Map.Entry<Long, Map<String, Object>> entry : uniqueUsers.entrySet()) {
                                 Map<String, Object> userData = new HashMap<>(entry.getValue());
@@ -94,7 +91,6 @@ public class UserRepository {
                                 usersWithCounts.add(userData);
                             }
 
-                            // Создаем результат с уникальными пользователями
                             Map<String, Object> resultData = new HashMap<>();
                             resultData.put("success", true);
                             resultData.put("users", usersWithCounts);
@@ -135,12 +131,10 @@ public class UserRepository {
         return result;
     }
 
-    // Метод для конвертации данных пользователя
     private com.example.vagmobile.model.User convertToUser(Map<String, Object> userData) {
         try {
             com.example.vagmobile.model.User user = new com.example.vagmobile.model.User();
 
-            // Безопасное преобразование ID
             Object idObj = userData.get("id");
             if (idObj != null) {
                 if (idObj instanceof Double) {
@@ -155,7 +149,6 @@ public class UserRepository {
             user.setUsername((String) userData.get("username"));
             user.setEmail((String) userData.get("email"));
 
-            // Роль (если есть)
             if (userData.get("role") != null) {
                 user.setRole((String) userData.get("role"));
             }
@@ -167,7 +160,6 @@ public class UserRepository {
         }
     }
 
-    // Остальные методы остаются без изменений...
     public MutableLiveData<Map<String, Object>> getCurrentUser() {
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
 

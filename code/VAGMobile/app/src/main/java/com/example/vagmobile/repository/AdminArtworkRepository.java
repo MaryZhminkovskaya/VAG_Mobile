@@ -46,7 +46,6 @@ public class AdminArtworkRepository {
         System.out.println("AdminArtworkRepository: AuthHeader: " + authHeader);
         System.out.println("AdminArtworkRepository: Request URL: /vag/api/mobile/admin/artworks?page=" + page + "&size=" + size);
 
-        // Всегда загружаем все публикации без фильтрации по статусу
         apiService.getAdminArtworks(authHeader, page, size).enqueue(new Callback<Map<String, Object>>() {
             @Override
             public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
@@ -64,7 +63,6 @@ public class AdminArtworkRepository {
                             String errorBody = response.errorBody().string();
                             System.out.println("AdminArtworkRepository: Error body (first 500 chars): " +
                                 (errorBody.length() > 500 ? errorBody.substring(0, 500) : errorBody));
-                            // Если это HTML, значит сервер перенаправил на страницу логина
                             if (errorBody.contains("<html") || errorBody.contains("<!DOCTYPE")) {
                                 System.out.println("AdminArtworkRepository: Server returned HTML instead of JSON - likely authentication issue");
                             }

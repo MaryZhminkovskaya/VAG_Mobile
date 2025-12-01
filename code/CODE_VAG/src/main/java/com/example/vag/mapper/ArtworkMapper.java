@@ -179,7 +179,8 @@ public class ArtworkMapper {
         dto.setId(category.getId());
         dto.setName(category.getName());
         dto.setDescription(category.getDescription());
-        dto.setApprovedArtworksCount(category.getApprovedArtworksCount());
+        Long count = category.getApprovedArtworksCount();
+        dto.setApprovedArtworksCount(count != null ? count : 0L);
 
         return dto;
     }

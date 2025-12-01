@@ -41,7 +41,6 @@ public class ArtworkListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_artwork_list);
 
-        // Получаем параметры
         listType = getIntent().getStringExtra("list_type"); // "category", "user", "liked"
         categoryId = getIntent().getLongExtra("category_id", -1);
         categoryName = getIntent().getStringExtra("category_name");
@@ -57,7 +56,6 @@ public class ArtworkListActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         tvTitle = findViewById(R.id.tvTitle);
 
-        // Устанавливаем заголовок
         if (categoryName != null) {
             tvTitle.setText(categoryName);
         } else if ("liked".equals(listType)) {
@@ -69,7 +67,6 @@ public class ArtworkListActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         artworkAdapter = new ArtworkAdapter(artworkList, artwork -> {
-            // Открываем детали публикации
             Intent intent = new Intent(ArtworkListActivity.this, ArtworkDetailActivity.class);
             intent.putExtra("artwork_id", artwork.getId());
             startActivity(intent);
@@ -84,17 +81,14 @@ public class ArtworkListActivity extends AppCompatActivity {
         artworkViewModel = new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication())).get(ArtworkViewModel.class);
         categoryViewModel = new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication())).get(CategoryViewModel.class);
 
-        // Observer для всех публикаций
         artworkViewModel.getArtworksResult().observe(this, result -> {
             handleArtworksResult(result);
         });
 
-        // Observer для публикаций по категории
         categoryViewModel.getCategoryArtworksResult().observe(this, result -> {
             handleArtworksResult(result);
         });
 
-        // Observer для понравившихся публикаций
         artworkViewModel.getLikedArtworksResult().observe(this, result -> {
             handleArtworksResult(result);
         });
@@ -108,7 +102,6 @@ public class ArtworkListActivity extends AppCompatActivity {
             if (success != null && success) {
                 List<Map<String, Object>> artworksData = (List<Map<String, Object>>) result.get("artworks");
                 if (artworksData != null) {
-                    // ОТЛАДОЧНЫЙ ВЫВОД ДЛЯ ОБЫЧНЫХ ПУБЛИКАЦИЙ
                     System.out.println("=== REGULAR ARTWORKS DATA DEBUG ===");
                     if (artworksData.size() > 0) {
                         Map<String, Object> firstArtwork = artworksData.get(0);
@@ -145,7 +138,6 @@ public class ArtworkListActivity extends AppCompatActivity {
     private Artwork convertToArtwork(Map<String, Object> artworkData) {
         Artwork artwork = new Artwork();
 
-        // Безопасное преобразование ID
         if (artworkData.get("id") != null) {
             if (artworkData.get("id") instanceof Double) {
                 artwork.setId(((Double) artworkData.get("id")).longValue());
@@ -160,7 +152,6 @@ public class ArtworkListActivity extends AppCompatActivity {
         artwork.setDescription((String) artworkData.get("description"));
         artwork.setImagePath((String) artworkData.get("imagePath"));
 
-        // Безопасное преобразование лайков
         if (artworkData.get("likes") != null) {
             if (artworkData.get("likes") instanceof Double) {
                 artwork.setLikes(((Double) artworkData.get("likes")).intValue());
@@ -171,7 +162,6 @@ public class ArtworkListActivity extends AppCompatActivity {
             }
         }
 
-        // УЛУЧШЕННЫЙ ПАРСИНГ ПОЛЬЗОВАТЕЛЯ
         artwork.setUser(parseUserFromArtworkData(artworkData));
 
         return artwork;
@@ -180,12 +170,10 @@ public class ArtworkListActivity extends AppCompatActivity {
     private User parseUserFromArtworkData(Map<String, Object> artworkData) {
         User user = new User();
 
-        // Вариант 1: user как объект
         Object userObj = artworkData.get("user");
         if (userObj instanceof Map) {
             Map<String, Object> userData = (Map<String, Object>) userObj;
 
-            // Парсим ID пользователя
             Object userIdObj = userData.get("id");
             if (userIdObj != null) {
                 if (userIdObj instanceof Double) {
@@ -197,7 +185,6 @@ public class ArtworkListActivity extends AppCompatActivity {
                 }
             }
 
-            // Парсим username
             String username = null;
             if (userData.get("username") != null) {
                 username = (String) userData.get("username");
@@ -208,7 +195,6 @@ public class ArtworkListActivity extends AppCompatActivity {
             }
             user.setUsername(username != null ? username : "Неизвестный художник");
 
-            // Парсим email
             if (userData.get("email") != null) {
                 user.setEmail((String) userData.get("email"));
             }
@@ -216,7 +202,6 @@ public class ArtworkListActivity extends AppCompatActivity {
             return user;
         }
 
-        // Вариант 2: поля пользователя прямо в artwork
         Object userIdObj = artworkData.get("userId");
         if (userIdObj != null) {
             if (userIdObj instanceof Double) {
@@ -228,7 +213,6 @@ public class ArtworkListActivity extends AppCompatActivity {
             }
         }
 
-        // Ищем username в разных возможных полях
         String username = null;
         if (artworkData.get("userName") != null) {
             username = (String) artworkData.get("userName");

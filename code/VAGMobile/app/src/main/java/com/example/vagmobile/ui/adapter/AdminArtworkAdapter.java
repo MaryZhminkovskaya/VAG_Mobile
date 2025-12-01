@@ -70,7 +70,6 @@ public class AdminArtworkAdapter extends RecyclerView.Adapter<AdminArtworkAdapte
                     .into(holder.ivArtwork);
         }
 
-        // Показываем кнопки в зависимости от статуса
         if ("PENDING".equals(artwork.getStatus())) {
             holder.btnApprove.setVisibility(View.VISIBLE);
             holder.btnReject.setVisibility(View.VISIBLE);
@@ -94,9 +93,7 @@ public class AdminArtworkAdapter extends RecyclerView.Adapter<AdminArtworkAdapte
             }
         });
 
-        // Добавляем клик на весь элемент для детального просмотра
         holder.itemView.setOnClickListener(v -> {
-            // Передаем ID вместо объекта artwork для гарантированной загрузки корректных данных
             Intent intent = new Intent(v.getContext(), AdminArtworkDetailActivity.class);
             intent.putExtra("artwork_id", artwork.getId());
             v.getContext().startActivity(intent);

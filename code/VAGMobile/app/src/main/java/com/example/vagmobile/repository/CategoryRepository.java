@@ -71,7 +71,6 @@ public class CategoryRepository {
     public LiveData<Map<String, Object>> createCategory(String name, String description) {
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
 
-        // Создаем JSON запрос
         Map<String, String> categoryData = new HashMap<>();
         categoryData.put("name", name);
         categoryData.put("description", description);
@@ -105,7 +104,6 @@ public class CategoryRepository {
     public LiveData<Map<String, Object>> updateCategory(Long categoryId, String name, String description) {
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
 
-        // Создаем JSON запрос
         Map<String, String> categoryData = new HashMap<>();
         categoryData.put("name", name);
         categoryData.put("description", description);

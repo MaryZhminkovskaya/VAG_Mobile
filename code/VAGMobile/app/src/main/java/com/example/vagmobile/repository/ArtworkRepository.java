@@ -37,7 +37,6 @@ public class ArtworkRepository {
         return null;
     }
 
-    // ДОБАВЛЕНО: Метод для получения сервиса с авторизацией
     private ApiService getApiServiceWithAuth() {
         String authHeader = getAuthHeader();
         if (authHeader != null) {
@@ -46,7 +45,6 @@ public class ArtworkRepository {
         return apiService;
     }
 
-    // НОВЫЙ МЕТОД: Получить публикацию для администратора
     public MutableLiveData<Map<String, Object>> getArtworkForAdmin(Long id) {
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
 
@@ -146,7 +144,6 @@ public class ArtworkRepository {
         return result;
     }
 
-    // ДОБАВЛЕНО: Метод для получения понравившихся публикаций
     public MutableLiveData<Map<String, Object>> getLikedArtworks(int page, int size) {
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
 
@@ -185,7 +182,6 @@ public class ArtworkRepository {
         return result;
     }
 
-    // Остальные методы остаются без изменений...
     public MutableLiveData<Map<String, Object>> createArtwork(
             String title,
             String description,
@@ -194,7 +190,6 @@ public class ArtworkRepository {
 
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
 
-        // Создаем RequestBody для текстовых полей
         RequestBody titleBody = RequestBody.create(MultipartBody.FORM, title);
         RequestBody descriptionBody = RequestBody.create(MultipartBody.FORM, description);
         RequestBody categoryIdsBody = RequestBody.create(MultipartBody.FORM, categoryIds);
@@ -202,7 +197,6 @@ public class ArtworkRepository {
         String authHeader = getAuthHeader();
         System.out.println("ArtworkRepository: Creating artwork with authHeader: " + authHeader);
 
-        // ИСПРАВЛЕНО: Используем сервис с авторизацией
         ApiService authApiService = getApiServiceWithAuth();
         authApiService.createArtwork(authHeader, titleBody, descriptionBody, categoryIdsBody, image)
                 .enqueue(new Callback<Map<String, Object>>() {
@@ -230,7 +224,6 @@ public class ArtworkRepository {
         return result;
     }
 
-    // ИСПРАВЛЕНО: Метод likeArtwork с авторизацией
     public MutableLiveData<Map<String, Object>> likeArtwork(Long id) {
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
 
@@ -243,7 +236,6 @@ public class ArtworkRepository {
             return result;
         }
 
-        // ИСПРАВЛЕНО: Используем сервис с авторизацией
         ApiService authApiService = getApiServiceWithAuth();
         authApiService.likeArtwork(authHeader, id).enqueue(new Callback<Map<String, Object>>() {
             @Override
@@ -270,7 +262,6 @@ public class ArtworkRepository {
         return result;
     }
 
-    // ИСПРАВЛЕНО: Метод unlikeArtwork с авторизацией
     public MutableLiveData<Map<String, Object>> unlikeArtwork(Long id) {
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
 
@@ -283,7 +274,6 @@ public class ArtworkRepository {
             return result;
         }
 
-        // ИСПРАВЛЕНО: Используем сервис с авторизацией
         ApiService authApiService = getApiServiceWithAuth();
         authApiService.unlikeArtwork(authHeader, id).enqueue(new Callback<Map<String, Object>>() {
             @Override
@@ -310,7 +300,6 @@ public class ArtworkRepository {
         return result;
     }
 
-    // УЛУЧШЕННЫЙ МЕТОД: addComment с предотвращением дублирования
     public MutableLiveData<Map<String, Object>> addComment(Long id, String content) {
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
 
@@ -323,20 +312,16 @@ public class ArtworkRepository {
             return result;
         }
 
-        // Создаем RequestBody для комментария
         RequestBody contentBody = RequestBody.create(MultipartBody.FORM, content);
 
-        // ИСПРАВЛЕНО: Используем сервис с авторизацией
         ApiService authApiService = getApiServiceWithAuth();
         authApiService.addComment(authHeader, id, contentBody).enqueue(new Callback<Map<String, Object>>() {
             @Override
             public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    // Убедимся, что ответ содержит обновленные данные
                     Map<String, Object> responseBody = response.body();
                     Boolean success = (Boolean) responseBody.get("success");
                     if (success != null && success) {
-                        // Возвращаем весь ответ, который содержит обновленный artwork
                         result.setValue(responseBody);
                     } else {
                         Map<String, Object> error = new HashMap<>();
@@ -419,8 +404,6 @@ public class ArtworkRepository {
 
         return result;
     }
-
-// В ArtworkRepository.java ДОБАВЬТЕ логирование и исправьте toggleLike:
 
     public MutableLiveData<Map<String, Object>> toggleLike(Long artworkId, boolean isCurrentlyLiked) {
         System.out.println("ArtworkRepository: Toggle like - artworkId: " + artworkId + ", isCurrentlyLiked: " + isCurrentlyLiked);

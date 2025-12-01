@@ -67,7 +67,6 @@ public class ArtistArtworksActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         artworkAdapter = new ArtworkAdapter(artworkList, artwork -> {
-            // Открываем детали публикации
             Intent intent = new Intent(ArtistArtworksActivity.this, ArtworkDetailActivity.class);
             intent.putExtra("artwork_id", artwork.getId());
             startActivity(intent);
@@ -92,7 +91,6 @@ public class ArtistArtworksActivity extends AppCompatActivity {
                         artworkList.clear();
                         for (Map<String, Object> artworkData : artworksData) {
                             Artwork artwork = convertToArtwork(artworkData);
-                            // Фильтруем по artistId
                             if (artwork.getUser() != null && artwork.getUser().getId().equals(artistId)) {
                                 artworkList.add(artwork);
                             }
@@ -118,7 +116,7 @@ public class ArtistArtworksActivity extends AppCompatActivity {
 
     private void loadArtistArtworks() {
         progressBar.setVisibility(View.VISIBLE);
-        artworkViewModel.getArtworks(0, 100); // Загружаем больше публикаций для фильтрации
+        artworkViewModel.getArtworks(0, 100);
     }
 
     private void showEmptyState(String message) {

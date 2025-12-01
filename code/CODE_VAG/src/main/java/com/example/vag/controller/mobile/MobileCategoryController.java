@@ -50,7 +50,8 @@ public class MobileCategoryController {
             // Устанавливаем количество одобренных публикаций для каждой категории
             for (Category category : categories) {
                 Long approvedCount = artworkService.countApprovedArtworksByCategoryId(category.getId());
-                category.setApprovedArtworksCount(approvedCount);
+                // ИСПРАВЛЕНО: Гарантируем, что не будет null
+                category.setApprovedArtworksCount(approvedCount != null ? approvedCount : 0L);
                 System.out.println("Category: " + category.getName() + ", approved artworks: " + approvedCount);
             }
 
@@ -61,14 +62,13 @@ public class MobileCategoryController {
             response.put("success", true);
             response.put("categories", categoryDTOs);
 
-            System.out.println("Response: " + response);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             System.out.println("ERROR getting categories: " + e.getMessage());
             e.printStackTrace();
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
-            response.put("message", "Failed to fetch categories: " + e.getMessage());
+            response.put("message", "Не удалось загрузить категории");
             return ResponseEntity.badRequest().body(response);
         }
     }

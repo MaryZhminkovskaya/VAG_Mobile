@@ -9,7 +9,6 @@ public class Category implements Serializable {
 
     private Long approvedArtworksCount;
 
-    // Конструкторы
     public Category() {}
 
     public Category(Long id, String name, String description) {
@@ -18,7 +17,6 @@ public class Category implements Serializable {
         this.description = description;
     }
 
-    // Геттеры и сеттеры
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -30,9 +28,6 @@ public class Category implements Serializable {
     public Long getApprovedArtworksCount() { return approvedArtworksCount; }
     public void setApprovedArtworksCount(Long approvedArtworksCount) { this.approvedArtworksCount = approvedArtworksCount; }
 
-    // Важно! Для правильного отображения в AutoCompleteTextView
     @Override
-    public String toString() {
-        return name; // Показываем только имя в выпадающем списке
-    }
+    public String toString() { return name; }
 }

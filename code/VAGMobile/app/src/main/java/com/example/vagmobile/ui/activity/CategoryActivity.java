@@ -108,7 +108,6 @@ public class CategoryActivity extends AppCompatActivity {
     private Category convertToCategory(Map<String, Object> categoryData) {
         Category category = new Category();
         
-        // Обработка ID
         Object idObj = categoryData.get("id");
         if (idObj != null) {
             if (idObj instanceof Double) {
@@ -123,7 +122,6 @@ public class CategoryActivity extends AppCompatActivity {
         category.setName((String) categoryData.get("name"));
         category.setDescription((String) categoryData.get("description"));
 
-        // Обработка approvedArtworksCount
         Object countObj = categoryData.get("approvedArtworksCount");
         if (countObj != null) {
             if (countObj instanceof Double) {

@@ -4,18 +4,24 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import com.bumptech.glide.Glide;
 import com.example.vagmobile.R;
 import com.example.vagmobile.model.Artwork;
+import com.example.vagmobile.model.Category;
 import com.example.vagmobile.model.Comment;
 import com.example.vagmobile.model.User;
 import com.example.vagmobile.ui.adapter.CommentAdapter;
@@ -36,8 +42,9 @@ public class ArtworkDetailActivity extends AppCompatActivity {
     private Long artworkId;
 
     private ImageView ivArtwork;
-    private TextView tvTitle, tvArtist, tvDescription, tvLikes, tvCategories;
-    private Button btnLike, btnComment;
+    private TextView tvTitle, tvArtist, tvDescription, tvLikes, tvViews, tvCategories;
+    private ImageButton btnLike;
+    private Button btnComment;
     private EditText etComment;
     private RecyclerView recyclerViewComments;
     private ProgressBar progressBar;
@@ -56,7 +63,7 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         artworkId = getIntent().getLongExtra("artwork_id", -1);
 
         if (artworkId == -1) {
-            Toast.makeText(this, "Artwork not found", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Публикация не найдена", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -73,6 +80,7 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         tvArtist = findViewById(R.id.tvArtist);
         tvDescription = findViewById(R.id.tvDescription);
         tvLikes = findViewById(R.id.tvLikes);
+        tvViews = findViewById(R.id.tvViews);
         tvCategories = findViewById(R.id.tvCategories);
         btnLike = findViewById(R.id.btnLike);
         btnComment = findViewById(R.id.btnComment);
@@ -113,37 +121,66 @@ public class ArtworkDetailActivity extends AppCompatActivity {
                     }
                 } else {
                     String message = (String) result.get("message");
-                    Toast.makeText(this, "Failed to load artwork: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Не удалось загрузить публикацию: " + message, Toast.LENGTH_SHORT).show();
                 }
             }
         });
 
         // Observer для toggle like
         artworkViewModel.getToggleLikeResult().observe(this, result -> {
-            if (result != null && Boolean.TRUE.equals((Boolean) result.get("success"))) {
-
-                if (artwork != null) {
-                    boolean newState = !artwork.isLiked();
-                    artwork.setLiked(newState);
-                    artwork.setLikes(newState ? artwork.getLikes() + 1 : artwork.getLikes() - 1);
-
-                    updateLikeButton();
-                    tvLikes.setText(artwork.getLikes() + " лайков");
-                }
-
-                loadArtwork(); // на всякий случай
-
-                Toast.makeText(this,
-                        artwork.isLiked() ? "Лайк добавлен" : "Лайк убран",
-                        Toast.LENGTH_SHORT).show();
-            } else {
-                String msg = result != null ? (String) result.get("message") : "Ошибка";
-                Toast.makeText(this, "Не удалось: " + msg, Toast.LENGTH_SHORT).show();
-            }
-
-            // Разблокировка кнопки
             isLikeInProgress = false;
             btnLike.setEnabled(true);
+
+            if (result != null) {
+                Boolean success = (Boolean) result.get("success");
+                if (success != null && success) {
+                    // Обновляем данные из ответа сервера
+                    Map<String, Object> artworkData = (Map<String, Object>) result.get("artwork");
+                    if (artworkData != null) {
+                        artwork = convertToArtwork(artworkData);
+                        updateUI();
+                    }
+
+                    Toast.makeText(this,
+                            artwork != null && artwork.isLiked() ? "Лайк добавлен" : "Лайк убран",
+                            Toast.LENGTH_SHORT).show();
+                } else {
+                    String msg = result != null ? (String) result.get("message") : "Ошибка";
+                    Toast.makeText(this, "Не удалось: " + msg, Toast.LENGTH_SHORT).show();
+
+                    // Откатываем изменение если сервер вернул ошибку
+                    if (artwork != null) {
+                        artwork.setLiked(!artwork.isLiked());
+                        artwork.setLikes(artwork.isLiked() ? artwork.getLikes() + 1 : artwork.getLikes() - 1);
+                        updateLikeButton();
+                        tvLikes.setText(String.valueOf(artwork.getLikes()));
+
+                    }
+                }
+            }
+        });
+        artworkViewModel.getAddCommentResult().observe(this, result -> {
+            btnComment.setEnabled(true);
+
+            if (result != null) {
+                Boolean success = (Boolean) result.get("success");
+                if (success != null && success) {
+                    Toast.makeText(this, "Комментарий добавлен", Toast.LENGTH_SHORT).show();
+
+                    Map<String, Object> artworkData = (Map<String, Object>) result.get("artwork");
+                    if (artworkData != null) {
+                        artwork = convertToArtwork(artworkData);
+                        updateUI();
+                    }
+
+                    if (commentList.size() > 0) {
+                        recyclerViewComments.smoothScrollToPosition(commentList.size() - 1);
+                    }
+                } else {
+                    String message = (String) result.get("message");
+                    Toast.makeText(this, "Ошибка: " + message, Toast.LENGTH_SHORT).show();
+                }
+            }
         });
     }
 
@@ -157,64 +194,79 @@ public class ArtworkDetailActivity extends AppCompatActivity {
 
         tvTitle.setText(artwork.getTitle());
         tvDescription.setText(artwork.getDescription());
-        tvLikes.setText(artwork.getLikes() + " лайков");
+        tvLikes.setText(String.valueOf(artwork.getLikes()));
+
+        if (artwork.getViews() > 0) {
+            tvViews.setText(artwork.getViews() + " просмотров");
+            tvViews.setVisibility(View.VISIBLE);
+        }
 
         Log.d("LIKE_DEBUG", "=== updateUI() вызван ===");
         Log.d("LIKE_DEBUG", "artwork.isLiked() = " + artwork.isLiked());
         Log.d("LIKE_DEBUG", "artwork.getLikes() = " + artwork.getLikes());
 
-        // Отображение категорий
         if (artwork.hasCategories()) {
-            tvCategories.setText(artwork.getCategoriesString());
+            tvCategories.setText("Категории: " + artwork.getCategoriesString());
             tvCategories.setVisibility(View.VISIBLE);
         } else {
-            tvCategories.setVisibility(View.GONE);
+            tvCategories.setText("Категории: Без категории");
+            tvCategories.setVisibility(View.VISIBLE);
         }
 
-        // Отображение реального пользователя
         if (artwork.getUser() != null && artwork.getUser().getUsername() != null) {
-            tvArtist.setText("By " + artwork.getUser().getUsername());
+            tvArtist.setText("Художник: " + artwork.getUser().getUsername());
         } else {
-            tvArtist.setText("By Unknown Artist");
+            tvArtist.setText("Художник: Неизвестно");
         }
 
-        // Загрузка изображения
         if (artwork.getImagePath() != null && !artwork.getImagePath().isEmpty()) {
             String imagePath = artwork.getImagePath();
             if (imagePath.startsWith("/")) {
                 imagePath = imagePath.substring(1);
             }
             String imageUrl = "http://192.168.0.51:8080/vag/uploads/" + imagePath;
-            Log.d("ArtworkDetail", "Loading image from URL: " + imageUrl);
+            Log.d("ArtworkDetail", "Загрузка изображения с URL: " + imageUrl);
             Glide.with(this)
                     .load(imageUrl)
-                    .placeholder(android.R.drawable.ic_menu_gallery)
-                    .error(android.R.drawable.ic_menu_report_image)
+                    .placeholder(R.drawable.ic_placeholder)
+                    .error(R.drawable.ic_error)
                     .into(ivArtwork);
         } else {
-            Log.d("ArtworkDetail", "ImagePath is null or empty");
+            Log.d("ArtworkDetail", "Путь к изображению пуст");
         }
 
-        // Обновление комментариев
         if (artwork.getComments() != null) {
+            List<Comment> newComments = new ArrayList<>();
+            List<Comment> tempComments = new ArrayList<>();
+
+            for (Comment comment : commentList) {
+                if (comment.getId() == null || comment.getId() == 0) {
+                    tempComments.add(comment);
+                }
+            }
+
             commentList.clear();
             commentList.addAll(artwork.getComments());
-            commentAdapter.notifyDataSetChanged();
-        }
 
-        // Обновление кнопки лайка только для авторизованных пользователей
-        if (prefs.isLoggedIn()) {
-            updateLikeButton();
+            commentList.addAll(tempComments);
+
+            commentAdapter.notifyDataSetChanged();
+
+            if (!commentList.isEmpty()) {
+                recyclerViewComments.smoothScrollToPosition(commentList.size() - 1);
+            }
         }
     }
 
     private void updateLikeButton() {
+        if (artwork == null) return;
+
         if (artwork.isLiked()) {
-            btnLike.setText("Убрать лайк");
-            btnLike.setBackgroundColor(getResources().getColor(android.R.color.holo_red_light));
+            btnLike.setImageResource(R.drawable.ic_heart_filled);
+            btnLike.setColorFilter(Color.RED);
         } else {
-            btnLike.setText("Поставить лайк");
-            btnLike.setBackgroundColor(getResources().getColor(android.R.color.holo_blue_light));
+            btnLike.setImageResource(R.drawable.ic_heart_outline);
+            btnLike.setColorFilter(Color.GRAY);
         }
     }
 
@@ -229,9 +281,24 @@ public class ArtworkDetailActivity extends AppCompatActivity {
             return;
         }
 
-        Log.d("ArtworkDetail", "Toggling like - artworkId: " + artworkId + ", currently liked: " + artwork.isLiked());
+        if (isLikeInProgress) {
+            return;
+        }
 
-        artworkViewModel.toggleLike(artworkId, artwork.isLiked());
+        Log.d("ArtworkDetail", "Переключение лайка - artworkId: " + artworkId + ", сейчас лайкнуто: " + artwork.isLiked());
+
+        boolean newLikedState = !artwork.isLiked();
+        artwork.setLiked(newLikedState);
+        artwork.setLikes(newLikedState ? artwork.getLikes() + 1 : artwork.getLikes() - 1);
+
+        updateLikeButton();
+        tvLikes.setText(String.valueOf(artwork.getLikes()));
+
+
+        isLikeInProgress = true;
+        btnLike.setEnabled(false);
+
+        artworkViewModel.toggleLike(artworkId, !newLikedState);
     }
 
     private void addComment() {
@@ -246,15 +313,16 @@ public class ArtworkDetailActivity extends AppCompatActivity {
             return;
         }
 
-        // Блокируем кнопку до завершения запроса
+        etComment.setText("");
+
         btnComment.setEnabled(false);
+
         artworkViewModel.addComment(artworkId, content);
     }
 
     private Artwork convertToArtwork(Map<String, Object> artworkData) {
         Artwork artwork = new Artwork();
 
-        // Безопасное преобразование ID
         Object idObj = artworkData.get("id");
         if (idObj != null) {
             if (idObj instanceof Double) {
@@ -270,7 +338,6 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         artwork.setDescription((String) artworkData.get("description"));
         artwork.setImagePath((String) artworkData.get("imagePath"));
 
-// Безопасное преобразование лайков
         Object likesObj = artworkData.get("likes");
         if (likesObj != null) {
             if (likesObj instanceof Double) {
@@ -281,14 +348,29 @@ public class ArtworkDetailActivity extends AppCompatActivity {
                 artwork.setLikes(((Long) likesObj).intValue());
             }
         } else {
-            artwork.setLikes(0); // на всякий случай
+            artwork.setLikes(0);
+        }
+
+        Object viewsObj = artworkData.get("views");
+        if (viewsObj != null) {
+            if (viewsObj instanceof Double) {
+                artwork.setViews(((Double) viewsObj).intValue());
+            } else if (viewsObj instanceof Integer) {
+                artwork.setViews((Integer) viewsObj);
+            } else if (viewsObj instanceof Long) {
+                artwork.setViews(((Long) viewsObj).intValue());
+            }
         }
 
         artwork.setStatus((String) artworkData.get("status"));
 
-// ВОТ ЭТА СТРОКА — САМАЯ ГЛАВНАЯ! (ты забыла её вставить)
-        artwork.setLiked(Boolean.TRUE.equals(artworkData.get("liked")));
-        // Парсинг пользователя
+        Object likedObj = artworkData.get("liked");
+        if (likedObj instanceof Boolean) {
+            artwork.setLiked((Boolean) likedObj);
+        } else {
+            artwork.setLiked(false);
+        }
+
         if (artworkData.get("user") != null) {
             Map<String, Object> userData = (Map<String, Object>) artworkData.get("user");
             User user = new User();
@@ -313,7 +395,6 @@ public class ArtworkDetailActivity extends AppCompatActivity {
             artwork.setUser(unknownUser);
         }
 
-        // Конвертируем комментарии
         if (artworkData.get("comments") != null) {
             List<Map<String, Object>> commentsData = (List<Map<String, Object>>) artworkData.get("comments");
             List<Comment> comments = new ArrayList<>();
@@ -324,7 +405,6 @@ public class ArtworkDetailActivity extends AppCompatActivity {
             artwork.setComments(comments);
         }
 
-        // Конвертируем категории
         if (artworkData.get("categories") != null) {
             List<Map<String, Object>> categoriesData = (List<Map<String, Object>>) artworkData.get("categories");
             List<com.example.vagmobile.model.Category> categories = new ArrayList<>();
@@ -346,6 +426,8 @@ public class ArtworkDetailActivity extends AppCompatActivity {
                 comment.setId(((Double) commentData.get("id")).longValue());
             } else if (commentData.get("id") instanceof Long) {
                 comment.setId((Long) commentData.get("id"));
+            } else if (commentData.get("id") instanceof Integer) {
+                comment.setId(((Integer) commentData.get("id")).longValue());
             }
         }
 
@@ -360,6 +442,8 @@ public class ArtworkDetailActivity extends AppCompatActivity {
                     user.setId(((Double) userData.get("id")).longValue());
                 } else if (userData.get("id") instanceof Long) {
                     user.setId((Long) userData.get("id"));
+                } else if (userData.get("id") instanceof Integer) {
+                    user.setId(((Integer) userData.get("id")).longValue());
                 }
             }
 
@@ -372,20 +456,43 @@ public class ArtworkDetailActivity extends AppCompatActivity {
             if (dateObj instanceof String) {
                 String dateString = (String) dateObj;
                 try {
-                    SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault());
-                    Date date = format.parse(dateString);
-                    comment.setDateCreated(date);
+                    SimpleDateFormat[] formats = {
+                            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.getDefault()),
+                            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault()),
+                            new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()),
+                            new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                    };
+
+                    Date date = null;
+                    for (SimpleDateFormat format : formats) {
+                        try {
+                            date = format.parse(dateString);
+                            break;
+                        } catch (Exception e) {
+                        }
+                    }
+
+                    if (date != null) {
+                        comment.setDateCreated(date);
+                    } else {
+                        comment.setDateCreated(new Date());
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
+                    comment.setDateCreated(new Date());
                 }
+            } else if (dateObj instanceof Long) {
+                comment.setDateCreated(new Date((Long) dateObj));
             }
+        } else {
+            comment.setDateCreated(new Date());
         }
 
         return comment;
     }
 
-    private com.example.vagmobile.model.Category convertToCategory(Map<String, Object> categoryData) {
-        com.example.vagmobile.model.Category category = new com.example.vagmobile.model.Category();
+    private Category convertToCategory(Map<String, Object> categoryData) {
+        Category category = new Category();
 
         Object idObj = categoryData.get("id");
         if (idObj != null) {
@@ -398,8 +505,21 @@ public class ArtworkDetailActivity extends AppCompatActivity {
             }
         }
 
-        category.setName((String) categoryData.get("name"));
-        category.setDescription((String) categoryData.get("description"));
+        category.setName(categoryData.get("name") != null ? categoryData.get("name").toString() : "Без названия");
+        category.setDescription(categoryData.get("description") != null ? categoryData.get("description").toString() : "");
+
+        Object countObj = categoryData.get("approvedArtworksCount");
+        if (countObj != null) {
+            if (countObj instanceof Double) {
+                category.setApprovedArtworksCount(((Double) countObj).longValue());
+            } else if (countObj instanceof Integer) {
+                category.setApprovedArtworksCount(((Integer) countObj).longValue());
+            } else if (countObj instanceof Long) {
+                category.setApprovedArtworksCount((Long) countObj);
+            }
+        } else {
+            category.setApprovedArtworksCount(0L);
+        }
 
         return category;
     }

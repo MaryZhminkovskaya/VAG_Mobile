@@ -57,7 +57,6 @@ public class ArtistsFragment extends Fragment {
 
     private void setupRecyclerView() {
         artistsAdapter = new ArtistsAdapter(artistList, artist -> {
-            // Открываем публикации художника
             Intent intent = new Intent(getActivity(), ArtistArtworksActivity.class);
             intent.putExtra("artist_id", artist.getId());
             intent.putExtra("artist_name", artist.getUsername());
@@ -121,7 +120,6 @@ public class ArtistsFragment extends Fragment {
         try {
             User user = new User();
 
-            // Безопасное преобразование ID
             Object idObj = userData.get("id");
             if (idObj != null) {
                 if (idObj instanceof Double) {
@@ -136,7 +134,6 @@ public class ArtistsFragment extends Fragment {
             user.setUsername((String) userData.get("username"));
             user.setEmail((String) userData.get("email"));
 
-            // Количество работ
             Object countObj = userData.get("artworksCount");
             if (countObj != null) {
                 if (countObj instanceof Double) {

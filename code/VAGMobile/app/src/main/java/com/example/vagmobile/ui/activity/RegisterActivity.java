@@ -27,7 +27,6 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        // Используем AndroidViewModel с Application context
         authViewModel = new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication())).get(AuthViewModel.class);
 
         etUsername = findViewById(R.id.etUsername);
@@ -76,7 +75,6 @@ public class RegisterActivity extends AppCompatActivity {
                 if (success != null && success) {
                     AuthResponse authResponse = (AuthResponse) result.get("user");
                     if (authResponse != null) {
-                        // Данные уже сохранены в Repository, просто переходим
                         Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
                         startActivity(new Intent(this, MainActivity.class));
                         finish();

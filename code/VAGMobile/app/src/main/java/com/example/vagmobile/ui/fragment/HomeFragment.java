@@ -69,14 +69,12 @@ public class HomeFragment extends Fragment {
         TextView tvSeeAllArtists = view.findViewById(R.id.tvSeeAllArtists);
 
         tvSeeAllArtworks.setOnClickListener(v -> {
-            // Переход ко всем публикациям
             if (getActivity() instanceof MainActivity) {
                 ((MainActivity) getActivity()).bottomNavigationView.setSelectedItemId(R.id.nav_gallery);
             }
         });
 
         tvSeeAllArtists.setOnClickListener(v -> {
-            // Переход ко всем художникам
             if (getActivity() instanceof MainActivity) {
                 ((MainActivity) getActivity()).bottomNavigationView.setSelectedItemId(R.id.nav_artists);
             }
@@ -84,7 +82,6 @@ public class HomeFragment extends Fragment {
     }
 
     private void setupRecyclerViews() {
-        // Настройка для публикаций
         featuredArtworkAdapter = new ArtworkAdapter(featuredArtworks, artwork -> {
             Intent intent = new Intent(getActivity(), ArtworkDetailActivity.class);
             intent.putExtra("artwork_id", artwork.getId());
@@ -95,7 +92,6 @@ public class HomeFragment extends Fragment {
         rvFeaturedArtworks.setLayoutManager(artworksLayoutManager);
         rvFeaturedArtworks.setAdapter(featuredArtworkAdapter);
 
-        // Настройка для художников
         featuredArtistsAdapter = new ArtistsAdapter(featuredArtists, artist -> {
             Intent intent = new Intent(getActivity(), ArtistArtworksActivity.class);
             intent.putExtra("artist_id", artist.getId());
@@ -114,7 +110,6 @@ public class HomeFragment extends Fragment {
         artworkViewModel = new ViewModelProvider(requireActivity()).get(ArtworkViewModel.class);
         userViewModel = new ViewModelProvider(requireActivity()).get(UserViewModel.class);
 
-        // Загрузка случайных публикаций
         artworkViewModel.getArtworksResult().observe(getViewLifecycleOwner(), result -> {
             progressBar.setVisibility(View.GONE);
 
@@ -131,7 +126,6 @@ public class HomeFragment extends Fragment {
                             }
                         }
 
-                        // Выбираем 4 случайные публикации
                         featuredArtworks.clear();
                         if (allArtworks.size() > 4) {
                             Collections.shuffle(allArtworks);
@@ -157,12 +151,10 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        // Загрузка случайных художников - ИСПРАВЛЕННАЯ ЧАСТЬ
         userViewModel.getArtistsResult().observe(getViewLifecycleOwner(), result -> {
             if (result != null) {
                 Boolean success = (Boolean) result.get("success");
                 if (success != null && success) {
-                    // ИСПРАВЛЕНИЕ: Правильно получаем список пользователей
                     Object usersObj = result.get("users");
                     if (usersObj instanceof List) {
                         List<?> usersList = (List<?>) usersObj;
@@ -170,10 +162,8 @@ public class HomeFragment extends Fragment {
 
                         for (Object userObj : usersList) {
                             if (userObj instanceof User) {
-                                // Если это уже объект User, просто добавляем
                                 allArtists.add((User) userObj);
                             } else if (userObj instanceof Map) {
-                                // Если это Map, конвертируем в User
                                 User user = convertToUser((Map<String, Object>) userObj);
                                 if (user != null) {
                                     allArtists.add(user);
@@ -181,7 +171,6 @@ public class HomeFragment extends Fragment {
                             }
                         }
 
-                        // Выбираем 4 случайных художника
                         featuredArtists.clear();
                         if (allArtists.size() > 4) {
                             Collections.shuffle(allArtists);
@@ -208,7 +197,6 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        // Запускаем загрузку данных
         artworkViewModel.getArtworks(0, 50);
         userViewModel.getAllArtists();
     }
@@ -217,18 +205,15 @@ public class HomeFragment extends Fragment {
         try {
             Artwork artwork = new Artwork();
 
-            // ID
             if (artworkData.get("id") != null) {
                 artwork.setId(((Number) artworkData.get("id")).longValue());
             }
 
-            // Основные поля
             artwork.setTitle((String) artworkData.get("title"));
             artwork.setDescription((String) artworkData.get("description"));
             artwork.setImagePath((String) artworkData.get("imagePath"));
             artwork.setStatus((String) artworkData.get("status"));
 
-            // Числовые поля
             if (artworkData.get("likes") != null) {
                 artwork.setLikes(((Number) artworkData.get("likes")).intValue());
             }
@@ -236,7 +221,6 @@ public class HomeFragment extends Fragment {
                 artwork.setViews(((Number) artworkData.get("views")).intValue());
             }
 
-            // Пользователь
             if (artworkData.get("user") != null) {
                 Map<String, Object> userData = (Map<String, Object>) artworkData.get("user");
                 User user = convertToUser(userData);
@@ -254,7 +238,6 @@ public class HomeFragment extends Fragment {
         try {
             User user = new User();
 
-            // Безопасное преобразование ID
             Object idObj = userData.get("id");
             if (idObj != null) {
                 if (idObj instanceof Double) {
@@ -269,7 +252,6 @@ public class HomeFragment extends Fragment {
             user.setUsername((String) userData.get("username"));
             user.setEmail((String) userData.get("email"));
 
-            // Количество работ
             Object countObj = userData.get("artworksCount");
             if (countObj != null) {
                 if (countObj instanceof Double) {

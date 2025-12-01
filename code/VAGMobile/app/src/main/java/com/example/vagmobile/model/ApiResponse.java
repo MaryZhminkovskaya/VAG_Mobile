@@ -11,7 +11,6 @@ public class ApiResponse<T> {
     @SerializedName("data")
     private T data;
 
-    // Геттеры и сеттеры
     public boolean isSuccess() { return success; }
     public void setSuccess(boolean success) { this.success = success; }
 

@@ -68,7 +68,6 @@ public class ArtworkAdapter extends RecyclerView.Adapter<ArtworkAdapter.ArtworkV
             tvTitle.setText(artwork.getTitle());
             tvLikes.setText(String.valueOf(artwork.getLikes()));
 
-            // Отображение категорий
             if (artwork.hasCategories()) {
                 tvCategories.setText(artwork.getCategoriesString());
                 tvCategories.setVisibility(View.VISIBLE);
@@ -76,16 +75,13 @@ public class ArtworkAdapter extends RecyclerView.Adapter<ArtworkAdapter.ArtworkV
                 tvCategories.setVisibility(View.GONE);
             }
 
-            // Отображение реального пользователя
             if (artwork.getUser() != null && artwork.getUser().getUsername() != null) {
                 tvArtist.setText(artwork.getUser().getUsername());
             } else {
                 tvArtist.setText("Неизвестный художник");
             }
 
-            // Загрузка изображения
             if (artwork.getImagePath() != null && !artwork.getImagePath().isEmpty()) {
-                // Убеждаемся, что путь не начинается с /
                 String imagePath = artwork.getImagePath();
                 if (imagePath.startsWith("/")) {
                     imagePath = imagePath.substring(1);

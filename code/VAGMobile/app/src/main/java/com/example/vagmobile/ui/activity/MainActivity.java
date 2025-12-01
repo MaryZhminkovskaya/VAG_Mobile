@@ -33,7 +33,6 @@ public class MainActivity extends AppCompatActivity {
         setupBottomNavigation();
         setupFloatingActionButton();
 
-        // Загружаем стартовый фрагмент
         if (savedInstanceState == null) {
             loadFragment(new HomeFragment());
         }
@@ -95,16 +94,13 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        // Если в back stack есть фрагменты, обрабатываем навигацию
         if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
             getSupportFragmentManager().popBackStack();
         } else {
-            // Если мы на главном фрагменте, выходим из приложения
             if (bottomNavigationView.getSelectedItemId() == R.id.nav_home) {
                 super.onBackPressed();
                 finishAffinity();
             } else {
-                // Иначе переходим на главный фрагмент
                 bottomNavigationView.setSelectedItemId(R.id.nav_home);
             }
         }

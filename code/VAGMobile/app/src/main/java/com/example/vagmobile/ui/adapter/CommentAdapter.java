@@ -1,5 +1,6 @@
 package com.example.vagmobile.ui.adapter;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -61,19 +62,24 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
         public void bind(Comment comment) {
             tvCommentContent.setText(comment.getContent());
 
-            // Установка имени пользователя
             if (comment.getUser() != null) {
                 tvUserName.setText(comment.getUser().getUsername());
             } else {
                 tvUserName.setText("Аноним");
             }
 
-            // Установка даты
             if (comment.getDateCreated() != null) {
-                String formattedDate = dateFormat.format(comment.getDateCreated());
-                tvCommentDate.setText(formattedDate);
-                tvCommentDate.setVisibility(View.VISIBLE);
+                try {
+                    String formattedDate = dateFormat.format(comment.getDateCreated());
+                    tvCommentDate.setText(formattedDate);
+                    tvCommentDate.setVisibility(View.VISIBLE);
+                    Log.d("COMMENT_ADAPTER", "Formatted date: " + formattedDate);
+                } catch (Exception e) {
+                    Log.e("COMMENT_ADAPTER", "Error formatting date: " + e.getMessage());
+                    tvCommentDate.setVisibility(View.GONE);
+                }
             } else {
+                Log.d("COMMENT_ADAPTER", "Comment date is null");
                 tvCommentDate.setVisibility(View.GONE);
             }
         }

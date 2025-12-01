@@ -21,10 +21,8 @@ public class CategoryEntity {
     @ColumnInfo(name = "last_updated")
     private Long lastUpdated;
 
-    // Конструкторы
     public CategoryEntity() {}
 
-    // Геттеры и сеттеры
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
