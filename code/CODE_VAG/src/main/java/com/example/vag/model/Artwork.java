@@ -1,5 +1,6 @@
 package com.example.vag.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
@@ -12,7 +13,6 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 
 @Entity
 @Table(name = "artworks")
@@ -34,12 +34,13 @@ public class Artwork {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "artwork_category",
             joinColumns = @JoinColumn(name = "artwork_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id")
     )
+    @JsonIgnore
     private Set<Category> categories = new HashSet<>();
 
     @Transient
@@ -54,12 +55,14 @@ public class Artwork {
     @Column(nullable = false)
     private LocalDate dateCreation;
 
-    @ManyToMany(mappedBy = "artworks")
+    @ManyToMany(mappedBy = "artworks", fetch = FetchType.LAZY)
+    @JsonIgnore
     private Set<Exhibition> exhibitions = new HashSet<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    // ИЗМЕНЕНО: EAGER загрузка для веб-шаблонов
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private User user; // Убрали @JsonIgnore для веб-шаблонов
 
     @Column(nullable = false)
     private String status; // PENDING, APPROVED, REJECTED
@@ -70,21 +73,16 @@ public class Artwork {
     @Column(nullable = false)
     private int views = 0;
 
-    @OneToMany(mappedBy = "artwork", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "artwork", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Like> artworkLikes;
 
-    @OneToMany(mappedBy = "artwork", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "artwork", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<Comment> comments;
+
     @Transient
     private Boolean liked;
-
-    public Boolean getLiked() {
-        return liked;
-    }
-
-    public void setLiked(Boolean liked) {
-        this.liked = liked;
-    }
 
     @PrePersist
     protected void onCreate() {
@@ -95,123 +93,18 @@ public class Artwork {
         PENDING, APPROVED, REJECTED
     }
 
-    public void setImageFile(MultipartFile imageFile) {
-        this.imageFile = imageFile;
-    }
-
-    public List<Long> getCategoryIds() {
-        return categoryIds;
-    }
-
-    public void setCategoryIds(List<Long> categoryIds) {
-        this.categoryIds = categoryIds;
-    }
-
-    public MultipartFile getImageFile() {
-        return imageFile;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public String getImagePath() {
-        return imagePath;
-    }
-
-    public LocalDate getDateCreation() {
-        return dateCreation;
-    }
-
-    public Set<Exhibition> getExhibitions() {
-        return exhibitions;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public int getLikes() {
-        return likes;
-    }
-
-    public int getViews() {
-        return views;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
-    }
-
-    public void setDateCreation(LocalDate dateCreation) {
-        this.dateCreation = dateCreation;
-    }
-
-    public void setExhibitions(Set<Exhibition> exhibitions) {
-        this.exhibitions = exhibitions;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public void setLikes(int likes) {
-        this.likes = likes;
-    }
-
-    public void setViews(int views) {
-        this.views = views;
-    }
-
-    public void setArtworkLikes(List<Like> artworkLikes) {
-        this.artworkLikes = artworkLikes;
-    }
-
-    public void setComments(List<Comment> comments) {
-        this.comments = comments;
-    }
-
-    public Set<Category> getCategories() {
-        return categories;
-    }
-
-    public void setCategories(Set<Category> categories) {
-        this.categories = categories;
-    }
-
-    public List<Like> getArtworkLikes() {
-        return artworkLikes;
-    }
-
-    public List<Comment> getComments() {
-        return comments;
+    // Безопасный toString без ленивых коллекций
+    @Override
+    public String toString() {
+        return "Artwork{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", description='" + (description != null ? description.substring(0, Math.min(50, description.length())) : "") + '\'' +
+                ", status='" + status + '\'' +
+                ", likes=" + likes +
+                ", views=" + views +
+                ", dateCreation=" + dateCreation +
+                ", user=" + (user != null ? user.getUsername() : "null") +
+                '}';
     }
 }

@@ -25,7 +25,7 @@ import java.util.Map;
 public class ArtworkListActivity extends AppCompatActivity {
 
     private ArtworkViewModel artworkViewModel;
-    private CategoryViewModel categoryViewModel; // ДОБАВЬТЕ ЭТУ СТРОКУ
+    private CategoryViewModel categoryViewModel;
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private TextView tvTitle;
@@ -89,7 +89,7 @@ public class ArtworkListActivity extends AppCompatActivity {
             handleArtworksResult(result);
         });
 
-        // Observer для публикаций по категории - ИСПРАВЛЕНО: используем categoryViewModel
+        // Observer для публикаций по категории
         categoryViewModel.getCategoryArtworksResult().observe(this, result -> {
             handleArtworksResult(result);
         });
@@ -108,6 +108,14 @@ public class ArtworkListActivity extends AppCompatActivity {
             if (success != null && success) {
                 List<Map<String, Object>> artworksData = (List<Map<String, Object>>) result.get("artworks");
                 if (artworksData != null) {
+                    // ОТЛАДОЧНЫЙ ВЫВОД ДЛЯ ОБЫЧНЫХ ПУБЛИКАЦИЙ
+                    System.out.println("=== REGULAR ARTWORKS DATA DEBUG ===");
+                    if (artworksData.size() > 0) {
+                        Map<String, Object> firstArtwork = artworksData.get(0);
+                        System.out.println("First artwork keys: " + firstArtwork.keySet());
+                        System.out.println("User object in first artwork: " + firstArtwork.get("user"));
+                    }
+
                     artworkList.clear();
                     for (Map<String, Object> artworkData : artworksData) {
                         Artwork artwork = convertToArtwork(artworkData);
@@ -163,23 +171,75 @@ public class ArtworkListActivity extends AppCompatActivity {
             }
         }
 
-        // Конвертируем пользователя
-        if (artworkData.get("user") != null) {
-            Map<String, Object> userData = (Map<String, Object>) artworkData.get("user");
-            User user = new User();
+        // УЛУЧШЕННЫЙ ПАРСИНГ ПОЛЬЗОВАТЕЛЯ
+        artwork.setUser(parseUserFromArtworkData(artworkData));
 
-            if (userData.get("id") != null) {
-                if (userData.get("id") instanceof Double) {
-                    user.setId(((Double) userData.get("id")).longValue());
-                } else if (userData.get("id") instanceof Long) {
-                    user.setId((Long) userData.get("id"));
+        return artwork;
+    }
+
+    private User parseUserFromArtworkData(Map<String, Object> artworkData) {
+        User user = new User();
+
+        // Вариант 1: user как объект
+        Object userObj = artworkData.get("user");
+        if (userObj instanceof Map) {
+            Map<String, Object> userData = (Map<String, Object>) userObj;
+
+            // Парсим ID пользователя
+            Object userIdObj = userData.get("id");
+            if (userIdObj != null) {
+                if (userIdObj instanceof Double) {
+                    user.setId(((Double) userIdObj).longValue());
+                } else if (userIdObj instanceof Integer) {
+                    user.setId(((Integer) userIdObj).longValue());
+                } else if (userIdObj instanceof Long) {
+                    user.setId((Long) userIdObj);
                 }
             }
 
-            user.setUsername((String) userData.get("username"));
-            artwork.setUser(user);
+            // Парсим username
+            String username = null;
+            if (userData.get("username") != null) {
+                username = (String) userData.get("username");
+            } else if (userData.get("userName") != null) {
+                username = (String) userData.get("userName");
+            } else if (userData.get("name") != null) {
+                username = (String) userData.get("name");
+            }
+            user.setUsername(username != null ? username : "Неизвестный художник");
+
+            // Парсим email
+            if (userData.get("email") != null) {
+                user.setEmail((String) userData.get("email"));
+            }
+
+            return user;
         }
 
-        return artwork;
+        // Вариант 2: поля пользователя прямо в artwork
+        Object userIdObj = artworkData.get("userId");
+        if (userIdObj != null) {
+            if (userIdObj instanceof Double) {
+                user.setId(((Double) userIdObj).longValue());
+            } else if (userIdObj instanceof Integer) {
+                user.setId(((Integer) userIdObj).longValue());
+            } else if (userIdObj instanceof Long) {
+                user.setId((Long) userIdObj);
+            }
+        }
+
+        // Ищем username в разных возможных полях
+        String username = null;
+        if (artworkData.get("userName") != null) {
+            username = (String) artworkData.get("userName");
+        } else if (artworkData.get("author") != null) {
+            username = (String) artworkData.get("author");
+        } else if (artworkData.get("username") != null) {
+            username = (String) artworkData.get("username");
+        }
+
+        user.setUsername(username != null ? username : "Неизвестный художник");
+
+        return user;
     }
 }

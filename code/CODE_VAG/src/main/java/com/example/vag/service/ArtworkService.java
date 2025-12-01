@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ArtworkService {
+
     Artwork save(Artwork artwork);
     Artwork create(Artwork artwork, MultipartFile imageFile, User user) throws IOException;
     List<Artwork> findAll();
@@ -27,8 +28,10 @@ public interface ArtworkService {
     void unlikeArtwork(Long artworkId, User user);
     boolean isLikedByUser(Artwork artwork, User user);
     void addComment(Long artworkId, User user, String content);
-    public Artwork findByIdWithComments(Long id);
+    Artwork findByIdWithComments(Long id);
+
     long countApprovedArtworksByCategoryId(Long categoryId);
+
     Page<Artwork> getApprovedArtworks(Pageable pageable);
     Optional<Artwork> findByIdWithCategories(Long id);
     Page<Artwork> findAll(Pageable pageable);
@@ -40,8 +43,11 @@ public interface ArtworkService {
     Page<Artwork> findByExhibitionId(Long exhibitionId, Pageable pageable);
     Page<Artwork> findAllPaginated(Pageable pageable);
     Page<Artwork> searchApprovedArtworks(String query, Pageable pageable);
+
     long countArtworksByCategoryId(Long categoryId);
+
     Artwork createWithCategories(Artwork artwork, MultipartFile imageFile, User user, List<Long> categoryIds) throws IOException;
 
-
+    void incrementViews(Long artworkId);
+    List<Artwork> findRandomArtworks(int count);
 }

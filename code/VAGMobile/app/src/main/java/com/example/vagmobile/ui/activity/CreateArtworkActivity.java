@@ -260,6 +260,7 @@ public class CreateArtworkActivity extends AppCompatActivity {
             }
         });
 
+        // ИСПРАВЛЕННЫЙ НАБЛЮДАТЕЛЬ: Используем правильный геттер
         artworkViewModel.getCreateResult().observe(this, result -> {
             resetCreateButton();
 
@@ -413,6 +414,7 @@ public class CreateArtworkActivity extends AppCompatActivity {
             btnCreateArtwork.setText("Creating...");
             progressBar.setVisibility(View.VISIBLE);
 
+            // ИСПРАВЛЕННЫЙ ВЫЗОВ: Используем правильный метод
             artworkViewModel.createArtwork(title, description, categoryIdsString, imagePart);
 
         } catch (Exception e) {
@@ -421,6 +423,7 @@ public class CreateArtworkActivity extends AppCompatActivity {
             resetCreateButton();
         }
     }
+
     private String convertCategoryIdsToString(List<Long> categoryIds) {
         if (categoryIds == null || categoryIds.isEmpty()) {
             return "";
@@ -442,6 +445,7 @@ public class CreateArtworkActivity extends AppCompatActivity {
         btnCreateArtwork.setText("Create Artwork");
         progressBar.setVisibility(View.GONE);
     }
+
     private void resetForm() {
         etTitle.setText("");
         etDescription.setText("");

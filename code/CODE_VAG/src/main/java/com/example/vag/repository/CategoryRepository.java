@@ -1,10 +1,6 @@
 package com.example.vag.repository;
 
-import com.example.vag.model.Artwork;
 import com.example.vag.model.Category;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,13 +12,19 @@ import java.util.Optional;
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
+    // Добавьте этот метод для поиска по имени
+    Optional<Category> findByName(String name);
+
+    // Метод для поиска категорий по списку ID
     @Query("SELECT c FROM Category c WHERE c.id IN :ids")
     List<Category> findAllByIds(@Param("ids") List<Long> ids);
 
-    @Query("SELECT DISTINCT c FROM Category c LEFT JOIN FETCH c.artworks")
-    List<Category> findAllWithArtworks();
+    // Существующие методы
+    List<Category> findAllByOrderByName();
 
-    Page<Category> findAll(Pageable pageable);
+    @Query("SELECT c FROM Category c LEFT JOIN FETCH c.artworks WHERE c.id = :id")
+    Category findByIdWithArtworks(@Param("id") Long id);
 
-    Optional<Category> findByName(String name);
+    // Стандартный метод Spring Data JPA
+    List<Category> findAllById(Iterable<Long> ids);
 }

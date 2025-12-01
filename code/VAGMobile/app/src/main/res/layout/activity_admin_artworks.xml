@@ -13,12 +13,14 @@
         android:textStyle="bold"
         android:layout_marginBottom="16dp" />
 
+    <!-- Фильтрация отключена - спиннер скрыт -->
     <Spinner
         android:id="@+id/statusSpinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:entries="@array/status_filter"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="16dp"
+        android:visibility="gone" />
 
     <ProgressBar
         android:id="@+id/progressBar"

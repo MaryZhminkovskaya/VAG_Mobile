@@ -67,6 +67,24 @@
             android:name=".ui.activity.CategoryDetailActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.activity.AdminArtworkDetailActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.activity.AdminArtworksActivity" />
+
+        <activity
+            android:name=".ui.activity.LikedArtworksActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.activity.ArtistsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.activity.ArtistArtworksActivity"
+            android:exported="false" />
+
+
     </application>
 
 </manifest>

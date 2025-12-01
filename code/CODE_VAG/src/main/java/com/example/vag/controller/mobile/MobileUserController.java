@@ -25,11 +25,16 @@ public class MobileUserController {
     private final UserService userService;
     private final ArtworkService artworkService;
     private final ArtworkMapper artworkMapper;
+    private final MobileAuthController mobileAuthController; // ДОБАВЛЕНО
 
-    public MobileUserController(UserService userService, ArtworkService artworkService, ArtworkMapper artworkMapper) {
+    public MobileUserController(UserService userService,
+                                ArtworkService artworkService,
+                                ArtworkMapper artworkMapper,
+                                MobileAuthController mobileAuthController) { // ДОБАВЛЕНО
         this.userService = userService;
         this.artworkService = artworkService;
         this.artworkMapper = artworkMapper;
+        this.mobileAuthController = mobileAuthController; // ДОБАВЛЕНО
     }
 
     // Получить профиль текущего пользователя
@@ -135,10 +140,16 @@ public class MobileUserController {
     @GetMapping("/liked/artworks")
     public ResponseEntity<?> getLikedArtworks(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
         try {
-            User user = userService.getCurrentUser();
+            // ИСПРАВЛЕНО: Используем токен для получения пользователя
+            User user = null;
+            if (authHeader != null) {
+                user = mobileAuthController.getUserFromToken(authHeader);
+            }
+
             if (user == null) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
@@ -221,6 +232,27 @@ public class MobileUserController {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "Failed to update profile");
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @GetMapping("/artists/random")
+    public ResponseEntity<?> getRandomArtists(@RequestParam(defaultValue = "4") int count) {
+        try {
+            List<User> randomArtists = userService.findRandomArtists(count);
+            List<UserDTO> userDTOs = randomArtists.stream()
+                    .map(artworkMapper::toUserDTO)
+                    .collect(Collectors.toList());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("artists", userDTOs);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Failed to fetch random artists");
             return ResponseEntity.badRequest().body(response);
         }
     }

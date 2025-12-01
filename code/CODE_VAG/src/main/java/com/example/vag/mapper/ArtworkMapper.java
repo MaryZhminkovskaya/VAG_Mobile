@@ -1,12 +1,17 @@
 package com.example.vag.mapper;
 
-import com.example.vag.dto.*;
+import com.example.vag.dto.ArtworkDTO;
+import com.example.vag.dto.CategoryDTO;
+import com.example.vag.dto.UserDTO;
+import com.example.vag.dto.CommentDTO;
 import com.example.vag.model.Artwork;
 import com.example.vag.model.Category;
-import com.example.vag.model.Comment;
 import com.example.vag.model.User;
+import com.example.vag.model.Comment;
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,96 +31,59 @@ public class ArtworkMapper {
         dto.setStatus(artwork.getStatus());
         dto.setLikes(artwork.getLikes());
         dto.setViews(artwork.getViews());
-        dto.setDateCreation(artwork.getDateCreation()); // Используем getDateCreation()
-        dto.setLiked(artwork.getLiked()); // Используем getLiked()
+        dto.setDateCreation(artwork.getDateCreation());
 
-        // Преобразование пользователя
+        // ВАЖНО: Добавляем пользователя
         if (artwork.getUser() != null) {
-            dto.setUser(toUserDTO(artwork.getUser()));
+            UserDTO userDTO = toUserDTO(artwork.getUser());
+            dto.setUser(userDTO);
+            System.out.println("Mapper: UserDTO created - " + userDTO.getUsername());
         }
 
-        // Преобразование категорий
+        // ИСПРАВЛЕНО: Правильно добавляем категории - инициализируем коллекцию
         if (artwork.getCategories() != null) {
-            List<CategoryDTO> categoryDTOs = artwork.getCategories().stream()
-                    .map(this::toCategoryDTO)
-                    .collect(Collectors.toList());
-            dto.setCategories(categoryDTOs);
+            try {
+                // Принудительно инициализируем коллекцию
+                Hibernate.initialize(artwork.getCategories());
+
+                List<CategoryDTO> categoryDTOs = artwork.getCategories().stream()
+                        .map(this::toCategoryDTO)
+                        .collect(Collectors.toList());
+                dto.setCategories(categoryDTOs);
+                System.out.println("Mapper: Added " + categoryDTOs.size() + " categories");
+            } catch (Exception e) {
+                System.out.println("Error initializing categories: " + e.getMessage());
+                dto.setCategories(new ArrayList<>());
+            }
+        } else {
+            System.out.println("Mapper: No categories found for artwork");
+            dto.setCategories(new ArrayList<>()); // Устанавливаем пустой список
         }
 
-        // Преобразование комментариев
+        // Добавляем комментарии
         if (artwork.getComments() != null) {
-            List<CommentDTO> commentDTOs = artwork.getComments().stream()
-                    .map(this::toCommentDTO)
-                    .collect(Collectors.toList());
-            dto.setComments(commentDTOs);
+            try {
+                Hibernate.initialize(artwork.getComments());
+                dto.setComments(artwork.getComments().stream()
+                        .map(this::toCommentDTO)
+                        .collect(Collectors.toList()));
+            } catch (Exception e) {
+                System.out.println("Error initializing comments: " + e.getMessage());
+                dto.setComments(new ArrayList<>());
+            }
         }
+
+        // Добавляем информацию о лайке
+        dto.setLiked(artwork.getLiked());
+
+        System.out.println("Mapper: Final ArtworkDTO - " + dto.getTitle() +
+                ", User: " + (dto.getUser() != null ? dto.getUser().getUsername() : "null") +
+                ", Categories: " + (dto.getCategories() != null ? dto.getCategories().size() : 0) +
+                ", Image: " + dto.getImagePath() +
+                ", Description: " + dto.getDescription());
 
         return dto;
     }
-
-    public List<ArtworkDTO> toDTOList(List<Artwork> artworks) {
-        return artworks.stream()
-                .map(this::toDTO)
-                .collect(Collectors.toList());
-    }
-
-    public UserDTO toUserDTO(User user) {
-        if (user == null) {
-            return null;
-        }
-
-        UserDTO dto = new UserDTO();
-        dto.setId(user.getId());
-        dto.setUsername(user.getUsername());
-        dto.setEmail(user.getEmail());
-
-        if (user.getRole() != null) {
-            dto.setRole(user.getRole().getName().name());
-        }
-
-        return dto;
-    }
-
-    public CategoryDTO toCategoryDTO(Category category) {
-        if (category == null) {
-            return null;
-        }
-
-        CategoryDTO dto = new CategoryDTO();
-        dto.setId(category.getId());
-        dto.setName(category.getName());
-        dto.setDescription(category.getDescription());
-
-        if (category.getApprovedArtworksCount() != null) {
-            dto.setApprovedArtworksCount(category.getApprovedArtworksCount());
-        }
-
-        return dto;
-    }
-
-    public List<CategoryDTO> toCategoryDTOList(List<Category> categories) {
-        return categories.stream()
-                .map(this::toCategoryDTO)
-                .collect(Collectors.toList());
-    }
-
-    public CommentDTO toCommentDTO(Comment comment) {
-        if (comment == null) {
-            return null;
-        }
-
-        CommentDTO dto = new CommentDTO();
-        dto.setId(comment.getId());
-        dto.setContent(comment.getContent());
-        dto.setDateCreated(comment.getDateCreated()); // Используем getDateCreated()
-
-        if (comment.getUser() != null) {
-            dto.setUser(toUserDTO(comment.getUser()));
-        }
-
-        return dto;
-    }
-
 
     public ArtworkDTO toSimpleDTO(Artwork artwork) {
         if (artwork == null) {
@@ -131,21 +99,117 @@ public class ArtworkMapper {
         dto.setLikes(artwork.getLikes());
         dto.setViews(artwork.getViews());
         dto.setDateCreation(artwork.getDateCreation());
-        dto.setLiked(artwork.getLiked());
 
+        // ВАЖНО: Добавляем пользователя даже в простом DTO
         if (artwork.getUser() != null) {
-            dto.setUser(toUserDTO(artwork.getUser()));
+            dto.setUser(toSimpleUserDTO(artwork.getUser()));
         }
 
-        // Не включаем категории и комментарии для упрощенного DTO
-        // чтобы избежать циклических ссылок и улучшить производительность
+        // ИСПРАВЛЕНО: Добавляем категории даже в простом DTO
+        if (artwork.getCategories() != null) {
+            try {
+                Hibernate.initialize(artwork.getCategories());
+                List<CategoryDTO> categoryDTOs = artwork.getCategories().stream()
+                        .map(this::toCategoryDTO)
+                        .collect(Collectors.toList());
+                dto.setCategories(categoryDTOs);
+            } catch (Exception e) {
+                dto.setCategories(new ArrayList<>());
+            }
+        } else {
+            dto.setCategories(new ArrayList<>());
+        }
 
         return dto;
+    }
+
+    public List<ArtworkDTO> toDTOList(List<Artwork> artworks) {
+        return artworks.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
     }
 
     public List<ArtworkDTO> toSimpleDTOList(List<Artwork> artworks) {
         return artworks.stream()
                 .map(this::toSimpleDTO)
+                .collect(Collectors.toList());
+    }
+
+    public UserDTO toUserDTO(User user) {
+        if (user == null) {
+            System.out.println("Mapper: User is null in toUserDTO");
+            return null;
+        }
+
+        UserDTO dto = new UserDTO();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername() != null ? user.getUsername() : "Unknown User");
+        dto.setEmail(user.getEmail() != null ? user.getEmail() : "N/A");
+
+        if (user.getRole() != null) {
+            dto.setRole(user.getRole().getName().name());
+        } else {
+            dto.setRole("UNKNOWN");
+        }
+
+        System.out.println("Mapper: UserDTO - " + dto.getUsername() + ", " + dto.getEmail());
+        return dto;
+    }
+
+    public UserDTO toSimpleUserDTO(User user) {
+        if (user == null) {
+            return null;
+        }
+
+        UserDTO dto = new UserDTO();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+        // Минимальные данные пользователя
+
+        return dto;
+    }
+
+    public CategoryDTO toCategoryDTO(Category category) {
+        if (category == null) {
+            return null;
+        }
+
+        CategoryDTO dto = new CategoryDTO();
+        dto.setId(category.getId());
+        dto.setName(category.getName());
+        dto.setDescription(category.getDescription());
+        dto.setApprovedArtworksCount(category.getApprovedArtworksCount());
+
+        return dto;
+    }
+
+    public CommentDTO toCommentDTO(Comment comment) {
+        if (comment == null) {
+            return null;
+        }
+
+        CommentDTO dto = new CommentDTO();
+        dto.setId(comment.getId());
+        dto.setContent(comment.getContent());
+        dto.setDateCreated(comment.getDateCreated());
+
+        if (comment.getUser() != null) {
+            dto.setUser(toSimpleUserDTO(comment.getUser()));
+        }
+
+        return dto;
+    }
+
+    public List<CategoryDTO> toCategoryDTOList(List<Category> categories) {
+        return categories.stream()
+                .map(this::toCategoryDTO)
+                .collect(Collectors.toList());
+    }
+
+    public List<UserDTO> toUserDTOList(List<User> users) {
+        return users.stream()
+                .map(this::toUserDTO)
                 .collect(Collectors.toList());
     }
 }

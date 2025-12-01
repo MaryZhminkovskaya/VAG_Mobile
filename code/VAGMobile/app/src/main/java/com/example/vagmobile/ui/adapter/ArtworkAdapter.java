@@ -53,7 +53,7 @@ public class ArtworkAdapter extends RecyclerView.Adapter<ArtworkAdapter.ArtworkV
 
     static class ArtworkViewHolder extends RecyclerView.ViewHolder {
         private ImageView ivArtwork;
-        private TextView tvTitle, tvArtist, tvLikes;
+        private TextView tvTitle, tvArtist, tvLikes, tvCategories;
 
         public ArtworkViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -61,11 +61,27 @@ public class ArtworkAdapter extends RecyclerView.Adapter<ArtworkAdapter.ArtworkV
             tvTitle = itemView.findViewById(R.id.tvTitle);
             tvArtist = itemView.findViewById(R.id.tvArtist);
             tvLikes = itemView.findViewById(R.id.tvLikes);
+            tvCategories = itemView.findViewById(R.id.tvCategories); // Добавлено для категорий
         }
 
         public void bind(Artwork artwork) {
             tvTitle.setText(artwork.getTitle());
             tvLikes.setText(String.valueOf(artwork.getLikes()));
+
+            // Отображение категорий
+            if (artwork.hasCategories()) {
+                tvCategories.setText(artwork.getCategoriesString());
+                tvCategories.setVisibility(View.VISIBLE);
+            } else {
+                tvCategories.setVisibility(View.GONE);
+            }
+
+            // Отображение реального пользователя
+            if (artwork.getUser() != null && artwork.getUser().getUsername() != null) {
+                tvArtist.setText(artwork.getUser().getUsername());
+            } else {
+                tvArtist.setText("Неизвестный художник");
+            }
 
             // Загрузка изображения
             if (artwork.getImagePath() != null && !artwork.getImagePath().isEmpty()) {
@@ -83,13 +99,6 @@ public class ArtworkAdapter extends RecyclerView.Adapter<ArtworkAdapter.ArtworkV
                         .into(ivArtwork);
             } else {
                 System.out.println("ArtworkAdapter: ImagePath is null or empty for artwork: " + artwork.getTitle());
-            }
-
-            // Имя художника
-            if (artwork.getUser() != null) {
-                tvArtist.setText(artwork.getUser().getUsername());
-            } else {
-                tvArtist.setText("Unknown Artist");
             }
         }
     }

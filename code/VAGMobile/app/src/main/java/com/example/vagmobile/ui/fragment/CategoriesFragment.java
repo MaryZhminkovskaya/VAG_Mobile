@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.vagmobile.R;
 import com.example.vagmobile.model.Category;
 import com.example.vagmobile.ui.activity.ArtworkListActivity;
+import com.example.vagmobile.ui.activity.CategoryDetailActivity;
 import com.example.vagmobile.ui.adapter.CategoryAdapter;
 import com.example.vagmobile.viewmodel.CategoryViewModel;
 
@@ -53,10 +54,14 @@ public class CategoriesFragment extends Fragment {
 
     private void setupRecyclerView() {
         categoryAdapter = new CategoryAdapter(categoryList, category -> {
-            // Открываем публикации категории
-            Intent intent = new Intent(getActivity(), ArtworkListActivity.class);
+            // Открываем детали категории с передачей всех данных
+            Intent intent = new Intent(getActivity(), CategoryDetailActivity.class);
             intent.putExtra("category_id", category.getId());
             intent.putExtra("category_name", category.getName());
+            // Можно также передать описание, если оно уже загружено
+            if (category.getDescription() != null) {
+                intent.putExtra("category_description", category.getDescription());
+            }
             startActivity(intent);
         });
 
@@ -75,16 +80,16 @@ public class CategoriesFragment extends Fragment {
                 System.out.println("CategoriesFragment: Received result: " + result);
                 Boolean success = (Boolean) result.get("success");
                 System.out.println("CategoriesFragment: Success: " + success);
-                
+
                 if (success != null && success) {
                     Object categoriesObj = result.get("categories");
                     System.out.println("CategoriesFragment: Categories object: " + categoriesObj);
                     System.out.println("CategoriesFragment: Categories object type: " + (categoriesObj != null ? categoriesObj.getClass().getName() : "null"));
-                    
+
                     if (categoriesObj instanceof List) {
                         List<?> categoriesList = (List<?>) categoriesObj;
                         System.out.println("CategoriesFragment: Categories list size: " + categoriesList.size());
-                        
+
                         categoryList.clear();
                         for (Object categoryObj : categoriesList) {
                             if (categoryObj instanceof Map) {
@@ -119,7 +124,7 @@ public class CategoriesFragment extends Fragment {
 
     private Category convertToCategory(Map<String, Object> categoryData) {
         Category category = new Category();
-        
+
         // Обработка ID
         Object idObj = categoryData.get("id");
         if (idObj != null) {
@@ -131,7 +136,7 @@ public class CategoriesFragment extends Fragment {
                 category.setId((Long) idObj);
             }
         }
-        
+
         category.setName((String) categoryData.get("name"));
         category.setDescription((String) categoryData.get("description"));
 

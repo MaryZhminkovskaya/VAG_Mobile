@@ -37,6 +37,59 @@ public class ArtworkRepository {
         return null;
     }
 
+    // ДОБАВЛЕНО: Метод для получения сервиса с авторизацией
+    private ApiService getApiServiceWithAuth() {
+        String authHeader = getAuthHeader();
+        if (authHeader != null) {
+            return ApiClient.getClientWithAuth(authHeader).create(ApiService.class);
+        }
+        return apiService;
+    }
+
+    // НОВЫЙ МЕТОД: Получить публикацию для администратора
+    public MutableLiveData<Map<String, Object>> getArtworkForAdmin(Long id) {
+        MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
+
+        String authHeader = getAuthHeader();
+        if (authHeader == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Authentication required");
+            result.setValue(error);
+            return result;
+        }
+
+        ApiService authApiService = getApiServiceWithAuth();
+        authApiService.getArtworkForAdmin(authHeader, id).enqueue(new Callback<Map<String, Object>>() {
+            @Override
+            public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                System.out.println("ArtworkRepository: Admin artwork response code: " + response.code());
+
+                if (response.isSuccessful() && response.body() != null) {
+                    System.out.println("ArtworkRepository: Admin artwork loaded successfully");
+                    result.setValue(response.body());
+                } else {
+                    System.out.println("ArtworkRepository: Failed to load admin artwork: " + response.message());
+                    Map<String, Object> error = new HashMap<>();
+                    error.put("success", false);
+                    error.put("message", "Failed to load artwork: " + response.message());
+                    result.setValue(error);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                System.out.println("ArtworkRepository: Network error loading admin artwork: " + t.getMessage());
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "Network error: " + t.getMessage());
+                result.setValue(error);
+            }
+        });
+
+        return result;
+    }
+
     public MutableLiveData<Map<String, Object>> getArtworks(int page, int size) {
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
 
@@ -76,7 +129,7 @@ public class ArtworkRepository {
                 } else {
                     Map<String, Object> error = new HashMap<>();
                     error.put("success", false);
-                    error.put("message", "Failed to load artwork");
+                    error.put("message", "Failed to load artwork: " + response.message());
                     result.setValue(error);
                 }
             }
@@ -93,6 +146,46 @@ public class ArtworkRepository {
         return result;
     }
 
+    // ДОБАВЛЕНО: Метод для получения понравившихся публикаций
+    public MutableLiveData<Map<String, Object>> getLikedArtworks(int page, int size) {
+        MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
+
+        String authHeader = getAuthHeader();
+        if (authHeader == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Authentication required");
+            result.setValue(error);
+            return result;
+        }
+
+        ApiService authApiService = getApiServiceWithAuth();
+        authApiService.getLikedArtworks(authHeader, page, size).enqueue(new Callback<Map<String, Object>>() {
+            @Override
+            public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    result.setValue(response.body());
+                } else {
+                    Map<String, Object> error = new HashMap<>();
+                    error.put("success", false);
+                    error.put("message", "Failed to load liked artworks: " + response.message());
+                    result.setValue(error);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "Network error: " + t.getMessage());
+                result.setValue(error);
+            }
+        });
+
+        return result;
+    }
+
+    // Остальные методы остаются без изменений...
     public MutableLiveData<Map<String, Object>> createArtwork(
             String title,
             String description,
@@ -109,7 +202,9 @@ public class ArtworkRepository {
         String authHeader = getAuthHeader();
         System.out.println("ArtworkRepository: Creating artwork with authHeader: " + authHeader);
 
-        apiService.createArtwork(authHeader, titleBody, descriptionBody, categoryIdsBody, image)
+        // ИСПРАВЛЕНО: Используем сервис с авторизацией
+        ApiService authApiService = getApiServiceWithAuth();
+        authApiService.createArtwork(authHeader, titleBody, descriptionBody, categoryIdsBody, image)
                 .enqueue(new Callback<Map<String, Object>>() {
                     @Override
                     public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
@@ -135,10 +230,22 @@ public class ArtworkRepository {
         return result;
     }
 
+    // ИСПРАВЛЕНО: Метод likeArtwork с авторизацией
     public MutableLiveData<Map<String, Object>> likeArtwork(Long id) {
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
 
-        apiService.likeArtwork(id).enqueue(new Callback<Map<String, Object>>() {
+        String authHeader = getAuthHeader();
+        if (authHeader == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Authentication required");
+            result.setValue(error);
+            return result;
+        }
+
+        // ИСПРАВЛЕНО: Используем сервис с авторизацией
+        ApiService authApiService = getApiServiceWithAuth();
+        authApiService.likeArtwork(authHeader, id).enqueue(new Callback<Map<String, Object>>() {
             @Override
             public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -146,7 +253,7 @@ public class ArtworkRepository {
                 } else {
                     Map<String, Object> error = new HashMap<>();
                     error.put("success", false);
-                    error.put("message", "Failed to like artwork");
+                    error.put("message", "Failed to like artwork: " + response.message());
                     result.setValue(error);
                 }
             }
@@ -163,10 +270,22 @@ public class ArtworkRepository {
         return result;
     }
 
+    // ИСПРАВЛЕНО: Метод unlikeArtwork с авторизацией
     public MutableLiveData<Map<String, Object>> unlikeArtwork(Long id) {
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
 
-        apiService.unlikeArtwork(id).enqueue(new Callback<Map<String, Object>>() {
+        String authHeader = getAuthHeader();
+        if (authHeader == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Authentication required");
+            result.setValue(error);
+            return result;
+        }
+
+        // ИСПРАВЛЕНО: Используем сервис с авторизацией
+        ApiService authApiService = getApiServiceWithAuth();
+        authApiService.unlikeArtwork(authHeader, id).enqueue(new Callback<Map<String, Object>>() {
             @Override
             public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
                 if (response.isSuccessful() && response.body() != null) {
@@ -174,7 +293,7 @@ public class ArtworkRepository {
                 } else {
                     Map<String, Object> error = new HashMap<>();
                     error.put("success", false);
-                    error.put("message", "Failed to unlike artwork");
+                    error.put("message", "Failed to unlike artwork: " + response.message());
                     result.setValue(error);
                 }
             }
@@ -191,21 +310,44 @@ public class ArtworkRepository {
         return result;
     }
 
+    // УЛУЧШЕННЫЙ МЕТОД: addComment с предотвращением дублирования
     public MutableLiveData<Map<String, Object>> addComment(Long id, String content) {
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
+
+        String authHeader = getAuthHeader();
+        if (authHeader == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Authentication required");
+            result.setValue(error);
+            return result;
+        }
 
         // Создаем RequestBody для комментария
         RequestBody contentBody = RequestBody.create(MultipartBody.FORM, content);
 
-        apiService.addComment(id, contentBody).enqueue(new Callback<Map<String, Object>>() {
+        // ИСПРАВЛЕНО: Используем сервис с авторизацией
+        ApiService authApiService = getApiServiceWithAuth();
+        authApiService.addComment(authHeader, id, contentBody).enqueue(new Callback<Map<String, Object>>() {
             @Override
             public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    result.setValue(response.body());
+                    // Убедимся, что ответ содержит обновленные данные
+                    Map<String, Object> responseBody = response.body();
+                    Boolean success = (Boolean) responseBody.get("success");
+                    if (success != null && success) {
+                        // Возвращаем весь ответ, который содержит обновленный artwork
+                        result.setValue(responseBody);
+                    } else {
+                        Map<String, Object> error = new HashMap<>();
+                        error.put("success", false);
+                        error.put("message", "Failed to add comment: " + responseBody.get("message"));
+                        result.setValue(error);
+                    }
                 } else {
                     Map<String, Object> error = new HashMap<>();
                     error.put("success", false);
-                    error.put("message", "Failed to add comment");
+                    error.put("message", "Failed to add comment: " + response.message());
                     result.setValue(error);
                 }
             }
@@ -278,30 +420,79 @@ public class ArtworkRepository {
         return result;
     }
 
-    public MutableLiveData<Map<String, Object>> getLikedArtworks(int page, int size) {
+// В ArtworkRepository.java ДОБАВЬТЕ логирование и исправьте toggleLike:
+
+    public MutableLiveData<Map<String, Object>> toggleLike(Long artworkId, boolean isCurrentlyLiked) {
+        System.out.println("ArtworkRepository: Toggle like - artworkId: " + artworkId + ", isCurrentlyLiked: " + isCurrentlyLiked);
+
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
 
-        apiService.getLikedArtworks(page, size).enqueue(new Callback<Map<String, Object>>() {
-            @Override
-            public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    result.setValue(response.body());
-                } else {
+        String authHeader = getAuthHeader();
+        if (authHeader == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Authentication required");
+            result.setValue(error);
+            return result;
+        }
+
+        ApiService authApiService = getApiServiceWithAuth();
+
+        if (isCurrentlyLiked) {
+            System.out.println("Calling UNLIKE for artwork: " + artworkId);
+            authApiService.unlikeArtwork(authHeader, artworkId).enqueue(new Callback<Map<String, Object>>() {
+                @Override
+                public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                    System.out.println("UNLIKE response - Code: " + response.code() + ", Success: " + response.isSuccessful());
+                    if (response.isSuccessful() && response.body() != null) {
+                        System.out.println("UNLIKE successful: " + response.body());
+                        result.setValue(response.body());
+                    } else {
+                        System.out.println("UNLIKE failed: " + response.message());
+                        Map<String, Object> error = new HashMap<>();
+                        error.put("success", false);
+                        error.put("message", "Failed to unlike artwork: " + response.message());
+                        result.setValue(error);
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                    System.out.println("UNLIKE network error: " + t.getMessage());
                     Map<String, Object> error = new HashMap<>();
                     error.put("success", false);
-                    error.put("message", "Failed to load liked artworks");
+                    error.put("message", "Network error: " + t.getMessage());
                     result.setValue(error);
                 }
-            }
+            });
+        } else {
+            System.out.println("Calling LIKE for artwork: " + artworkId);
+            authApiService.likeArtwork(authHeader, artworkId).enqueue(new Callback<Map<String, Object>>() {
+                @Override
+                public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                    System.out.println("LIKE response - Code: " + response.code() + ", Success: " + response.isSuccessful());
+                    if (response.isSuccessful() && response.body() != null) {
+                        System.out.println("LIKE successful: " + response.body());
+                        result.setValue(response.body());
+                    } else {
+                        System.out.println("LIKE failed: " + response.message());
+                        Map<String, Object> error = new HashMap<>();
+                        error.put("success", false);
+                        error.put("message", "Failed to like artwork: " + response.message());
+                        result.setValue(error);
+                    }
+                }
 
-            @Override
-            public void onFailure(Call<Map<String, Object>> call, Throwable t) {
-                Map<String, Object> error = new HashMap<>();
-                error.put("success", false);
-                error.put("message", "Network error: " + t.getMessage());
-                result.setValue(error);
-            }
-        });
+                @Override
+                public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                    System.out.println("LIKE network error: " + t.getMessage());
+                    Map<String, Object> error = new HashMap<>();
+                    error.put("success", false);
+                    error.put("message", "Network error: " + t.getMessage());
+                    result.setValue(error);
+                }
+            });
+        }
 
         return result;
     }

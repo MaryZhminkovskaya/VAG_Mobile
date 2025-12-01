@@ -6,6 +6,7 @@ import com.example.vag.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -15,13 +16,33 @@ import java.util.Optional;
 
 @Repository
 public interface LikeRepository extends JpaRepository<Like, Long> {
-    @Query(value = "SELECT l FROM Like l JOIN FETCH l.artwork a JOIN FETCH a.user WHERE l.user = :user",
-            countQuery = "SELECT COUNT(l) FROM Like l WHERE l.user = :user")
-    Page<Like> findByUserWithArtworkDetails(@Param("user") User user, Pageable pageable);
 
-    Optional<Like> findByArtworkAndUser(@Param("artwork") Artwork artwork, @Param("user") User user);
-    boolean existsByArtworkAndUser(@Param("artwork") Artwork artwork, @Param("user") User user);
+    // Метод для пагинации с пользователем
+    Page<Like> findByUser(User user, Pageable pageable);
+
+    // Метод без пагинации (для списка)
     List<Like> findByUser(User user);
+
+    // Альтернативный метод с JOIN (если нужны связанные данные)
+    @Query("SELECT l FROM Like l JOIN l.artwork a WHERE l.user = :user")
+    Page<Like> findLikesByUserWithArtwork(@Param("user") User user, Pageable pageable);
+
+    @Query("SELECT l FROM Like l JOIN l.artwork a WHERE l.user = :user")
+    List<Like> findLikesByUserWithArtwork(@Param("user") User user);
+
+    Optional<Like> findByArtworkAndUser(Artwork artwork, User user);
+
+    boolean existsByArtworkAndUser(Artwork artwork, User user);
+
+    // Метод для удаления лайка
+    @Modifying
+    @Query("DELETE FROM Like l WHERE l.artwork = :artwork AND l.user = :user")
+    void deleteByArtworkAndUser(@Param("artwork") Artwork artwork, @Param("user") User user);
+
+    // Метод для подсчета лайков публикации
+    long countByArtwork(Artwork artwork);
+
+    // Дополнительный метод для проверки существования лайка
+    @Query("SELECT CASE WHEN COUNT(l) > 0 THEN true ELSE false END FROM Like l WHERE l.artwork = :artwork AND l.user = :user")
+    boolean existsByArtworkIdAndUserId(@Param("artwork") Artwork artwork, @Param("user") User user);
 }
-
-
