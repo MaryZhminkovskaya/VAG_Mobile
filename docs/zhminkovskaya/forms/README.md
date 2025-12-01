@@ -68,4 +68,4 @@
 
 ---
 
-[Создание публикаций](/publications/creating/) | [Частые вопросы](/faq/)
+[Создание публикаций](../publications/creating/README.md) | [Частые вопросы](../faq/README.md)
