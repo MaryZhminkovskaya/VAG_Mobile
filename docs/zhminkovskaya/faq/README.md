@@ -105,9 +105,9 @@
 *Если вы не нашли ответ на свой вопрос:*
 
 - [x] **Обратитесь в службу поддержки** через приложение
-- [x] **Посетите раздел** [Управление публикациями](../publications/managing/README.md)
-- [x] **Изучите** [Формы создания работ](../forms/README.md)
+- [x] **Посетите раздел** [Управление публикациями](/zhminkovskaya/publications/managing/)
+- [x] **Изучите** [Формы создания работ](/zhminkovskaya/forms/)
 
 ---
 
-[Вернуться на главную](../README.md) | [Создать публикацию](../publications/creating/README.md)
+[Вернуться на главную](/zhminkovskaya/) | [Создать публикацию](/zhminkovskaya/publications/creating/)

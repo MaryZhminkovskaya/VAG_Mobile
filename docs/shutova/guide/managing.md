@@ -37,4 +37,4 @@
 
 ---
 
-[Добавление работ в выставку](./adding_works.md) | [Частые вопросы](../about/faq.md)
+[Добавление работ в выставку](/shutova/guide/adding_works.md) | [Частые вопросы](/shutova/about/faq.md)

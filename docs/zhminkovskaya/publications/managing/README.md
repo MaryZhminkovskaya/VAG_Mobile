@@ -56,4 +56,4 @@
 
 ---
 
-[Руководство к публикациям](../README.md) | [Создание публикаций](../creating/README.md)
+[Руководство к публикациям](/zhminkovskaya/publications/) | [Создание публикаций](/zhminkovskaya/publications/creating/)

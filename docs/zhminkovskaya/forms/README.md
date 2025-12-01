@@ -68,4 +68,4 @@
 
 ---
 
-[Создание публикаций](../publications/creating/README.md) | [Частые вопросы](../faq/README.md)
+[Создание публикаций](/zhminkovskaya/publications/creating/) | [Частые вопросы](/zhminkovskaya/faq/)
