@@ -1,0 +1,483 @@
+package com.example.vagmobile.ui.activity;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
+
+import android.content.Intent;
+import android.graphics.Color;
+import android.net.Uri;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.example.vagmobile.R;
+import com.example.vagmobile.model.Category;
+import com.example.vagmobile.util.ImageUtils;
+import com.example.vagmobile.viewmodel.ArtworkViewModel;
+import com.example.vagmobile.viewmodel.CategoryViewModel;
+import com.github.dhaval2404.imagepicker.ImagePicker;
+
+import okhttp3.MultipartBody;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+public class CreateArtworkActivity extends AppCompatActivity {
+    private static final int IMAGE_PICKER_REQUEST_CODE = 1001;
+
+    private ArtworkViewModel artworkViewModel;
+    private CategoryViewModel categoryViewModel;
+
+    private EditText etTitle, etDescription;
+    private ImageView ivArtworkImage;
+    private Button btnSelectImage, btnCreateArtwork;
+    private ProgressBar progressBar;
+    private LinearLayout chipContainer;
+    private AutoCompleteTextView autoCompleteCategories;
+    private TextView tvSelectedCategories;
+
+    private Uri selectedImageUri;
+    private List<Category> categoryList = new ArrayList<>();
+    private ArrayAdapter<Category> categoryAdapter;
+    private List<Long> selectedCategoryIds = new ArrayList<>();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_create_artwork);
+
+        artworkViewModel = new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication())).get(ArtworkViewModel.class);
+        categoryViewModel = new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication())).get(CategoryViewModel.class);
+
+        initViews();
+        setupClickListeners();
+        setupCategorySelection();
+        loadCategories();
+        observeViewModels();
+    }
+
+    private void initViews() {
+        etTitle = findViewById(R.id.etTitle);
+        etDescription = findViewById(R.id.etDescription);
+        ivArtworkImage = findViewById(R.id.ivArtworkImage);
+        btnSelectImage = findViewById(R.id.btnSelectImage);
+        btnCreateArtwork = findViewById(R.id.btnCreateArtwork);
+        progressBar = findViewById(R.id.progressBar);
+        chipContainer = findViewById(R.id.chipContainer);
+        autoCompleteCategories = findViewById(R.id.autoCompleteCategories);
+        tvSelectedCategories = findViewById(R.id.tvSelectedCategories);
+
+        btnCreateArtwork.setEnabled(false);
+        progressBar.setVisibility(View.VISIBLE);
+
+        // Устанавливаем начальный текст для выбранных категорий
+        updateSelectedCategoriesText();
+    }
+
+    private void setupClickListeners() {
+        btnSelectImage.setOnClickListener(v -> selectImage());
+        btnCreateArtwork.setOnClickListener(v -> createArtwork());
+
+        // Обработчик для скрытия клавиатуры при клике вне полей ввода
+        View rootLayout = findViewById(android.R.id.content);
+        rootLayout.setOnClickListener(v -> {
+            etTitle.clearFocus();
+            etDescription.clearFocus();
+            autoCompleteCategories.clearFocus();
+        });
+    }
+
+    private void setupCategorySelection() {
+        // Используем кастомный адаптер для правильного отображения
+        categoryAdapter = new ArrayAdapter<Category>(this,
+                android.R.layout.simple_dropdown_item_1line, categoryList) {
+            @NonNull
+            @Override
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+                TextView textView = (TextView) view;
+                Category category = getItem(position);
+                if (category != null) {
+                    textView.setText(category.getName());
+                }
+                return view;
+            }
+
+            @Override
+            public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                View view = super.getDropDownView(position, convertView, parent);
+                TextView textView = (TextView) view;
+                Category category = getItem(position);
+                if (category != null) {
+                    textView.setText(category.getName());
+                    // Отключаем категории, которые уже выбраны
+                    if (selectedCategoryIds.contains(category.getId())) {
+                        textView.setTextColor(Color.GRAY);
+                        textView.setBackgroundColor(Color.LTGRAY);
+                    } else {
+                        textView.setTextColor(Color.BLACK);
+                        textView.setBackgroundColor(Color.WHITE);
+                    }
+                }
+                return view;
+            }
+        };
+
+        autoCompleteCategories.setAdapter(categoryAdapter);
+        autoCompleteCategories.setThreshold(1); // Показывать предложения после 1 символа
+
+        // Обработчик выбора категории из списка
+        autoCompleteCategories.setOnItemClickListener((parent, view, position, id) -> {
+            Category selectedCategory = (Category) parent.getItemAtPosition(position);
+            if (selectedCategory != null) {
+                if (!selectedCategoryIds.contains(selectedCategory.getId())) {
+                    addCategoryChip(selectedCategory);
+                    autoCompleteCategories.setText("");
+                    Log.d("CreateArtwork", "Category selected from dropdown: " + selectedCategory.getName());
+                } else {
+                    Toast.makeText(CreateArtworkActivity.this, "Category already selected", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        // Обработчик фокуса - показывать список при касании
+        autoCompleteCategories.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus && categoryList.size() > 0) {
+                autoCompleteCategories.showDropDown();
+            }
+        });
+
+        // Обработчик касания - показывать список при клике
+        autoCompleteCategories.setOnClickListener(v -> {
+            if (categoryList.size() > 0) {
+                autoCompleteCategories.showDropDown();
+            }
+        });
+
+        // Обработчик ввода текста для фильтрации
+        autoCompleteCategories.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Автоматически показывать dropdown при вводе
+                if (s.length() > 0) {
+                    autoCompleteCategories.showDropDown();
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+    }
+
+    private void addCategoryChip(Category category) {
+        // Создаем TextView как чип
+        TextView chipView = new TextView(this);
+        chipView.setText(category.getName());
+        chipView.setBackgroundResource(R.drawable.chip_background);
+        chipView.setPadding(32, 16, 32, 16);
+        chipView.setTextColor(Color.WHITE);
+        chipView.setGravity(Gravity.CENTER);
+        chipView.setTextSize(14);
+
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(0, 0, 16, 16);
+        chipView.setLayoutParams(params);
+
+        chipView.setTag(category.getId());
+
+        // Добавляем иконку удаления
+        chipView.setCompoundDrawablesWithIntrinsicBounds(0, 0, android.R.drawable.ic_menu_close_clear_cancel, 0);
+        chipView.setCompoundDrawablePadding(8);
+
+        // Удаление по клику
+        chipView.setOnClickListener(v -> {
+            chipContainer.removeView(v);
+            selectedCategoryIds.remove(category.getId());
+            updateSelectedCategoriesText();
+            // Обновляем адаптер, чтобы снова показать удаленную категорию в выпадающем списке
+            categoryAdapter.notifyDataSetChanged();
+            Toast.makeText(CreateArtworkActivity.this, "Removed: " + category.getName(), Toast.LENGTH_SHORT).show();
+        });
+
+        selectedCategoryIds.add(category.getId());
+        chipContainer.addView(chipView);
+        updateSelectedCategoriesText();
+
+        // Обновляем адаптер, чтобы скрыть выбранную категорию из выпадающего списка
+        categoryAdapter.notifyDataSetChanged();
+
+        Toast.makeText(this, "Added: " + category.getName(), Toast.LENGTH_SHORT).show();
+    }
+
+    private void observeViewModels() {
+        categoryViewModel.getCategoriesResult().observe(this, result -> {
+            progressBar.setVisibility(View.GONE);
+
+            if (result != null) {
+                Boolean success = (Boolean) result.get("success");
+                if (success != null && success) {
+                    List<Map<String, Object>> categoriesData = (List<Map<String, Object>>) result.get("categories");
+                    if (categoriesData != null && !categoriesData.isEmpty()) {
+                        categoryList.clear();
+                        for (Map<String, Object> categoryData : categoriesData) {
+                            Category category = convertToCategory(categoryData);
+                            if (category != null) {
+                                categoryList.add(category);
+                            }
+                        }
+                        categoryAdapter.notifyDataSetChanged();
+                        btnCreateArtwork.setEnabled(true);
+
+                        Toast.makeText(this, "Loaded " + categoryList.size() + " categories", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    String message = (String) result.get("message");
+                    Toast.makeText(this, "Failed to load categories: " + message, Toast.LENGTH_SHORT).show();
+                    btnCreateArtwork.setEnabled(true);
+                }
+            }
+        });
+
+        // ИСПРАВЛЕННЫЙ НАБЛЮДАТЕЛЬ: Используем правильный геттер
+        artworkViewModel.getCreateResult().observe(this, result -> {
+            resetCreateButton();
+
+            if (result != null) {
+                Boolean success = (Boolean) result.get("success");
+                if (success != null && success) {
+                    Toast.makeText(this, "Artwork created successfully!", Toast.LENGTH_SHORT).show();
+                    resetForm();
+                    finish();
+                } else {
+                    String message = (String) result.get("message");
+                    String errorMessage = "Failed to create artwork";
+                    if (message != null && !message.isEmpty()) {
+                        errorMessage += ": " + message;
+                    }
+                    Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
+                    Log.e("CreateArtwork", "Create artwork failed: " + message);
+                }
+            } else {
+                Toast.makeText(this, "Failed to create artwork: null result", Toast.LENGTH_LONG).show();
+                Log.e("CreateArtwork", "Create artwork failed: null result");
+            }
+        });
+    }
+
+    private Category convertToCategory(Map<String, Object> categoryData) {
+        try {
+            Category category = new Category();
+
+            // ID
+            if (categoryData.get("id") != null) {
+                Object idObj = categoryData.get("id");
+                if (idObj instanceof Double) {
+                    category.setId(((Double) idObj).longValue());
+                } else if (idObj instanceof Long) {
+                    category.setId((Long) idObj);
+                } else if (idObj instanceof Integer) {
+                    category.setId(((Integer) idObj).longValue());
+                } else if (idObj instanceof String) {
+                    try {
+                        category.setId(Long.parseLong((String) idObj));
+                    } catch (NumberFormatException e) {
+                        category.setId(0L);
+                    }
+                }
+            }
+
+            // Name
+            if (categoryData.get("name") != null) {
+                category.setName(categoryData.get("name").toString());
+            } else {
+                category.setName("Unnamed Category");
+            }
+
+            // Description
+            if (categoryData.get("description") != null) {
+                category.setDescription(categoryData.get("description").toString());
+            } else {
+                category.setDescription("No description");
+            }
+
+            Log.d("CreateArtwork", "Converted category: " + category.getName() + " (ID: " + category.getId() + ")");
+            return category;
+        } catch (Exception e) {
+            Log.e("CreateArtwork", "Error converting category: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private void updateSelectedCategoriesText() {
+        if (selectedCategoryIds.isEmpty()) {
+            tvSelectedCategories.setText("No categories selected");
+        } else {
+            tvSelectedCategories.setText("Selected: " + selectedCategoryIds.size() + " categories");
+        }
+    }
+
+    private void selectImage() {
+        ImagePicker.with(this)
+                .crop()
+                .compress(1024)
+                .maxResultSize(1080, 1080)
+                .start(IMAGE_PICKER_REQUEST_CODE);
+    }
+
+    private void loadCategories() {
+        categoryViewModel.getCategories();
+    }
+
+    private void createArtwork() {
+        String title = etTitle.getText().toString().trim();
+        String description = etDescription.getText().toString().trim();
+
+        // Валидация заголовка
+        if (title.isEmpty()) {
+            etTitle.setError("Please enter title");
+            etTitle.requestFocus();
+            return;
+        }
+
+        if (title.length() < 3) {
+            etTitle.setError("Title must be at least 3 characters");
+            etTitle.requestFocus();
+            return;
+        }
+
+        // Валидация описания
+        if (description.isEmpty()) {
+            etDescription.setError("Please enter description");
+            etDescription.requestFocus();
+            return;
+        }
+
+        if (description.length() < 10) {
+            etDescription.setError("Description must be at least 10 characters");
+            etDescription.requestFocus();
+            return;
+        }
+
+        if (selectedImageUri == null) {
+            Toast.makeText(this, "Please select an image", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (selectedCategoryIds.isEmpty()) {
+            Toast.makeText(this, "Please select at least one category", Toast.LENGTH_SHORT).show();
+            autoCompleteCategories.requestFocus();
+            return;
+        }
+
+        try {
+            File imageFile = ImageUtils.uriToFile(selectedImageUri, this);
+            if (imageFile == null || !imageFile.exists()) {
+                Toast.makeText(this, "Failed to process image file", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            MultipartBody.Part imagePart = ImageUtils.prepareImagePart("imageFile", imageFile);
+
+            // Правильное преобразование categoryIds
+            String categoryIdsString = convertCategoryIdsToString(selectedCategoryIds);
+
+            Log.d("CreateArtwork", "Creating artwork with:");
+            Log.d("CreateArtwork", "Title: " + title);
+            Log.d("CreateArtwork", "Description: " + description);
+            Log.d("CreateArtwork", "Category IDs: " + categoryIdsString);
+            Log.d("CreateArtwork", "Image file: " + imageFile.getAbsolutePath());
+
+            btnCreateArtwork.setEnabled(false);
+            btnCreateArtwork.setText("Creating...");
+            progressBar.setVisibility(View.VISIBLE);
+
+            // ИСПРАВЛЕННЫЙ ВЫЗОВ: Используем правильный метод
+            artworkViewModel.createArtwork(title, description, categoryIdsString, imagePart);
+
+        } catch (Exception e) {
+            Log.e("CreateArtwork", "Error creating artwork: " + e.getMessage(), e);
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            resetCreateButton();
+        }
+    }
+
+    private String convertCategoryIdsToString(List<Long> categoryIds) {
+        if (categoryIds == null || categoryIds.isEmpty()) {
+            return "";
+        }
+
+        // Формат: "1,2,3" или просто "2" если один элемент
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < categoryIds.size(); i++) {
+            if (i > 0) {
+                sb.append(",");
+            }
+            sb.append(categoryIds.get(i));
+        }
+        return sb.toString();
+    }
+
+    private void resetCreateButton() {
+        btnCreateArtwork.setEnabled(true);
+        btnCreateArtwork.setText("Create Artwork");
+        progressBar.setVisibility(View.GONE);
+    }
+
+    private void resetForm() {
+        etTitle.setText("");
+        etDescription.setText("");
+        ivArtworkImage.setImageResource(android.R.drawable.ic_menu_gallery);
+        selectedImageUri = null;
+        selectedCategoryIds.clear();
+        chipContainer.removeAllViews();
+        updateSelectedCategoriesText();
+        autoCompleteCategories.setText("");
+
+        // Обновляем адаптер, чтобы показать все категории снова
+        if (categoryAdapter != null) {
+            categoryAdapter.notifyDataSetChanged();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == IMAGE_PICKER_REQUEST_CODE) {
+            if (resultCode == RESULT_OK && data != null) {
+                selectedImageUri = data.getData();
+                if (selectedImageUri != null) {
+                    ivArtworkImage.setImageURI(selectedImageUri);
+                    Toast.makeText(this, "Image selected", Toast.LENGTH_SHORT).show();
+                }
+            } else if (resultCode == ImagePicker.RESULT_ERROR) {
+                Toast.makeText(this, ImagePicker.getError(data), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Image selection cancelled", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+}

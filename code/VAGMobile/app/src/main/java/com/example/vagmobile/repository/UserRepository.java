@@ -1,0 +1,236 @@
+package com.example.vagmobile.repository;
+
+import android.content.Context;
+import androidx.lifecycle.MutableLiveData;
+import com.example.vagmobile.network.ApiClient;
+import com.example.vagmobile.network.ApiService;
+import com.example.vagmobile.util.SharedPreferencesHelper;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class UserRepository {
+    private ApiService apiService;
+    private Context context;
+
+    public UserRepository() {
+        apiService = ApiClient.getClient().create(ApiService.class);
+    }
+
+    public UserRepository(Context context) {
+        this.context = context;
+        apiService = ApiClient.getClient().create(ApiService.class);
+    }
+
+    private String getAuthHeader() {
+        if (context != null) {
+            SharedPreferencesHelper prefs = new SharedPreferencesHelper(context);
+            String token = prefs.getToken();
+            if (token != null) {
+                return "Bearer " + token;
+            }
+        }
+        return null;
+    }
+// В UserRepository.java обновите метод getAllArtists():
+
+    public MutableLiveData<Map<String, Object>> getAllArtists() {
+        MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
+
+        // Используем artworks endpoint, который не требует авторизации для GET запросов
+        apiService.getArtworks(0, 100).enqueue(new Callback<Map<String, Object>>() {
+            @Override
+            public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                System.out.println("UserRepository: Artworks response code: " + response.code());
+
+                if (response.isSuccessful() && response.body() != null) {
+                    Map<String, Object> responseBody = response.body();
+                    Boolean success = (Boolean) responseBody.get("success");
+
+                    if (success != null && success) {
+                        List<Map<String, Object>> artworksData = (List<Map<String, Object>>) responseBody.get("artworks");
+                        if (artworksData != null && !artworksData.isEmpty()) {
+                            // Извлекаем уникальных пользователей из публикаций и подсчитываем работы
+                            Map<Long, Map<String, Object>> uniqueUsers = new HashMap<>();
+                            Map<Long, Integer> artworkCounts = new HashMap<>();
+
+                            for (Map<String, Object> artworkData : artworksData) {
+                                if (artworkData.get("user") != null) {
+                                    Map<String, Object> userData = (Map<String, Object>) artworkData.get("user");
+                                    Object userIdObj = userData.get("id");
+
+                                    if (userIdObj != null) {
+                                        Long userId = null;
+                                        if (userIdObj instanceof Double) {
+                                            userId = ((Double) userIdObj).longValue();
+                                        } else if (userIdObj instanceof Integer) {
+                                            userId = ((Integer) userIdObj).longValue();
+                                        } else if (userIdObj instanceof Long) {
+                                            userId = (Long) userIdObj;
+                                        }
+
+                                        if (userId != null) {
+                                            // Подсчитываем количество работ
+                                            artworkCounts.put(userId, artworkCounts.getOrDefault(userId, 0) + 1);
+
+                                            // Добавляем пользователя только если еще не добавлен
+                                            if (!uniqueUsers.containsKey(userId)) {
+                                                uniqueUsers.put(userId, userData);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Добавляем количество работ в данные пользователя
+                            List<Map<String, Object>> usersWithCounts = new ArrayList<>();
+                            for (Map.Entry<Long, Map<String, Object>> entry : uniqueUsers.entrySet()) {
+                                Map<String, Object> userData = new HashMap<>(entry.getValue());
+                                userData.put("artworksCount", artworkCounts.get(entry.getKey()));
+                                usersWithCounts.add(userData);
+                            }
+
+                            // Создаем результат с уникальными пользователями
+                            Map<String, Object> resultData = new HashMap<>();
+                            resultData.put("success", true);
+                            resultData.put("users", usersWithCounts);
+                            result.setValue(resultData);
+
+                            System.out.println("UserRepository: Extracted " + uniqueUsers.size() + " unique artists from artworks");
+                        } else {
+                            Map<String, Object> error = new HashMap<>();
+                            error.put("success", false);
+                            error.put("message", "No artworks found");
+                            result.setValue(error);
+                        }
+                    } else {
+                        String message = (String) responseBody.get("message");
+                        Map<String, Object> error = new HashMap<>();
+                        error.put("success", false);
+                        error.put("message", "Failed to load artworks: " + message);
+                        result.setValue(error);
+                    }
+                } else {
+                    Map<String, Object> error = new HashMap<>();
+                    error.put("success", false);
+                    error.put("message", "Failed to load artworks: " + response.message());
+                    result.setValue(error);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                System.out.println("UserRepository: Network error loading artworks: " + t.getMessage());
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "Network error: " + t.getMessage());
+                result.setValue(error);
+            }
+        });
+
+        return result;
+    }
+
+    // Метод для конвертации данных пользователя
+    private com.example.vagmobile.model.User convertToUser(Map<String, Object> userData) {
+        try {
+            com.example.vagmobile.model.User user = new com.example.vagmobile.model.User();
+
+            // Безопасное преобразование ID
+            Object idObj = userData.get("id");
+            if (idObj != null) {
+                if (idObj instanceof Double) {
+                    user.setId(((Double) idObj).longValue());
+                } else if (idObj instanceof Integer) {
+                    user.setId(((Integer) idObj).longValue());
+                } else if (idObj instanceof Long) {
+                    user.setId((Long) idObj);
+                }
+            }
+
+            user.setUsername((String) userData.get("username"));
+            user.setEmail((String) userData.get("email"));
+
+            // Роль (если есть)
+            if (userData.get("role") != null) {
+                user.setRole((String) userData.get("role"));
+            }
+
+            return user;
+        } catch (Exception e) {
+            System.out.println("UserRepository: Error converting user: " + e.getMessage());
+            return null;
+        }
+    }
+
+    // Остальные методы остаются без изменений...
+    public MutableLiveData<Map<String, Object>> getCurrentUser() {
+        MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
+
+        String authHeader = getAuthHeader();
+        if (authHeader == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Authentication required");
+            result.setValue(error);
+            return result;
+        }
+
+        ApiService authApiService = ApiClient.getClientWithAuth(authHeader).create(ApiService.class);
+        authApiService.getCurrentUserProfile(authHeader).enqueue(new Callback<Map<String, Object>>() {
+            @Override
+            public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    result.setValue(response.body());
+                } else {
+                    Map<String, Object> error = new HashMap<>();
+                    error.put("success", false);
+                    error.put("message", "Failed to get user profile: " + response.message());
+                    result.setValue(error);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "Network error: " + t.getMessage());
+                result.setValue(error);
+            }
+        });
+
+        return result;
+    }
+
+    public MutableLiveData<Map<String, Object>> getUser(Long userId) {
+        MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
+
+        apiService.getUserProfile(userId).enqueue(new Callback<Map<String, Object>>() {
+            @Override
+            public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    result.setValue(response.body());
+                } else {
+                    Map<String, Object> error = new HashMap<>();
+                    error.put("success", false);
+                    error.put("message", "Failed to get user: " + response.message());
+                    result.setValue(error);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "Network error: " + t.getMessage());
+                result.setValue(error);
+            }
+        });
+
+        return result;
+    }
+}
