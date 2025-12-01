@@ -15,7 +15,21 @@
       name: 'Виртуальная Арт-Галерея',
       repo: 'MaryZhminkovskaya/VAG_TRMP', 
       loadSidebar: true,
-      subMaxLevel: 2
+      subMaxLevel: 3,
+      auto2top: true,
+      alias: {
+        '/.*/_sidebar.md': '/_sidebar.md'
+      },
+      notFoundPage: true,
+      executeScript: true,
+      maxLevel: 4,
+      plugins: [
+        function (hook, vm) {
+          hook.doneEach(function () {
+            console.log('Sidebar loaded:', vm);
+          });
+        }
+      ]
     }
   </script>
   <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
