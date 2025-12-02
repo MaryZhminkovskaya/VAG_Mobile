@@ -62,7 +62,8 @@ public class AdminArtworkAdapter extends RecyclerView.Adapter<AdminArtworkAdapte
             if (imagePath.startsWith("/")) {
                 imagePath = imagePath.substring(1);
             }
-            String imageUrl = "http://192.168.0.51:8080/vag/uploads/" + imagePath;
+//            String imageUrl = "http://192.168.0.51:8080/vag/uploads/" + imagePath;
+            String imageUrl = "http://192.168.0.31:8080/vag/uploads/" + imagePath;
             Glide.with(holder.itemView.getContext())
                     .load(imageUrl)
                     .placeholder(android.R.drawable.ic_menu_gallery)

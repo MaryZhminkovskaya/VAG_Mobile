@@ -231,7 +231,8 @@ public class ArtworkDetailActivity extends AppCompatActivity {
             if (imagePath.startsWith("/")) {
                 imagePath = imagePath.substring(1);
             }
-            String imageUrl = "http://192.168.0.51:8080/vag/uploads/" + imagePath;
+//            String imageUrl = "http://192.168.0.51:8080/vag/uploads/" + imagePath;
+            String imageUrl = "http://192.168.0.31:8080/vag/uploads/" + imagePath;
             Log.d("ArtworkDetail", "Загрузка изображения с URL: " + imageUrl);
             Glide.with(this)
                     .load(imageUrl)
