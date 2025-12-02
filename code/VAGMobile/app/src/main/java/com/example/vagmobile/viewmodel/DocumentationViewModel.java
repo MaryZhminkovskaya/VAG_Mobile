@@ -17,14 +17,26 @@ public class DocumentationViewModel extends ViewModel {
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>();
 
+    private static final String DOCS_BASE_URL = "https://maryzhminkovskaya.github.io/VAG_Mobile/";
+
     public final List<DocPage> docPages = Arrays.asList(
-            new DocPage("Главная", "https://raw.githubusercontent.com/MaryZhminkovskaya/VAG_Mobile/Mary/docs/README.md"),
-            new DocPage("Публикации", "https://raw.githubusercontent.com/MaryZhminkovskaya/VAG_Mobile/Mary/docs/publications/README.md"),
-            new DocPage("Создание публикаций", "https://raw.githubusercontent.com/MaryZhminkovskaya/VAG_Mobile/Mary/docs/publications/creating/README.md"),
-            new DocPage("Управление публикациями", "https://raw.githubusercontent.com/MaryZhminkovskaya/VAG_Mobile/Mary/docs/publications/managing/README.md"),
-            new DocPage("Формы публикаций", "https://raw.githubusercontent.com/MaryZhminkovskaya/VAG_Mobile/Mary/docs/forms/README.md"),
-            new DocPage("Частые вопросы", "https://raw.githubusercontent.com/MaryZhminkovskaya/VAG_Mobile/Mary/docs/faq/README.md")
-    );
+            new DocPage("Главная", DOCS_BASE_URL + "README.md"),
+
+            new DocPage("Шутова: главная", DOCS_BASE_URL + "shutova/README.md"),
+            new DocPage("Шутова: руководство по выставкам", DOCS_BASE_URL + "shutova/guide/README.md"),
+            new DocPage("Шутова: добавление работ", DOCS_BASE_URL + "shutova/guide/adding_works.md"),
+            new DocPage("Шутова: управление выставками", DOCS_BASE_URL + "shutova/guide/managing.md"),
+            new DocPage("Шутова: о проекте", DOCS_BASE_URL + "shutova/about/README.md"),
+            new DocPage("Шутова: ЧаВо", DOCS_BASE_URL + "shutova/about/faq.md"),
+
+            new DocPage("Жминьковская: главная", DOCS_BASE_URL + "zhminkovskaya/README.md"),
+            new DocPage("Жминьковская: публикации", DOCS_BASE_URL + "zhminkovskaya/publications/README.md"),
+            new DocPage("Жминьковская: создание публикаций",
+                    DOCS_BASE_URL + "zhminkovskaya/publications/creating/README.md"),
+            new DocPage("Жминьковская: управление публикациями",
+                    DOCS_BASE_URL + "zhminkovskaya/publications/managing/README.md"),
+            new DocPage("Жминьковская: формы публикаций", DOCS_BASE_URL + "zhminkovskaya/forms/README.md"),
+            new DocPage("Жминьковская: ЧаВо", DOCS_BASE_URL + "zhminkovskaya/faq/README.md"));
 
     public void loadMarkdownContent(String rawUrl) {
         isLoading.setValue(true);
@@ -44,7 +56,15 @@ public class DocumentationViewModel extends ViewModel {
         });
     }
 
-    public LiveData<String> getCurrentContent() { return currentContent; }
-    public LiveData<String> getErrorMessage() { return errorMessage; }
-    public LiveData<Boolean> getIsLoading() { return isLoading; }
+    public LiveData<String> getCurrentContent() {
+        return currentContent;
+    }
+
+    public LiveData<String> getErrorMessage() {
+        return errorMessage;
+    }
+
+    public LiveData<Boolean> getIsLoading() {
+        return isLoading;
+    }
 }

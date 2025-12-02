@@ -34,6 +34,7 @@ public class DocumentationDetailFragment extends Fragment {
     private TextView contentTextView;
     private DocumentationViewModel viewModel;
     private CustomLinkMovementMethod linkMovementMethod;
+    private DocPage currentDocPage;
 
     public static DocumentationDetailFragment newInstance(DocPage docPage) {
         DocumentationDetailFragment fragment = new DocumentationDetailFragment();
@@ -58,7 +59,8 @@ public class DocumentationDetailFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_documentation_detail, container, false);
     }
 
@@ -68,6 +70,7 @@ public class DocumentationDetailFragment extends Fragment {
 
         DocPage docPage = (DocPage) getArguments().getSerializable(ARG_DOC_PAGE);
         if (docPage != null) {
+            currentDocPage = docPage;
             TextView titleTextView = view.findViewById(R.id.tv_doc_detail_title);
             contentTextView = view.findViewById(R.id.tv_doc_detail_content);
             progressBar = view.findViewById(R.id.progressBar);
@@ -84,7 +87,8 @@ public class DocumentationDetailFragment extends Fragment {
 
         viewModel.getCurrentContent().observe(getViewLifecycleOwner(), content -> {
             if (content != null) {
-                String processedContent = MarkdownHelper.processMarkdown(content);
+                String pageUrl = currentDocPage != null ? currentDocPage.getRawUrl() : null;
+                String processedContent = MarkdownHelper.processMarkdown(content, pageUrl);
                 markwon.setMarkdown(contentTextView, processedContent);
                 contentTextView.setVisibility(View.VISIBLE);
             }
@@ -111,6 +115,10 @@ public class DocumentationDetailFragment extends Fragment {
     }
 
     private void handleLinkClick(String url) {
+        if (url == null || url.trim().isEmpty() || url.trim().equals("#")) {
+            return;
+        }
+
         try {
             DocPage targetPage = findDocPageByUrl(url);
 
@@ -124,21 +132,20 @@ public class DocumentationDetailFragment extends Fragment {
             } else {
                 android.content.Intent browserIntent = new android.content.Intent(
                         android.content.Intent.ACTION_VIEW,
-                        android.net.Uri.parse(url)
-                );
+                        android.net.Uri.parse(url));
                 startActivity(browserIntent);
             }
         } catch (Exception e) {
             android.content.Intent browserIntent = new android.content.Intent(
                     android.content.Intent.ACTION_VIEW,
-                    android.net.Uri.parse(url)
-            );
+                    android.net.Uri.parse(url));
             startActivity(browserIntent);
         }
     }
 
     private DocPage findDocPageByUrl(String url) {
-        if (url == null || viewModel.docPages == null) return null;
+        if (url == null || viewModel.docPages == null)
+            return null;
 
         for (DocPage page : viewModel.docPages) {
             if (url.equals(page.getRawUrl())) {
