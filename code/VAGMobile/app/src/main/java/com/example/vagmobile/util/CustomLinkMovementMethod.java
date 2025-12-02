@@ -45,7 +45,8 @@ public class CustomLinkMovementMethod extends LinkMovementMethod {
                 ClickableSpan link = links[0];
                 String url = extractUrlFromClickableSpan(link);
 
-                if (linkClickListener != null && url != null) {
+                // Игнорируем пустые и чисто якорные ссылки, чтобы не вызывать падения
+                if (linkClickListener != null && url != null && !url.trim().isEmpty()) {
                     linkClickListener.onLinkClick(url);
                     return true;
                 }
