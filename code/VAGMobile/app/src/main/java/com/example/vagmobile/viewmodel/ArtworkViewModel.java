@@ -2,6 +2,7 @@ package com.example.vagmobile.viewmodel;
 
 import android.app.Application;
 import androidx.lifecycle.AndroidViewModel;
+import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import com.example.vagmobile.repository.ArtworkRepository;
 import okhttp3.MultipartBody;
@@ -17,11 +18,9 @@ public class ArtworkViewModel extends AndroidViewModel {
     private MutableLiveData<Map<String, Object>> addCommentResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> searchResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> categoryArtworksResult = new MutableLiveData<>();
-
-    // ДОБАВЛЕНО: Для админских функций
+    private final MutableLiveData<Map<String, Object>> deleteResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> artworkForAdminResult = new MutableLiveData<>();
-
-    // ДОБАВЛЕНО: Для создания публикаций
+    private MutableLiveData<Map<String, Object>> allUserArtworksResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> createResult = new MutableLiveData<>();
 
     public ArtworkViewModel(Application application) {
@@ -57,12 +56,10 @@ public class ArtworkViewModel extends AndroidViewModel {
         return categoryArtworksResult;
     }
 
-    // ДОБАВЛЕНО: Геттер для админского результата
     public MutableLiveData<Map<String, Object>> getArtworkForAdminResult() {
         return artworkForAdminResult;
     }
 
-    // ДОБАВЛЕНО: Геттер для результата создания
     public MutableLiveData<Map<String, Object>> getCreateResult() {
         return createResult;
     }
@@ -75,7 +72,6 @@ public class ArtworkViewModel extends AndroidViewModel {
         artworkRepository.getArtwork(id).observeForever(artworkResult::setValue);
     }
 
-    // ДОБАВЛЕНО: Метод для получения публикации через админский endpoint
     public void getArtworkForAdmin(Long id) {
         artworkRepository.getArtworkForAdmin(id).observeForever(artworkForAdminResult::setValue);
     }
@@ -106,8 +102,30 @@ public class ArtworkViewModel extends AndroidViewModel {
         artworkRepository.getCategoryArtworks(categoryId, page, size).observeForever(categoryArtworksResult::setValue);
     }
 
-    // ДОБАВЛЕНО: Метод для создания публикации
     public void createArtwork(String title, String description, String categoryIds, MultipartBody.Part image) {
         artworkRepository.createArtwork(title, description, categoryIds, image).observeForever(createResult::setValue);
+    }
+
+
+    public void loadUserArtworks(Long userId) {
+        artworkRepository.getUserArtworks(userId, 0, 100);
+    }
+
+    public LiveData<Map<String, Object>> getAllUserArtworksResult() {
+        return allUserArtworksResult;
+    }
+
+    public void getAllUserArtworks(Long userId, int page, int size) {
+        artworkRepository.getAllUserArtworks(userId, page, size)
+                .observeForever(result -> allUserArtworksResult.setValue(result));
+    }
+
+    public LiveData<Map<String, Object>> getDeleteResult() {
+        return deleteResult;
+    }
+
+    public void deleteArtwork(Long artworkId) {
+        artworkRepository.deleteArtwork(artworkId)
+                .observeForever(deleteResult::setValue);
     }
 }

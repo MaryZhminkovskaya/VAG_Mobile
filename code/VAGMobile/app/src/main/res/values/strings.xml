@@ -1,11 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">VAG Mobile</string>
-    <string name="login">Login</string>
-    <string name="register">Register</string>
-    <string name="username">Username</string>
-    <string name="password">Password</string>
-    <string name="email">Email</string>
-    <string name="confirm_password">Confirm Password</string>
-    <string name="action_settings">Settings</string>
+    <!-- Основные строки -->
+    <string name="app_name">Цифровое арт-пространство</string>
 
+    <!-- Навигация -->
+    <string name="nav_home">Главная</string>
+    <string name="nav_gallery">Галерея</string>
+    <string name="nav_categories">Категории</string>
+    <string name="nav_artists">Художники</string>
+    <string name="nav_profile">Профиль</string>
+
+    <!-- Кнопки -->
+    <string name="login">Войти</string>
+    <string name="register">Регистрация</string>
+    <string name="logout">Выйти</string>
+    <string name="create_artwork">Создать публикацию</string>
+
+    <!-- Сообщения -->
+    <string name="login_required">Пожалуйста, войдите в систему</string>
+    <string name="loading">Загрузка...</string>
+    <string name="no_data">Нет данных</string>
+
+    <!-- Профиль -->
+    <string name="profile">Профиль</string>
+    <string name="view_profile">Просмотреть профиль</string>
+    <string name="liked_artworks">Понравившиеся публикации</string>
+    <string name="documentation">Документация</string>
+    <string name="administration">Администрирование</string>
+    <string name="manage_categories">Управление категориями</string>
+    <string name="moderate_artworks">Модерация публикаций</string>
+    <string name="not_logged_in">Вы не авторизованы</string>
+    <string name="login_to_access">Войдите в систему для доступа ко всем функциям</string>
+
+    <!-- Публикации -->
+    <string name="artworks">Публикации</string>
+    <string name="title">Название</string>
+    <string name="description">Описание</string>
+    <string name="artist">Художник</string>
+    <string name="likes">лайков</string>
+    <string name="views">просмотров</string>
+    <string name="status">Статус</string>
+    <string name="categories">Категории</string>
+    <string name="comments">Комментарии</string>
+    <string name="add_comment">Добавить комментарий</string>
+
+    <!-- Категории -->
+    <string name="category">Категория</string>
+    <string name="artworks_count">публикаций</string>
+
+    <!-- Художники -->
+    <string name="artists">Художники</string>
+    <string name="publications">публикации</string>
+    <string name="no_publications">Нет публикаций</string>
 </resources>

@@ -28,7 +28,6 @@ public class AuthRepository {
     public MutableLiveData<Map<String, Object>> login(String username, String password) {
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
 
-        // Создаем JSON запрос
         Map<String, String> loginRequest = new HashMap<>();
         loginRequest.put("username", username);
         loginRequest.put("password", password);
@@ -53,13 +52,10 @@ public class AuthRepository {
 
                     if (success != null && success) {
                         try {
-                            // Создаем AuthResponse из данных ответа
                             AuthResponse authResponse = new AuthResponse();
                             authResponse.setSuccess(true);
                             authResponse.setMessage((String) responseBody.get("message"));
 
-                            // Извлекаем данные пользователя
-                            // Сервер возвращает user как Map (после JSON десериализации)
                             Object userObj = responseBody.get("user");
                             if (userObj instanceof Map) {
                                 Map<String, Object> userData = (Map<String, Object>) userObj;
@@ -76,7 +72,6 @@ public class AuthRepository {
                                     authResponse.setRole((String) userData.get("role"));
                                 }
                             } else {
-                                // Fallback: если user не Map, пытаемся извлечь напрямую из responseBody
                                 if (responseBody.get("id") != null) {
                                     authResponse.setId(((Number) responseBody.get("id")).longValue());
                                 }
@@ -91,7 +86,6 @@ public class AuthRepository {
                                 }
                             }
                             
-                            // Проверяем, что все необходимые данные получены
                             if (authResponse.getId() == null || authResponse.getUsername() == null) {
                                 System.out.println("Warning: Incomplete user data in response");
                                 System.out.println("Response body: " + responseBody);
@@ -99,11 +93,9 @@ public class AuthRepository {
 
                             responseMap.put("user", authResponse);
 
-                            // СОХРАНЯЕМ ДАННЫЕ ПОЛЬЗОВАТЕЛЯ В SharedPreferences
                             if (context != null) {
                                 SharedPreferencesHelper prefs = new SharedPreferencesHelper(context);
                                 
-                                // Сохраняем токен, если он есть в ответе
                                 Object tokenObj = responseBody.get("token");
                                 if (tokenObj != null) {
                                     String token = tokenObj.toString();
@@ -159,7 +151,6 @@ public class AuthRepository {
     public MutableLiveData<Map<String, Object>> register(User user) {
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
 
-        // Создаем JSON запрос
         Map<String, String> registerRequest = new HashMap<>();
         registerRequest.put("username", user.getUsername());
         registerRequest.put("email", user.getEmail());
@@ -182,12 +173,10 @@ public class AuthRepository {
                     responseMap.put("message", responseBody.get("message"));
 
                     if (success != null && success) {
-                        // Создаем AuthResponse из данных ответа
                         AuthResponse authResponse = new AuthResponse();
                         authResponse.setSuccess(true);
                         authResponse.setMessage((String) responseBody.get("message"));
 
-                        // Извлекаем данные пользователя
                         if (responseBody.get("id") != null) {
                             authResponse.setId(((Number) responseBody.get("id")).longValue());
                         }
@@ -203,7 +192,6 @@ public class AuthRepository {
 
                         responseMap.put("user", authResponse);
 
-                        // СОХРАНЯЕМ ДАННЫЕ ПОЛЬЗОВАТЕЛЯ В SharedPreferences
                         SharedPreferencesHelper prefs = new SharedPreferencesHelper(context);
                         prefs.saveUserData(
                                 authResponse.getId(),

@@ -19,6 +19,8 @@ public interface UserService {
     User update(User updatedUser);
     User authenticate(String username, String password);
     User getCurrentUser();
-
     List<User> findRandomArtists(int count);
+
+    // ДОБАВЛЕНО: Метод для получения всех пользователей с количеством публикаций
+    List<User> findAllWithArtworksCount();
 }

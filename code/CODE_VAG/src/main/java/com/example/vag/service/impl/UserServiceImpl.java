@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,6 +37,21 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User save(User user) {
+        if (user.getId() == null) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        } else {
+            Optional<User> existingUser = userRepository.findById(user.getId());
+            if (existingUser.isPresent()) {
+                User dbUser = existingUser.get();
+                if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+                    dbUser.setPassword(passwordEncoder.encode(user.getPassword()));
+                }
+                dbUser.setUsername(user.getUsername());
+                dbUser.setEmail(user.getEmail());
+                dbUser.setDescription(user.getDescription()); // ДОБАВЛЕНО
+                return userRepository.save(dbUser);
+            }
+        }
         return userRepository.save(user);
     }
 
@@ -60,8 +76,31 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<User> findAllWithArtworksCount() {
+        List<User> users = userRepository.findAllArtistsWithArtworks();
+        // Инициализируем коллекции для предотвращения LazyInitializationException
+        users.forEach(user -> {
+            user.getArtworks().size(); // Инициализируем коллекцию
+            if (user.getExhibitions() != null) {
+                user.getExhibitions().size(); // Инициализируем коллекцию
+            }
+        });
+        return users;
+    }
+
+    @Override
     public Optional<User> findById(Long id) {
-        return userRepository.findById(id);
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            // Инициализируем коллекции
+            user.getArtworks().size();
+            if (user.getExhibitions() != null) {
+                user.getExhibitions().size();
+            }
+        }
+        return userOpt;
     }
 
     @Override
@@ -92,10 +131,15 @@ public class UserServiceImpl implements UserService {
             user.setEmail(updatedUser.getEmail());
         }
 
+        if (updatedUser.getDescription() != null) {
+            user.setDescription(updatedUser.getDescription());
+        }
+
         if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(updatedUser.getPassword()));
         }
 
+        user.setUpdatedAt(LocalDateTime.now());
         return userRepository.save(user);
     }
 
@@ -111,6 +155,8 @@ public class UserServiceImpl implements UserService {
             // Проверяем пароль
             if (passwordEncoder.matches(password, user.getPassword())) {
                 System.out.println("Authentication successful for: " + username);
+                System.out.println("User description: " + user.getDescription());
+                System.out.println("User role: " + (user.getRole() != null ? user.getRole().getName() : "null"));
                 return user;
             } else {
                 System.out.println("Invalid password for: " + username);
@@ -122,6 +168,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
     public User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -147,6 +194,8 @@ public class UserServiceImpl implements UserService {
         if (principal instanceof User) {
             User user = (User) principal;
             System.out.println("Mobile user found: " + user.getUsername());
+            System.out.println("User description: " + user.getDescription());
+            System.out.println("User role: " + (user.getRole() != null ? user.getRole().getName() : "null"));
             return user;
         }
         // Для веб-пользователей Spring Security
@@ -160,7 +209,9 @@ public class UserServiceImpl implements UserService {
             Optional<User> userOpt = findByUsername(username);
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
-                System.out.println("Web user details: " + user.getUsername() + ", role: " + user.getRole().getName());
+                System.out.println("Web user details: " + user.getUsername() +
+                        ", role: " + user.getRole().getName() +
+                        ", description: " + user.getDescription());
                 return user;
             } else {
                 System.out.println("Web user not found in database: " + username);
@@ -174,9 +225,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> findRandomArtists(int count) {
-        // Используем native query или ограничиваем результат в коде
         List<User> artists = userRepository.findRandomArtists(count);
-        // Ограничиваем результат до нужного количества
+        // Инициализируем коллекции для предотвращения LazyInitializationException
+        artists.forEach(artist -> {
+            artist.getArtworks().size();
+        });
         return artists.size() > count ? artists.subList(0, count) : artists;
     }
 }

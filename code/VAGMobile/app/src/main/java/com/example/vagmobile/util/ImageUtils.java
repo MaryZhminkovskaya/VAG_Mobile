@@ -24,7 +24,6 @@ public class ImageUtils {
         }
     }
 
-    // В классе ImageUtils
     public static String convertCategoryIdsToString(List<Long> categoryIds) {
         if (categoryIds == null || categoryIds.isEmpty()) {
             return "";
@@ -65,7 +64,6 @@ public class ImageUtils {
         }
     }
 
-    // Альтернативный метод для работы с URI напрямую
     public static MultipartBody.Part prepareImagePartFromUri(String partName, Uri imageUri, Context context) {
         try {
             File file = uriToFile(imageUri, context);

@@ -32,7 +32,6 @@ public class ApiClient {
         return retrofit;
     }
 
-    // ДОБАВЛЕНО: Метод для получения клиента с авторизацией
     public static Retrofit getClientWithAuth(final String authToken) {
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);

@@ -26,7 +26,6 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        // Проверяем, если пользователь уже авторизован
         SharedPreferencesHelper prefs = new SharedPreferencesHelper(this);
         if (prefs.isLoggedIn()) {
             startActivity(new Intent(this, MainActivity.class));
@@ -34,7 +33,6 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        // Используем AndroidViewModel с Application context
         authViewModel = new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication())).get(AuthViewModel.class);
 
         etUsername = findViewById(R.id.etUsername);
@@ -70,7 +68,6 @@ public class LoginActivity extends AppCompatActivity {
                     if (success != null && success) {
                         AuthResponse authResponse = (AuthResponse) result.get("user");
                         if (authResponse != null) {
-                            // Данные уже сохранены в Repository, просто переходим
                             Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(this, MainActivity.class);
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);

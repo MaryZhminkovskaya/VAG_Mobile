@@ -21,10 +21,8 @@ public class UserEntity {
     @ColumnInfo(name = "last_sync")
     private Long lastSync;
 
-    // Конструкторы
     public UserEntity() {}
 
-    // Геттеры и сеттеры
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

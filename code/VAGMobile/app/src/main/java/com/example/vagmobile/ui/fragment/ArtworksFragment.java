@@ -53,12 +53,24 @@ public class ArtworksFragment extends Fragment {
     }
 
     private void setupRecyclerView() {
-        artworkAdapter = new ArtworkAdapter(artworkList, artwork -> {
-            // Открываем детали публикации
-            Intent intent = new Intent(getActivity(), ArtworkDetailActivity.class);
-            intent.putExtra("artwork_id", artwork.getId());
-            startActivity(intent);
-        });
+        artworkAdapter = new ArtworkAdapter(artworkList, new ArtworkAdapter.OnArtworkClickListener() {
+            @Override
+            public void onArtworkClick(Artwork artwork) {
+                Intent intent = new Intent(getActivity(), ArtworkDetailActivity.class);
+                intent.putExtra("artwork_id", artwork.getId());
+                startActivity(intent);
+            }
+
+            @Override
+            public void onEditClick(Artwork artwork) {
+                // Не используется для просмотра всех публикаций
+            }
+
+            @Override
+            public void onDeleteClick(Artwork artwork) {
+                // Не используется для просмотра всех публикаций
+            }
+        }, false); // false - не показываем кнопки действий для публичного просмотра
 
         GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 2);
         recyclerView.setLayoutManager(layoutManager);
@@ -99,7 +111,6 @@ public class ArtworksFragment extends Fragment {
     private Artwork convertToArtwork(Map<String, Object> artworkData) {
         Artwork artwork = new Artwork();
 
-        // Безопасное преобразование ID
         if (artworkData.get("id") != null) {
             if (artworkData.get("id") instanceof Double) {
                 artwork.setId(((Double) artworkData.get("id")).longValue());
@@ -114,7 +125,6 @@ public class ArtworksFragment extends Fragment {
         artwork.setDescription((String) artworkData.get("description"));
         artwork.setImagePath((String) artworkData.get("imagePath"));
 
-        // Безопасное преобразование лайков
         if (artworkData.get("likes") != null) {
             if (artworkData.get("likes") instanceof Double) {
                 artwork.setLikes(((Double) artworkData.get("likes")).intValue());
@@ -125,7 +135,6 @@ public class ArtworksFragment extends Fragment {
             }
         }
 
-        // УЛУЧШЕННЫЙ ПАРСИНГ ПОЛЬЗОВАТЕЛЯ ДЛЯ ФРАГМЕНТА
         artwork.setUser(parseUserFromArtworkData(artworkData));
 
         return artwork;
@@ -134,12 +143,10 @@ public class ArtworksFragment extends Fragment {
     private User parseUserFromArtworkData(Map<String, Object> artworkData) {
         User user = new User();
 
-        // Вариант 1: user как объект
         Object userObj = artworkData.get("user");
         if (userObj instanceof Map) {
             Map<String, Object> userData = (Map<String, Object>) userObj;
 
-            // Парсим ID пользователя
             Object userIdObj = userData.get("id");
             if (userIdObj != null) {
                 if (userIdObj instanceof Double) {
@@ -151,7 +158,6 @@ public class ArtworksFragment extends Fragment {
                 }
             }
 
-            // Парсим username
             String username = null;
             if (userData.get("username") != null) {
                 username = (String) userData.get("username");
@@ -162,7 +168,6 @@ public class ArtworksFragment extends Fragment {
             }
             user.setUsername(username != null ? username : "Неизвестный художник");
 
-            // Парсим email
             if (userData.get("email") != null) {
                 user.setEmail((String) userData.get("email"));
             }
@@ -170,7 +175,6 @@ public class ArtworksFragment extends Fragment {
             return user;
         }
 
-        // Вариант 2: поля пользователя прямо в artwork
         Object userIdObj = artworkData.get("userId");
         if (userIdObj != null) {
             if (userIdObj instanceof Double) {
@@ -182,7 +186,6 @@ public class ArtworksFragment extends Fragment {
             }
         }
 
-        // Ищем username в разных возможных полях
         String username = null;
         if (artworkData.get("userName") != null) {
             username = (String) artworkData.get("userName");
@@ -196,5 +199,4 @@ public class ArtworksFragment extends Fragment {
 
         return user;
     }
-
 }

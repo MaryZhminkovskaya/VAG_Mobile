@@ -71,13 +71,10 @@ public class ArtistsAdapter extends RecyclerView.Adapter<ArtistsAdapter.ArtistVi
             tvArtworksCount = itemView.findViewById(R.id.tvArtworksCount);
         }
 
-// В ArtistsAdapter.java обновите метод bind():
-
         public void bind(User artist) {
             tvArtistName.setText(artist.getUsername());
             tvArtistEmail.setText(artist.getEmail() != null ? artist.getEmail() : "Email не указан");
 
-            // Отображаем реальное количество работ
             int artworksCount = artist.getArtworksCount() != null ? artist.getArtworksCount() : 0;
             if (artworksCount == 0) {
                 tvArtworksCount.setText("Нет публикаций");
@@ -89,7 +86,6 @@ public class ArtistsAdapter extends RecyclerView.Adapter<ArtistsAdapter.ArtistVi
                 tvArtworksCount.setText(artworksCount + " публикаций");
             }
 
-            // Загрузка аватарки
             Glide.with(itemView.getContext())
                     .load(R.drawable.ic_people)
                     .circleCrop()

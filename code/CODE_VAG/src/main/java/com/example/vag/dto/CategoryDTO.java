@@ -4,7 +4,7 @@ public class CategoryDTO {
     private Long id;
     private String name;
     private String description;
-    private Long approvedArtworksCount;
+    private Long approvedArtworksCount = 0L;
 
     // Конструкторы
     public CategoryDTO() {}
@@ -25,6 +25,10 @@ public class CategoryDTO {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public Long getApprovedArtworksCount() { return approvedArtworksCount; }
-    public void setApprovedArtworksCount(Long approvedArtworksCount) { this.approvedArtworksCount = approvedArtworksCount; }
-}
+    public Long getApprovedArtworksCount() {
+        return approvedArtworksCount != null ? approvedArtworksCount : 0L;
+    }
+
+    public void setApprovedArtworksCount(Long approvedArtworksCount) {
+        this.approvedArtworksCount = approvedArtworksCount != null ? approvedArtworksCount : 0L;
+    }}

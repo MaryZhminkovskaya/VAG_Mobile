@@ -51,7 +51,6 @@ public class SharedPreferencesHelper {
         return sharedPreferences.getString(KEY_EMAIL, null);
     }
 
-    // Основной метод для сохранения всех данных пользователя
     public void saveUserData(Long userId, String username, String email, String role) {
         try {
             SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -72,12 +71,10 @@ public class SharedPreferencesHelper {
         }
     }
 
-    // Сохранение токена
     public void saveToken(String token) {
         sharedPreferences.edit().putString(KEY_TOKEN, token).apply();
     }
 
-    // Получение токена
     public String getToken() {
         return sharedPreferences.getString(KEY_TOKEN, null);
     }

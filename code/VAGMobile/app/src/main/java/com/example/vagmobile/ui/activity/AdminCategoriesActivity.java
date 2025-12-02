@@ -220,18 +220,32 @@ public class AdminCategoriesActivity extends AppCompatActivity {
 
     private Category convertToCategory(Map<String, Object> categoryData) {
         Category category = new Category();
-        category.setId(((Double) categoryData.get("id")).longValue());
-        category.setName((String) categoryData.get("name"));
-        category.setDescription((String) categoryData.get("description"));
 
-        if (categoryData.get("approvedArtworksCount") != null) {
-            if (categoryData.get("approvedArtworksCount") instanceof Double) {
-                category.setApprovedArtworksCount(((Double) categoryData.get("approvedArtworksCount")).longValue());
-            } else if (categoryData.get("approvedArtworksCount") instanceof Integer) {
-                category.setApprovedArtworksCount(((Integer) categoryData.get("approvedArtworksCount")).longValue());
-            } else if (categoryData.get("approvedArtworksCount") instanceof Long) {
-                category.setApprovedArtworksCount((Long) categoryData.get("approvedArtworksCount"));
+        Object idObj = categoryData.get("id");
+        if (idObj != null) {
+            if (idObj instanceof Double) {
+                category.setId(((Double) idObj).longValue());
+            } else if (idObj instanceof Integer) {
+                category.setId(((Integer) idObj).longValue());
+            } else if (idObj instanceof Long) {
+                category.setId((Long) idObj);
             }
+        }
+
+        category.setName(categoryData.get("name") != null ? categoryData.get("name").toString() : "Без названия");
+        category.setDescription(categoryData.get("description") != null ? categoryData.get("description").toString() : "");
+
+        Object countObj = categoryData.get("approvedArtworksCount");
+        if (countObj != null) {
+            if (countObj instanceof Double) {
+                category.setApprovedArtworksCount(((Double) countObj).longValue());
+            } else if (countObj instanceof Integer) {
+                category.setApprovedArtworksCount(((Integer) countObj).longValue());
+            } else if (countObj instanceof Long) {
+                category.setApprovedArtworksCount((Long) countObj);
+            }
+        } else {
+            category.setApprovedArtworksCount(0L);
         }
 
         return category;

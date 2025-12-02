@@ -43,10 +43,8 @@ public class ArtworkEntity {
     @ColumnInfo(name = "last_updated")
     private Date lastUpdated;
 
-    // Конструкторы
     public ArtworkEntity() {}
 
-    // Геттеры и сеттеры
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

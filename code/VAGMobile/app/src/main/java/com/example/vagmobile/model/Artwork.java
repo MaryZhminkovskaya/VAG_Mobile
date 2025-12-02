@@ -42,11 +42,8 @@ public class Artwork implements Serializable {
     private List<Comment> comments;
 
     private boolean liked;
-
-    // Конструкторы
     public Artwork() {}
 
-    // Геттеры и сеттеры
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -83,7 +80,6 @@ public class Artwork implements Serializable {
     public boolean isLiked() { return liked; }
     public void setLiked(boolean liked) { this.liked = liked; }
 
-    // НОВЫЕ МЕТОДЫ ДЛЯ КАТЕГОРИЙ
     public String getCategoriesString() {
         if (categories == null || categories.isEmpty()) {
             return "Без категории";
@@ -102,7 +98,15 @@ public class Artwork implements Serializable {
 
         return sb.toString();
     }
+    private Integer artworksCount;
 
+    public Integer getArtworksCount() {
+        return artworksCount;
+    }
+
+    public void setArtworksCount(Integer artworksCount) {
+        this.artworksCount = artworksCount;
+    }
     public boolean hasCategories() {
         return categories != null && !categories.isEmpty();
     }

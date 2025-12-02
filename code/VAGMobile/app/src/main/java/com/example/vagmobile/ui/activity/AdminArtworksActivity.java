@@ -66,7 +66,6 @@ public class AdminArtworksActivity extends AppCompatActivity {
     private void observeViewModels() {
         adminArtworkViewModel = new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication())).get(AdminArtworkViewModel.class);
 
-        // Наблюдатель для загрузки публикаций
         adminArtworkViewModel.getArtworksResult().observe(this, result -> {
             progressBar.setVisibility(View.GONE);
 
@@ -75,7 +74,6 @@ public class AdminArtworksActivity extends AppCompatActivity {
                 if (success != null && success) {
                     List<Map<String, Object>> artworksData = (List<Map<String, Object>>) result.get("artworks");
                     if (artworksData != null) {
-                        // ДЕТАЛЬНЫЙ ОТЛАДОЧНЫЙ ВЫВОД
                         System.out.println("=== ADMIN ARTWORKS DATA DEBUG ===");
                         System.out.println("Total artworks: " + artworksData.size());
 
@@ -84,13 +82,11 @@ public class AdminArtworksActivity extends AppCompatActivity {
                             System.out.println("--- Artwork " + i + " ---");
                             System.out.println("All keys: " + artworkData.keySet());
 
-                            // Выводим все поля artwork
                             for (String key : artworkData.keySet()) {
                                 Object value = artworkData.get(key);
                                 System.out.println(key + ": " + value + " (type: " + (value != null ? value.getClass().getSimpleName() : "null") + ")");
                             }
 
-                            // Особенно внимательно смотрим на поле user
                             Object userObj = artworkData.get("user");
                             System.out.println("User object: " + userObj);
                             if (userObj != null) {
@@ -120,7 +116,6 @@ public class AdminArtworksActivity extends AppCompatActivity {
             }
         });
 
-        // Наблюдатель для одобрения публикации
         adminArtworkViewModel.getApproveResult().observe(this, result -> {
             if (result != null) {
                 Boolean success = (Boolean) result.get("success");
@@ -134,7 +129,6 @@ public class AdminArtworksActivity extends AppCompatActivity {
             }
         });
 
-        // Наблюдатель для отклонения публикации
         adminArtworkViewModel.getRejectResult().observe(this, result -> {
             if (result != null) {
                 Boolean success = (Boolean) result.get("success");
@@ -199,7 +193,6 @@ public class AdminArtworksActivity extends AppCompatActivity {
             }
         }
 
-        // УЛУЧШЕННЫЙ ПАРСИНГ ПОЛЬЗОВАТЕЛЯ
         artwork.setUser(parseUserFromArtworkData(artworkData));
 
         return artwork;
@@ -211,14 +204,12 @@ public class AdminArtworksActivity extends AppCompatActivity {
         System.out.println("=== PARSING USER DATA ===");
         System.out.println("Artwork data keys: " + artworkData.keySet());
 
-        // Вариант 1: user как объект Map
         Object userObj = artworkData.get("user");
         if (userObj instanceof Map) {
             Map<String, Object> userData = (Map<String, Object>) userObj;
             System.out.println("Found user as Map: " + userData);
             System.out.println("User data keys: " + userData.keySet());
 
-            // Парсим ID пользователя
             Object userIdObj = userData.get("id");
             if (userIdObj != null) {
                 System.out.println("User ID object: " + userIdObj + " (type: " + userIdObj.getClass().getSimpleName() + ")");
@@ -238,7 +229,6 @@ public class AdminArtworksActivity extends AppCompatActivity {
                 System.out.println("Parsed user ID: " + user.getId());
             }
 
-            // Парсим username - проверяем все возможные варианты названий полей
             String username = null;
             if (userData.get("username") != null) {
                 username = userData.get("username").toString();
@@ -256,7 +246,6 @@ public class AdminArtworksActivity extends AppCompatActivity {
 
             user.setUsername(username != null ? username : "Неизвестный пользователь");
 
-            // Парсим email
             if (userData.get("email") != null) {
                 user.setEmail(userData.get("email").toString());
                 System.out.println("Found email: " + user.getEmail());
@@ -269,7 +258,6 @@ public class AdminArtworksActivity extends AppCompatActivity {
             System.out.println("User object value: " + userObj);
         }
 
-        // Вариант 2: поля пользователя прямо в artwork (прямые поля)
         System.out.println("Checking for direct user fields in artwork...");
 
         Object userIdObj = artworkData.get("userId");
@@ -290,7 +278,6 @@ public class AdminArtworksActivity extends AppCompatActivity {
             }
         }
 
-        // Ищем username в разных возможных полях artwork
         String username = null;
         if (artworkData.get("userName") != null) {
             username = artworkData.get("userName").toString();
@@ -312,7 +299,6 @@ public class AdminArtworksActivity extends AppCompatActivity {
         user.setUsername(username != null ? username :
                 (user.getId() != null ? "Пользователь #" + user.getId() : "Неизвестный пользователь"));
 
-        // Ищем email в разных полях
         if (artworkData.get("userEmail") != null) {
             user.setEmail(artworkData.get("userEmail").toString());
         } else if (artworkData.get("email") != null) {

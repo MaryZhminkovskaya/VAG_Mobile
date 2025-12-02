@@ -18,4 +18,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.role.name = 'ARTIST' ORDER BY FUNCTION('RAND')")
     List<User> findRandomArtists(@Param("count") int count);
 
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.artworks WHERE u.role.name = 'ARTIST' ORDER BY SIZE(u.artworks) DESC")
+    List<User> findAllArtistsWithArtworks();
+
+    @Query("SELECT DISTINCT u FROM User u LEFT JOIN FETCH u.artworks WHERE u.id = :id")
+    Optional<User> findByIdWithArtworks(@Param("id") Long id);
+
 }

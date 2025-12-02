@@ -20,6 +20,9 @@ public class User implements Serializable {
     @SerializedName("role")
     private Object role;
 
+    @SerializedName("description") // ДОБАВЛЕНО
+    private String description;
+
     private Integer artworksCount;
 
     public Integer getArtworksCount() {
@@ -46,4 +49,8 @@ public class User implements Serializable {
 
     public Object getRole() { return role; }
     public void setRole(Object role) { this.role = role; }
+
+    // ДОБАВЛЕНО: Геттер и сеттер для description
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 }

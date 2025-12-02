@@ -6,19 +6,9 @@
         android:title="Главная" />
 
     <item
-        android:id="@+id/nav_gallery"
-        android:icon="@drawable/ic_artwork"
-        android:title="Публикации" />
-
-    <item
-        android:id="@+id/nav_categories"
-        android:icon="@drawable/ic_category"
-        android:title="Категории" />
-
-    <item
-        android:id="@+id/nav_artists"
-        android:icon="@drawable/ic_people"
-        android:title="Художники" />
+        android:id="@+id/nav_more"
+        android:icon="@drawable/ic_more"
+        android:title="Ещё" />
 
     <item
         android:id="@+id/nav_profile"

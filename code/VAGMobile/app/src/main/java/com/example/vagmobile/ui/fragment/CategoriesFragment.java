@@ -54,14 +54,10 @@ public class CategoriesFragment extends Fragment {
 
     private void setupRecyclerView() {
         categoryAdapter = new CategoryAdapter(categoryList, category -> {
-            // Открываем детали категории с передачей всех данных
             Intent intent = new Intent(getActivity(), CategoryDetailActivity.class);
             intent.putExtra("category_id", category.getId());
             intent.putExtra("category_name", category.getName());
-            // Можно также передать описание, если оно уже загружено
-            if (category.getDescription() != null) {
-                intent.putExtra("category_description", category.getDescription());
-            }
+            intent.putExtra("category_description", category.getDescription());
             startActivity(intent);
         });
 
@@ -125,7 +121,6 @@ public class CategoriesFragment extends Fragment {
     private Category convertToCategory(Map<String, Object> categoryData) {
         Category category = new Category();
 
-        // Обработка ID
         Object idObj = categoryData.get("id");
         if (idObj != null) {
             if (idObj instanceof Double) {
@@ -137,10 +132,9 @@ public class CategoriesFragment extends Fragment {
             }
         }
 
-        category.setName((String) categoryData.get("name"));
-        category.setDescription((String) categoryData.get("description"));
+        category.setName(categoryData.get("name") != null ? categoryData.get("name").toString() : "Без названия");
+        category.setDescription(categoryData.get("description") != null ? categoryData.get("description").toString() : "");
 
-        // Обработка approvedArtworksCount
         Object countObj = categoryData.get("approvedArtworksCount");
         if (countObj != null) {
             if (countObj instanceof Double) {
@@ -149,7 +143,11 @@ public class CategoriesFragment extends Fragment {
                 category.setApprovedArtworksCount(((Integer) countObj).longValue());
             } else if (countObj instanceof Long) {
                 category.setApprovedArtworksCount((Long) countObj);
+            } else {
+                category.setApprovedArtworksCount(0L);
             }
+        } else {
+            category.setApprovedArtworksCount(0L);
         }
 
         return category;

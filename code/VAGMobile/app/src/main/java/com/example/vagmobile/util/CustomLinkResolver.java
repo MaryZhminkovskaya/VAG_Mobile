@@ -22,7 +22,6 @@ public class CustomLinkResolver {
     public void resolveLink(String link) {
         Log.d(TAG, "Processing link: " + link);
 
-        // Обрабатываем относительные ссылки GitHub
         if (link.startsWith("./")) {
             link = "https://raw.githubusercontent.com/MaryZhminkovskaya/VAG_Mobile/Mary/docs/" +
                     link.substring(2) + "README.md";
@@ -58,15 +57,12 @@ public class CustomLinkResolver {
     private void openInternalDocumentationPage(String rawUrl) {
         Log.d(TAG, "Opening internal page: " + rawUrl);
 
-        // Нормализуем URL - убираем лишние README.md
         if (rawUrl.endsWith("/README.mdREADME.md")) {
             rawUrl = rawUrl.replace("/README.mdREADME.md", "/README.md");
         }
 
-        // Извлекаем название страницы из URL
         String pageName = extractPageNameFromUrl(rawUrl);
 
-        // Создаем новую DocPage и открываем её
         DocPage newDocPage = new DocPage(pageName, rawUrl);
         DocumentationDetailFragment newFragment = DocumentationDetailFragment.newInstance(newDocPage);
 
@@ -103,6 +99,5 @@ public class CustomLinkResolver {
 
     private void scrollToAnchor(String anchor) {
         Log.d(TAG, "Scrolling to anchor: " + anchor);
-        // Пока просто игнорируем
     }
 }

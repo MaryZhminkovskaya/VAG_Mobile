@@ -37,7 +37,8 @@ public class ArtworkMapper {
         if (artwork.getUser() != null) {
             UserDTO userDTO = toUserDTO(artwork.getUser());
             dto.setUser(userDTO);
-            System.out.println("Mapper: UserDTO created - " + userDTO.getUsername());
+            System.out.println("Mapper: UserDTO created - " + userDTO.getUsername() +
+                    ", description: " + userDTO.getDescription());
         }
 
         // ИСПРАВЛЕНО: Правильно добавляем категории - инициализируем коллекцию
@@ -78,6 +79,7 @@ public class ArtworkMapper {
 
         System.out.println("Mapper: Final ArtworkDTO - " + dto.getTitle() +
                 ", User: " + (dto.getUser() != null ? dto.getUser().getUsername() : "null") +
+                ", User Description: " + (dto.getUser() != null ? dto.getUser().getDescription() : "null") +
                 ", Categories: " + (dto.getCategories() != null ? dto.getCategories().size() : 0) +
                 ", Image: " + dto.getImagePath() +
                 ", Description: " + dto.getDescription());
@@ -146,13 +148,26 @@ public class ArtworkMapper {
         dto.setUsername(user.getUsername() != null ? user.getUsername() : "Unknown User");
         dto.setEmail(user.getEmail() != null ? user.getEmail() : "N/A");
 
+        // ДОБАВЛЕНО: Устанавливаем description
+        dto.setDescription(user.getDescription() != null ? user.getDescription() : "");
+
         if (user.getRole() != null) {
             dto.setRole(user.getRole().getName().name());
         } else {
             dto.setRole("UNKNOWN");
         }
 
-        System.out.println("Mapper: UserDTO - " + dto.getUsername() + ", " + dto.getEmail());
+        // ДОБАВЛЕНО: Добавляем количество публикаций
+        if (user.getArtworks() != null) {
+            dto.setArtworksCount(user.getArtworks().size());
+        } else {
+            dto.setArtworksCount(0);
+        }
+
+        System.out.println("Mapper: UserDTO - " + dto.getUsername() +
+                ", email: " + dto.getEmail() +
+                ", description: " + dto.getDescription() +
+                ", artworksCount: " + dto.getArtworksCount());
         return dto;
     }
 
@@ -165,7 +180,8 @@ public class ArtworkMapper {
         dto.setId(user.getId());
         dto.setUsername(user.getUsername());
         dto.setEmail(user.getEmail());
-        // Минимальные данные пользователя
+        // ДОБАВЛЕНО: Добавляем description
+        dto.setDescription(user.getDescription() != null ? user.getDescription() : "");
 
         return dto;
     }
@@ -179,7 +195,8 @@ public class ArtworkMapper {
         dto.setId(category.getId());
         dto.setName(category.getName());
         dto.setDescription(category.getDescription());
-        dto.setApprovedArtworksCount(category.getApprovedArtworksCount());
+        Long count = category.getApprovedArtworksCount();
+        dto.setApprovedArtworksCount(count != null ? count : 0L);
 
         return dto;
     }
@@ -210,6 +227,22 @@ public class ArtworkMapper {
     public List<UserDTO> toUserDTOList(List<User> users) {
         return users.stream()
                 .map(this::toUserDTO)
+                .collect(Collectors.toList());
+    }
+
+    // ДОБАВЛЕНО: Метод для получения DTO художников с количеством публикаций
+    public List<UserDTO> toArtistsWithCountDTOList(List<User> users) {
+        return users.stream()
+                .map(user -> {
+                    UserDTO dto = toUserDTO(user);
+                    // Устанавливаем количество публикаций
+                    if (user.getArtworks() != null) {
+                        dto.setArtworksCount(user.getArtworks().size());
+                    } else {
+                        dto.setArtworksCount(0);
+                    }
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 }
