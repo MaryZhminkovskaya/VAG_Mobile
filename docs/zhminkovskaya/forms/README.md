@@ -68,4 +68,4 @@
 
 ---
 
-[Создание публикаций](/publications/creating/) | [Частые вопросы](/faq/)
+[Создание публикаций](/zhminkovskaya/publications/creating/) | [Частые вопросы](/zhminkovskaya/faq/)

@@ -56,4 +56,4 @@
 
 ---
 
-[Руководство к публикациям](/publications/) | [Создание публикаций](/publications/creating/)
+[Руководство к публикациям](/zhminkovskaya/publications/) | [Создание публикаций](/zhminkovskaya/publications/creating/)

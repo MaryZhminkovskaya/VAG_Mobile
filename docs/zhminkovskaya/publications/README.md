@@ -31,11 +31,11 @@
 
 *Типичный путь работы в системе:*
 
-1. **Создание** → Заполнение [![Форма публикации](https://www.unite.ai/wp-content/uploads/2024/12/AI-in-Art.png)](/publications/creating/)
+1. **Создание** → Заполнение [![Форма публикации](https://www.unite.ai/wp-content/uploads/2024/12/AI-in-Art.png)](/zhminkovskaya/publications/creating/)
 2. **Модерация** → Проверка модератором (4-8 часов)
 3. **Публикация** → Появление в галерее
 4. **Участие** → Добавление в выставки
 
 ---
 
-[Создание публикаций](/./publications/creating/) | [Управление публикациями](/publications/managing/)
+[Создание публикаций](/zhminkovskaya/publications/creating/) | [Управление публикациями](/zhminkovskaya/publications/managing/)
