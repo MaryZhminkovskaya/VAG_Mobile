@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/ivExhibitionImage"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/placeholder_image" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:id="@+id/tvExhibitionTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Название выставки"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/tvExhibitionDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Описание выставки"
+                android:textSize="14sp"
+                android:textColor="#666"
+                android:maxLines="2"
+                android:ellipsize="end"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:id="@+id/tvAuthor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Автор: username"
+                android:textSize="12sp"
+                android:textColor="#888"
+                android:layout_marginTop="4dp"
+                android:visibility="visible" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/tvArtworksCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 работ"
+                    android:textSize="12sp"
+                    android:textColor="#666"
+                    android:drawablePadding="4dp"
+                    android:drawableStart="@drawable/ic_artwork" />
+
+                <TextView
+                    android:id="@+id/tvAuthorOnly"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Приватная"
+                    android:textSize="10sp"
+                    android:textColor="#FF6B6B"
+                    android:background="@drawable/bg_rounded_red"
+                    android:paddingLeft="6dp"
+                    android:paddingRight="6dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp"
+                    android:layout_marginStart="8dp"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

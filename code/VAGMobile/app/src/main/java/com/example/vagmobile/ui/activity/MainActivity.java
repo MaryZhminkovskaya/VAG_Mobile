@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
 
 import com.example.vagmobile.R;
 import com.example.vagmobile.ui.fragment.HomeFragment;
@@ -69,14 +70,34 @@ public class MainActivity extends AppCompatActivity {
         fabCreate.setOnClickListener(v -> {
             SharedPreferencesHelper prefs = new SharedPreferencesHelper(MainActivity.this);
             if (!prefs.isLoggedIn()) {
-                Toast.makeText(MainActivity.this, "Пожалуйста, войдите в систему чтобы создавать публикации", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Пожалуйста, войдите в систему чтобы создавать контент", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(MainActivity.this, LoginActivity.class));
                 return;
             }
 
-            Intent intent = new Intent(MainActivity.this, CreateArtworkActivity.class);
-            startActivity(intent);
+            showCreateContentDialog();
         });
+    }
+
+    private void showCreateContentDialog() {
+        String[] options = {"Создать публикацию", "Создать выставку"};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Выберите тип контента")
+                .setItems(options, (dialog, which) -> {
+                    switch (which) {
+                        case 0: // Создать публикацию
+                            Intent artworkIntent = new Intent(MainActivity.this, CreateArtworkActivity.class);
+                            startActivity(artworkIntent);
+                            break;
+                        case 1: // Создать выставку
+                            Intent exhibitionIntent = new Intent(MainActivity.this, CreateExhibitionActivity.class);
+                            startActivity(exhibitionIntent);
+                            break;
+                    }
+                })
+                .setNegativeButton("Отмена", null)
+                .show();
     }
 
     private void loadFragment(Fragment fragment) {

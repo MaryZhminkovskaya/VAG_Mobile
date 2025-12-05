@@ -293,6 +293,24 @@ public class ArtworkServiceImpl implements ArtworkService {
     }
 
     @Override
+    public Page<Artwork> findByExhibitionIdFiltered(Long exhibitionId, Long userId, boolean isAdmin, Pageable pageable) {
+        System.out.println("=== ARTWORK SERVICE FILTERING ===");
+        System.out.println("Exhibition ID: " + exhibitionId);
+        System.out.println("User ID: " + userId);
+        System.out.println("Is Admin: " + isAdmin);
+        System.out.println("=================================");
+
+        Page<Artwork> result = artworkRepository.findByExhibitionIdFiltered(exhibitionId, userId, isAdmin, pageable);
+
+        System.out.println("Found artworks count: " + result.getContent().size());
+        result.getContent().forEach(artwork ->
+            System.out.println("Artwork: " + artwork.getTitle() + " (status: " + artwork.getStatus() + ", user: " + artwork.getUser().getId() + ")")
+        );
+
+        return result;
+    }
+
+    @Override
     public List<Artwork> findByExhibitionId(Long exhibitionId) {
         return artworkRepository.findByExhibitionsId(exhibitionId);
     }

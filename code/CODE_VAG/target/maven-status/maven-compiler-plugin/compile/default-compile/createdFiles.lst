@@ -14,6 +14,8 @@ com\example\vag\model\Like.class
 com\example\vag\service\CategoryService.class
 com\example\vag\service\ExhibitionService.class
 com\example\vag\repository\RoleRepository.class
+com\example\vag\controller\mobile\MobileExhibitionController.class
+com\example\vag\dto\ExhibitionDTO.class
 com\example\vag\repository\CommentRepository.class
 com\example\vag\controller\AdminController.class
 com\example\vag\service\UserService.class

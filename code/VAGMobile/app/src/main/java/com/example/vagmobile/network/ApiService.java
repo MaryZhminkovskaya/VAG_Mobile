@@ -169,4 +169,70 @@ public interface ApiService {
             @Header("Authorization") String authHeader,
             @Path("id") Long id
     );
+
+    // Выставки (Exhibitions)
+    @GET("vag/api/mobile/exhibitions")
+    Call<Map<String, Object>> getExhibitions(@Query("page") int page, @Query("size") int size);
+
+    @GET("vag/api/mobile/exhibitions/{id}")
+    Call<Map<String, Object>> getExhibition(@Path("id") Long id);
+
+    @POST("vag/api/mobile/exhibitions/create")
+    Call<Map<String, Object>> createExhibition(
+            @Header("Authorization") String authHeader,
+            @Query("title") String title,
+            @Query("description") String description,
+            @Query("authorOnly") boolean authorOnly
+    );
+
+    @PUT("vag/api/mobile/exhibitions/{id}")
+    Call<Map<String, Object>> updateExhibition(
+            @Header("Authorization") String authHeader,
+            @Path("id") Long exhibitionId,
+            @Query("title") String title,
+            @Query("description") String description,
+            @Query("authorOnly") boolean authorOnly
+    );
+
+    @DELETE("vag/api/mobile/exhibitions/{id}")
+    Call<Map<String, Object>> deleteExhibition(
+            @Header("Authorization") String authHeader,
+            @Path("id") Long exhibitionId
+    );
+
+    @GET("vag/api/mobile/exhibitions/{id}/artworks")
+    Call<Map<String, Object>> getExhibitionArtworks(
+            @Path("id") Long exhibitionId,
+            @Query("page") int page,
+            @Query("size") int size
+    );
+
+    @GET("vag/api/mobile/exhibitions/{id}/artworks")
+    Call<Map<String, Object>> getExhibitionArtworksWithAuth(
+            @Header("Authorization") String authHeader,
+            @Path("id") Long exhibitionId,
+            @Query("page") int page,
+            @Query("size") int size
+    );
+
+    @POST("vag/api/mobile/exhibitions/{exhibitionId}/artworks/{artworkId}")
+    Call<Map<String, Object>> addArtworkToExhibition(
+            @Header("Authorization") String authHeader,
+            @Path("exhibitionId") Long exhibitionId,
+            @Path("artworkId") Long artworkId
+    );
+
+    @DELETE("vag/api/mobile/exhibitions/{exhibitionId}/artworks/{artworkId}")
+    Call<Map<String, Object>> removeArtworkFromExhibition(
+            @Header("Authorization") String authHeader,
+            @Path("exhibitionId") Long exhibitionId,
+            @Path("artworkId") Long artworkId
+    );
+
+    @GET("vag/api/mobile/users/{userId}/exhibitions")
+    Call<Map<String, Object>> getUserExhibitions(
+            @Path("userId") Long userId,
+            @Query("page") int page,
+            @Query("size") int size
+    );
 }

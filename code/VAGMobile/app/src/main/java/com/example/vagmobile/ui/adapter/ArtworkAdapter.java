@@ -69,6 +69,14 @@ public class ArtworkAdapter extends RecyclerView.Adapter<ArtworkAdapter.ArtworkV
         notifyDataSetChanged();
     }
 
+    public void addItems(List<Artwork> newItems) {
+        if (newItems != null && !newItems.isEmpty()) {
+            int startPosition = this.artworkList.size();
+            this.artworkList.addAll(newItems);
+            notifyItemRangeInserted(startPosition, newItems.size());
+        }
+    }
+
     static class ArtworkViewHolder extends RecyclerView.ViewHolder {
         private ImageView ivArtwork;
         private TextView tvTitle, tvArtist, tvLikes, tvCategories, tvStatus;
@@ -158,8 +166,8 @@ public class ArtworkAdapter extends RecyclerView.Adapter<ArtworkAdapter.ArtworkV
                 if (imagePath.startsWith("/")) {
                     imagePath = imagePath.substring(1);
                 }
-//                String imageUrl = "http://192.168.0.51:8080/vag/uploads/" + imagePath;
-                String imageUrl = "http://192.168.0.31:8080/vag/uploads/" + imagePath;
+//                String imageUrl = "http://192.168.0.36:8080/vag/uploads/" + imagePath;
+                String imageUrl = "http://192.168.0.36:8080/vag/uploads/" + imagePath;
                 Glide.with(itemView.getContext())
                         .load(imageUrl)
                         .placeholder(R.drawable.ic_placeholder)

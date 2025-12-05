@@ -45,17 +45,11 @@ public class MobileAuthFilter extends GenericFilterBean {
             return;
         }
 
-        // ИСКЛЮЧАЕМ публичные мобильные эндпоинты из проверки аутентификации
-        if (isPublicMobileEndpoint(path, method)) {
-            System.out.println("Public mobile endpoint, skipping auth check");
-            chain.doFilter(request, response);
-            return;
-        }
-
         String authHeader = httpRequest.getHeader("Authorization");
 
         System.out.println("Auth Header: " + authHeader);
 
+        // Если есть токен, устанавливаем SecurityContext даже для публичных эндпоинтов
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
 
@@ -77,11 +71,21 @@ public class MobileAuthFilter extends GenericFilterBean {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 System.out.println("Authentication set successfully");
             } else {
-                System.out.println("Token validation failed");
-                handleUnauthorized(httpResponse, "Invalid token");
-                return;
+                System.out.println("Token validation failed, but continuing for public endpoint");
             }
-        } else {
+        }
+
+        // ИСКЛЮЧАЕМ публичные мобильные эндпоинты из обязательной проверки аутентификации
+        if (isPublicMobileEndpoint(path, method)) {
+            System.out.println("Public mobile endpoint, allowing access");
+            chain.doFilter(request, response);
+            return;
+        }
+
+        // Для защищенных эндпоинтов проверяем наличие аутентификации
+        if (SecurityContextHolder.getContext().getAuthentication() == null ||
+            !SecurityContextHolder.getContext().getAuthentication().isAuthenticated() ||
+            "anonymousUser".equals(SecurityContextHolder.getContext().getAuthentication().getPrincipal())) {
             System.out.println("No auth header for protected mobile endpoint");
             handleUnauthorized(httpResponse, "Authentication required");
             return;
@@ -123,6 +127,9 @@ public class MobileAuthFilter extends GenericFilterBean {
                 return true;
             }
             if (path.contains("/api/mobile/users/") && path.contains("/artworks")) {
+                return true;
+            }
+            if (path.contains("/api/mobile/exhibitions")) {
                 return true;
             }
         }

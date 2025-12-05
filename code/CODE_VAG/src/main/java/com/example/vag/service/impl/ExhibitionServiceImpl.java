@@ -86,6 +86,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     @Override
     public Artwork getFirstApprovedArtworkInExhibition(Long exhibitionId) {
         List<Artwork> artworks = exhibitionRepository.findFirstApprovedArtworkInExhibition(exhibitionId);
+        System.out.println("ExhibitionServiceImpl: Exhibition " + exhibitionId + " - found " + artworks.size() + " approved artworks");
         return artworks.isEmpty() ? null : artworks.get(0);
     }
 

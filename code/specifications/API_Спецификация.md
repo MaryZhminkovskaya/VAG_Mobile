@@ -21,7 +21,7 @@
 ## Базовый URL
 
 ```
-http://192.168.0.51:8080/vag/api/mobile
+http://192.168.0.36:8080/vag/api/mobile
 ```
 
 ---
@@ -605,11 +605,11 @@ GET /vag/api/mobile/artworks/search?query=живопись&page=0&size=20
 
 4.2. Тип запроса: GET
 
-4.3. Endpoint: `http://192.168.0.51:8080/vag/api/mobile/categories`
+4.3. Endpoint: `http://192.168.0.36:8080/vag/api/mobile/categories`
 
 **5. ПРИМЕР**
 
-`http://192.168.0.51:8080/vag/api/mobile/categories`
+`http://192.168.0.36:8080/vag/api/mobile/categories`
 
 **6. ПАРАМЕТРЫ ЗАПРОСА**
 
@@ -670,11 +670,11 @@ GET /vag/api/mobile/artworks/search?query=живопись&page=0&size=20
 
 4.2. Тип запроса: GET
 
-4.3. Endpoint: `http://192.168.0.51:8080/vag/api/mobile/artworks/{id}`
+4.3. Endpoint: `http://192.168.0.36:8080/vag/api/mobile/artworks/{id}`
 
 **5. ПРИМЕР**
 
-`http://192.168.0.51:8080/vag/api/mobile/artworks/1`
+`http://192.168.0.36:8080/vag/api/mobile/artworks/1`
 
 **6. ПАРАМЕТРЫ ЗАПРОСА**
 
@@ -773,11 +773,11 @@ GET /vag/api/mobile/artworks/search?query=живопись&page=0&size=20
 
 4.2. Тип запроса: POST
 
-4.3. Endpoint: `http://192.168.0.51:8080/vag/api/mobile/artworks/{id}/like`
+4.3. Endpoint: `http://192.168.0.36:8080/vag/api/mobile/artworks/{id}/like`
 
 **5. ПРИМЕР**
 
-`http://192.168.0.51:8080/vag/api/mobile/artworks/1/like`
+`http://192.168.0.36:8080/vag/api/mobile/artworks/1/like`
 
 **6. ПАРАМЕТРЫ ЗАПРОСА**
 
@@ -845,11 +845,11 @@ GET /vag/api/mobile/artworks/search?query=живопись&page=0&size=20
 
 4.2. Тип запроса: POST
 
-4.3. Endpoint: `http://192.168.0.51:8080/vag/api/mobile/artworks/create`
+4.3. Endpoint: `http://192.168.0.36:8080/vag/api/mobile/artworks/create`
 
 **5. ПРИМЕР**
 
-`http://192.168.0.51:8080/vag/api/mobile/artworks/create`
+`http://192.168.0.36:8080/vag/api/mobile/artworks/create`
 
 **6. ПАРАМЕТРЫ ЗАПРОСА**
 

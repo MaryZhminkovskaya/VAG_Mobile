@@ -62,6 +62,21 @@ public interface ArtworkRepository extends JpaRepository<Artwork, Long> {
     List<Artwork> findByExhibitionsId(Long exhibitionId);
     Page<Artwork> findByExhibitionsId(Long exhibitionId, Pageable pageable);
 
+    // Метод для получения работ выставки с фильтрацией по видимости для пользователя
+    @Query(value = "SELECT DISTINCT a FROM Artwork a " +
+            "JOIN a.exhibitions e " +
+            "WHERE e.id = :exhibitionId " +
+            "AND (:isAdmin = true OR a.status = 'APPROVED' OR (:userId IS NOT NULL AND a.user.id = :userId)) " +
+            "ORDER BY a.id DESC",
+            countQuery = "SELECT COUNT(DISTINCT a) FROM Artwork a " +
+            "JOIN a.exhibitions e " +
+            "WHERE e.id = :exhibitionId " +
+            "AND (:isAdmin = true OR a.status = 'APPROVED' OR (:userId IS NOT NULL AND a.user.id = :userId))")
+    Page<Artwork> findByExhibitionIdFiltered(@Param("exhibitionId") Long exhibitionId,
+                                            @Param("userId") Long userId,
+                                            @Param("isAdmin") boolean isAdmin,
+                                            Pageable pageable);
+
     // Методы для поиска
     @Query("SELECT a FROM Artwork a WHERE (LOWER(a.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(a.description) LIKE LOWER(CONCAT('%', :query, '%'))) AND a.status = 'APPROVED'")
     Page<Artwork> searchApproved(@Param("query") String query, Pageable pageable);

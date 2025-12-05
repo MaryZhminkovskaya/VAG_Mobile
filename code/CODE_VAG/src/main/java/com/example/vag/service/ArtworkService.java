@@ -41,6 +41,7 @@ public interface ArtworkService {
     List<Artwork> findLikedArtworks(User user);
     Page<Artwork> findLikedArtworks(User user, Pageable pageable);
     Page<Artwork> findByExhibitionId(Long exhibitionId, Pageable pageable);
+    Page<Artwork> findByExhibitionIdFiltered(Long exhibitionId, Long userId, boolean isAdmin, Pageable pageable);
     Page<Artwork> findAllPaginated(Pageable pageable);
     Page<Artwork> searchApprovedArtworks(String query, Pageable pageable);
 
