@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Основные строки -->
-    <string name="app_name">Цифровое арт-пространство</string>
+    <string name="app_name">Арт-галерея</string>
 
     <!-- Навигация -->
     <string name="nav_home">Главная</string>

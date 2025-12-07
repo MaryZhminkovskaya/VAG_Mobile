@@ -49,10 +49,11 @@ public class ArtistsActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         artistsAdapter = new ArtistsAdapter(artistList, artist -> {
-            // Открываем публикации художника
-            Intent intent = new Intent(ArtistsActivity.this, ArtistArtworksActivity.class);
-            intent.putExtra("artist_id", artist.getId());
-            intent.putExtra("artist_name", artist.getUsername());
+            // Открываем профиль пользователя вместо публикаций
+            Intent intent = new Intent(ArtistsActivity.this, MainActivity.class);
+            intent.putExtra("openProfile", true);
+            intent.putExtra("userId", artist.getId());
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             startActivity(intent);
         });
 

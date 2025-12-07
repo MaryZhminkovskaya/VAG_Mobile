@@ -5,13 +5,16 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import com.example.vagmobile.model.User;
 import com.example.vagmobile.repository.UserRepository;
+import com.example.vagmobile.repository.ExhibitionRepository;
 import java.util.Map;
 
 public class UserViewModel extends ViewModel {
     private UserRepository userRepository;
+    private ExhibitionRepository exhibitionRepository;
     private MutableLiveData<Map<String, Object>> currentUserResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> userResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> userArtworksResult = new MutableLiveData<>();
+    private MutableLiveData<Map<String, Object>> userExhibitionsResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> likedArtworksResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> updateProfileResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> deleteArtworkResult = new MutableLiveData<>();
@@ -20,6 +23,17 @@ public class UserViewModel extends ViewModel {
 
     public UserViewModel() {
         userRepository = new UserRepository();
+        exhibitionRepository = new ExhibitionRepository();
+    }
+
+    // Метод для установки контекста в репозиторий
+    public void setContext(android.content.Context context) {
+        if (userRepository != null) {
+            userRepository.setContext(context);
+        }
+        if (exhibitionRepository != null) {
+            exhibitionRepository.setContext(context);
+        }
     }
 
     public void getAllArtists() {
@@ -47,7 +61,16 @@ public class UserViewModel extends ViewModel {
     }
 
     public void getUserArtworks(Long userId, int page, int size) {
-        // TODO: Implement this method
+        UserRepository repoWithContext = new UserRepository(null); // TODO: Pass context if needed
+        repoWithContext.getUserArtworks(userId, page, size).observeForever(result -> {
+            userArtworksResult.setValue(result);
+        });
+    }
+
+    public void getUserExhibitions(Long userId, int page, int size) {
+        exhibitionRepository.getUserExhibitions(userId, page, size).observeForever(result -> {
+            userExhibitionsResult.setValue(result);
+        });
     }
 
     public void getLikedArtworks(int page, int size) {
@@ -85,6 +108,10 @@ public class UserViewModel extends ViewModel {
 
     public LiveData<Map<String, Object>> getUserArtworksResult() {
         return userArtworksResult;
+    }
+
+    public LiveData<Map<String, Object>> getUserExhibitionsResult() {
+        return userExhibitionsResult;
     }
 
     public LiveData<Map<String, Object>> getLikedArtworksResult() {

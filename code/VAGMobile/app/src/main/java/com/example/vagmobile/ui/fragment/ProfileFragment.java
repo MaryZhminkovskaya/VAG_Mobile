@@ -1,200 +1,284 @@
 package com.example.vagmobile.ui.fragment;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.viewpager2.widget.ViewPager2;
+
 import com.example.vagmobile.R;
-import com.example.vagmobile.ui.activity.LoginActivity;
-import com.example.vagmobile.ui.activity.ProfileActivity;
-import com.example.vagmobile.ui.activity.AdminCategoriesActivity;
-import com.example.vagmobile.ui.activity.AdminArtworksActivity;
-import com.example.vagmobile.ui.activity.LikedArtworksActivity;
-import com.example.vagmobile.ui.activity.UserArtworksActivity;
-import com.example.vagmobile.ui.activity.EditProfileActivity;
+import com.example.vagmobile.repository.ExhibitionRepository;
+import com.example.vagmobile.repository.UserRepository;
+import com.example.vagmobile.ui.activity.MainActivity;
+import com.example.vagmobile.ui.adapter.ProfilePagerAdapter;
 import com.example.vagmobile.util.SharedPreferencesHelper;
+import com.example.vagmobile.viewmodel.UserViewModel;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
+
+import java.util.List;
+import java.util.Map;
 
 public class ProfileFragment extends Fragment {
 
-    private TextView tvUsername, tvEmail, tvDescription;
-    private Button btnViewProfile, btnLogout, btnAdminCategories, btnAdminArtworks,
-            btnLikedArtworks, btnLogin, btnDocumentation, btnMyArtworks, btnEditProfile;
-    private LinearLayout loggedInLayout, guestLayout, adminSection;
-    private SharedPreferencesHelper prefs;
+    private TextView tvUsername, tvEmail, tvDescription, tvArtworksCount, tvExhibitionsCount;
+    private ProgressBar progressBar;
+    private TabLayout tabLayout;
+    private ViewPager2 viewPager;
+    private UserViewModel userViewModel;
+    private Long userId;
+    private boolean isOwnProfile = true;
 
+    public static ProfileFragment newInstance(Long userId) {
+        ProfileFragment fragment = new ProfileFragment();
+        if (userId != null) {
+            Bundle args = new Bundle();
+            args.putLong("userId", userId);
+            fragment.setArguments(args);
+        }
+        return fragment;
+    }
+
+    @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
 
+        userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
+        if (getContext() != null) {
+            userViewModel.setContext(getContext());
+        }
+
         initViews(view);
-        setupUI();
+        setupToolbar();
+        loadUserData();
 
         return view;
     }
 
     private void initViews(View view) {
-        tvUsername = view.findViewById(R.id.tv_username);
-        tvEmail = view.findViewById(R.id.tv_email);
-        tvDescription = view.findViewById(R.id.tv_description);
-        btnViewProfile = view.findViewById(R.id.btn_view_profile);
-        btnLogout = view.findViewById(R.id.btn_logout);
-        btnAdminCategories = view.findViewById(R.id.btn_admin_categories);
-        btnAdminArtworks = view.findViewById(R.id.btn_admin_artworks);
-        btnLikedArtworks = view.findViewById(R.id.btn_liked_artworks);
-        btnLogin = view.findViewById(R.id.btn_login);
-        btnDocumentation = view.findViewById(R.id.btn_documentation);
-        btnMyArtworks = view.findViewById(R.id.btn_my_artworks);
-        btnEditProfile = view.findViewById(R.id.btn_edit_profile);
-
-        loggedInLayout = view.findViewById(R.id.logged_in_layout);
-        guestLayout = view.findViewById(R.id.guest_layout);
-        adminSection = view.findViewById(R.id.admin_section);
-
-        prefs = new SharedPreferencesHelper(getContext());
+        tvUsername = view.findViewById(R.id.tvUsername);
+        tvEmail = view.findViewById(R.id.tvEmail);
+        tvDescription = view.findViewById(R.id.tvDescription);
+        tvArtworksCount = view.findViewById(R.id.tvArtworksCount);
+        tvExhibitionsCount = view.findViewById(R.id.tvExhibitionsCount);
+        progressBar = view.findViewById(R.id.progressBar);
+        tabLayout = view.findViewById(R.id.tabLayout);
+        viewPager = view.findViewById(R.id.viewPager);
     }
 
-    private void setupUI() {
-        if (prefs.isLoggedIn()) {
-            setupLoggedInUI();
-        } else {
-            setupGuestUI();
+    private void setupToolbar() {
+        // Настройка меню в toolbar (шестерёнка для настроек)
+        if (getActivity() != null) {
+            androidx.appcompat.widget.Toolbar toolbar = getActivity().findViewById(R.id.toolbar);
+            if (toolbar != null) {
+                toolbar.setTitle("Профиль");
+                toolbar.getMenu().clear();
+                // Показываем меню только для своего профиля
+                if (isOwnProfile) {
+                    toolbar.inflateMenu(R.menu.profile_menu);
+                    toolbar.setOnMenuItemClickListener(this::onMenuItemClick);
+                }
+            }
         }
     }
 
-    private void setupLoggedInUI() {
-        loggedInLayout.setVisibility(View.VISIBLE);
-        guestLayout.setVisibility(View.GONE);
-
-        loadUserData();
-        checkAdminRole();
-        setupLoggedInClickListeners();
+    private boolean onMenuItemClick(MenuItem item) {
+        if (item.getItemId() == R.id.action_settings) {
+            openSettings();
+            return true;
+        }
+        return false;
     }
 
-    private void setupGuestUI() {
-        loggedInLayout.setVisibility(View.GONE);
-        guestLayout.setVisibility(View.VISIBLE);
-
-        tvUsername.setText("Гость");
-        tvEmail.setText("Войдите в систему для доступа ко всем функциям");
-        tvDescription.setText("");
-
-        btnLogin.setOnClickListener(v -> {
-            startActivity(new Intent(getActivity(), LoginActivity.class));
-        });
+    private void openSettings() {
+        // Переход к настройкам профиля (старый ProfileFragment)
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).loadFragmentWithBackStack(new EditProfileFragment());
+        }
     }
 
     private void loadUserData() {
-        String username = prefs.getUsername();
-        String email = prefs.getEmail();
-        String description = getDescriptionFromPrefs();
-
-        tvUsername.setText(username != null ? username : "Пользователь");
-        tvEmail.setText(email != null ? email : "user@example.com");
-
-        // ИСПРАВЛЕНО: Если нет описания, показываем текст
-        if (description != null && !description.trim().isEmpty()) {
-            tvDescription.setText(description);
-        } else {
-            tvDescription.setText("Описание не добавлено");
-            tvDescription.setTextColor(getResources().getColor(android.R.color.darker_gray));
+        if (progressBar != null) {
+            progressBar.setVisibility(View.VISIBLE);
         }
-    }
 
-    private String getDescriptionFromPrefs() {
-        // ИСПРАВЛЕНО: Используем те же SharedPreferences
-        SharedPreferences sharedPref = getActivity().getSharedPreferences("user_profile", Context.MODE_PRIVATE);
-        return sharedPref.getString("user_description", "");
-    }
-
-    private void saveDescriptionToPrefs(String description) {
-        // ИСПРАВЛЕНО: Используем те же SharedPreferences
-        SharedPreferences sharedPref = getActivity().getSharedPreferences("user_profile", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString("user_description", description);
-        editor.apply();
-    }
-
-    private void checkAdminRole() {
-        String userRole = prefs.getUserRole();
-        boolean isAdmin = "ADMIN".equals(userRole) || "ROLE_ADMIN".equals(userRole);
-
-        if (isAdmin) {
-            btnAdminCategories.setVisibility(View.VISIBLE);
-            btnAdminArtworks.setVisibility(View.VISIBLE);
-            adminSection.setVisibility(View.VISIBLE);
-        } else {
-            btnAdminCategories.setVisibility(View.GONE);
-            btnAdminArtworks.setVisibility(View.GONE);
-            adminSection.setVisibility(View.GONE);
-        }
-    }
-
-    private void setupLoggedInClickListeners() {
-        btnViewProfile.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), ProfileActivity.class);
-            startActivity(intent);
-        });
-
-        btnEditProfile.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), EditProfileActivity.class);
-            startActivity(intent);
-        });
-
-        btnMyArtworks.setOnClickListener(v -> {
-            Long userId = prefs.getUserId();
-            if (userId != null) {
-                Intent intent = new Intent(getActivity(), UserArtworksActivity.class);
-                intent.putExtra("user_id", userId);
-                intent.putExtra("is_own_profile", true);
-                startActivity(intent);
+        // Получаем ID пользователя из аргументов фрагмента (для чужого профиля) или из SharedPreferences (для своего профиля)
+        if (getArguments() != null) {
+            userId = getArguments().getLong("userId", -1);
+            if (userId == -1) {
+                // Если userId не передан в аргументах, загружаем текущего пользователя
+                SharedPreferencesHelper prefs = new SharedPreferencesHelper(getContext());
+                userId = prefs.getUserId();
+                isOwnProfile = true;
             } else {
-                Toast.makeText(getContext(), "Ошибка загрузки профиля", Toast.LENGTH_SHORT).show();
+                // Проверяем, является ли это профилем текущего пользователя
+                SharedPreferencesHelper prefs = new SharedPreferencesHelper(getContext());
+                Long currentUserId = prefs.getUserId();
+                isOwnProfile = currentUserId != null && currentUserId.equals(userId);
             }
-        });
+        } else {
+            // Загружаем текущего пользователя
+            SharedPreferencesHelper prefs = new SharedPreferencesHelper(getContext());
+            userId = prefs.getUserId();
+            isOwnProfile = true;
+        }
 
-        btnLikedArtworks.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), LikedArtworksActivity.class);
-            startActivity(intent);
-        });
+        if (userId != null) {
+            if (isOwnProfile) {
+                loadCurrentUserProfile();
+            } else {
+                loadUserProfile(userId);
+            }
+        } else {
+            showError("Не удалось получить ID пользователя");
+        }
+    }
 
-        btnDocumentation.setOnClickListener(v -> {
-            DocumentationFragment documentationFragment = new DocumentationFragment();
-            getParentFragmentManager()
-                    .beginTransaction()
-                    .replace(R.id.fragment_container, documentationFragment)
-                    .addToBackStack("profile")
-                    .commit();
+    private void loadCurrentUserProfile() {
+        userViewModel.getCurrentUser();
+        userViewModel.getCurrentUserResult().observe(getViewLifecycleOwner(), result -> {
+            if (progressBar != null) {
+                progressBar.setVisibility(View.GONE);
+            }
+            handleUserData(result);
         });
+    }
 
-        btnAdminCategories.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), AdminCategoriesActivity.class);
-            startActivity(intent);
+    private void loadUserProfile(Long userId) {
+        userViewModel.getUser(userId);
+        userViewModel.getUserResult().observe(getViewLifecycleOwner(), result -> {
+            if (progressBar != null) {
+                progressBar.setVisibility(View.GONE);
+            }
+            handleUserData(result);
         });
+    }
 
-        btnAdminArtworks.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), AdminArtworksActivity.class);
-            startActivity(intent);
-        });
+    private void handleUserData(Map<String, Object> result) {
+        Boolean success = (Boolean) result.get("success");
+        if (success != null && success) {
+            Map<String, Object> userData = (Map<String, Object>) result.get("user");
+            if (userData != null) {
+                updateUserInfo(userData);
+                setupTabs();
+            }
+        } else {
+            String message = (String) result.get("message");
+            showError(message != null ? message : "Ошибка загрузки данных пользователя");
+        }
+    }
 
-        btnLogout.setOnClickListener(v -> {
-            prefs.clearUserData();
-            setupUI();
-            Toast.makeText(getContext(), "Вы вышли из системы", Toast.LENGTH_SHORT).show();
-        });
+    private void updateUserInfo(Map<String, Object> userData) {
+        String username = (String) userData.get("username");
+        String email = (String) userData.get("email");
+        String description = (String) userData.get("description");
+
+        if (tvUsername != null) {
+            tvUsername.setText(username != null ? username : "Пользователь");
+        }
+        if (tvEmail != null) {
+            tvEmail.setText(email != null ? email : "email@example.com");
+        }
+        if (tvDescription != null) {
+            tvDescription.setText(description != null && !description.trim().isEmpty() ? description : "Описание не указано");
+        }
+
+        // Загружаем счетчики публикаций и выставок
+        loadUserStats();
+    }
+
+    private void loadUserStats() {
+        if (userId != null && getContext() != null) {
+            // Загружаем публикации пользователя для подсчета
+            UserRepository userRepo = new UserRepository(getContext());
+            userRepo.getUserArtworks(userId, 0, 1).observe(getViewLifecycleOwner(), artworksResult -> {
+                if (tvArtworksCount != null && artworksResult != null && Boolean.TRUE.equals(artworksResult.get("success"))) {
+                    List<?> artworks = (List<?>) artworksResult.get("artworks");
+                    if (artworks != null) {
+                        tvArtworksCount.setText(String.valueOf(artworks.size()));
+                    } else {
+                        tvArtworksCount.setText("0");
+                    }
+                } else if (tvArtworksCount != null) {
+                    tvArtworksCount.setText("0");
+                }
+            });
+
+            // Загружаем выставки пользователя для подсчета
+            ExhibitionRepository exhibitionRepo = new ExhibitionRepository(getContext());
+            exhibitionRepo.getUserExhibitions(userId, 0, 100).observe(getViewLifecycleOwner(), exhibitionsResult -> {
+                if (tvExhibitionsCount != null && exhibitionsResult != null && Boolean.TRUE.equals(exhibitionsResult.get("success"))) {
+                    List<?> exhibitions = (List<?>) exhibitionsResult.get("exhibitions");
+                    if (exhibitions != null) {
+                        tvExhibitionsCount.setText(String.valueOf(exhibitions.size()));
+                    } else {
+                        tvExhibitionsCount.setText("0");
+                    }
+                } else if (tvExhibitionsCount != null) {
+                    tvExhibitionsCount.setText("0");
+                }
+            });
+        }
+    }
+
+    private void setupTabs() {
+        if (getActivity() != null && viewPager != null && tabLayout != null) {
+            // Создаем адаптер для ViewPager
+            ProfilePagerAdapter adapter = new ProfilePagerAdapter(getActivity(), userId);
+            viewPager.setAdapter(adapter);
+
+            // Отключаем прокрутку ViewPager2, чтобы NestedScrollView мог обрабатывать всю прокрутку
+            viewPager.setUserInputEnabled(false);
+
+            // Настраиваем TabLayout с ViewPager
+            new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
+                switch (position) {
+                    case 0:
+                        tab.setText("Публикации");
+                        break;
+                    case 1:
+                        tab.setText("Выставки");
+                        break;
+                }
+            }).attach();
+        }
+    }
+
+    private void showError(String message) {
+        if (getContext() != null) {
+            Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
+        }
+        if (progressBar != null) {
+            progressBar.setVisibility(View.GONE);
+        }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        setupUI();
+        setupToolbar();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        // Очищаем меню при уничтожении view
+        if (getActivity() != null) {
+            androidx.appcompat.widget.Toolbar toolbar = getActivity().findViewById(R.id.toolbar);
+            if (toolbar != null) {
+                toolbar.getMenu().clear();
+            }
+        }
     }
 }

@@ -11,10 +11,14 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
 
 import com.bumptech.glide.Glide;
 import com.example.vagmobile.R;
@@ -85,13 +89,11 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
 
         btnEdit.setOnClickListener(v -> {
-            // TODO: Реализовать редактирование выставки
-            Toast.makeText(this, "Редактирование пока не реализовано", Toast.LENGTH_SHORT).show();
+            showEditDialog();
         });
 
         btnDelete.setOnClickListener(v -> {
-            // TODO: Реализовать удаление выставки
-            Toast.makeText(this, "Удаление пока не реализовано", Toast.LENGTH_SHORT).show();
+            showDeleteConfirmationDialog();
         });
     }
 
@@ -239,6 +241,36 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
                 isLoading = false;
             }
         });
+
+        exhibitionViewModel.getUpdateResult().observe(this, result -> {
+            if (result != null) {
+                Boolean success = (Boolean) result.get("success");
+                String message = (String) result.get("message");
+
+                if (success != null && success) {
+                    Toast.makeText(this, message != null ? message : "Выставка успешно обновлена", Toast.LENGTH_SHORT).show();
+                    // Перезагружаем данные выставки
+                    loadExhibition();
+                } else {
+                    Toast.makeText(this, message != null ? message : "Не удалось обновить выставку", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        exhibitionViewModel.getDeleteResult().observe(this, result -> {
+            if (result != null) {
+                Boolean success = (Boolean) result.get("success");
+                String message = (String) result.get("message");
+
+                if (success != null && success) {
+                    Toast.makeText(this, message != null ? message : "Выставка успешно удалена", Toast.LENGTH_SHORT).show();
+                    // Закрываем активность
+                    finish();
+                } else {
+                    Toast.makeText(this, message != null ? message : "Не удалось удалить выставку", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     private void loadExhibition() {
@@ -284,7 +316,7 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
             // Преобразуем относительный путь в полный URL
             String relativePath = exhibition.getFirstArtwork().getImagePath();
             if (relativePath != null && !relativePath.startsWith("http")) {
-                imageUrl = "http://192.168.0.36:8080/uploads/" + relativePath;
+                imageUrl = "http://192.168.0.38:8080/uploads/" + relativePath;
             } else {
                 imageUrl = relativePath;
             }
@@ -495,5 +527,64 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
             e.printStackTrace();
             return null;
         }
+    }
+
+    private void showEditDialog() {
+        if (exhibition == null) return;
+
+        // Создаем layout для диалога
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(32, 16, 32, 16);
+
+        // Поле для названия
+        EditText etTitle = new EditText(this);
+        etTitle.setHint("Название выставки");
+        etTitle.setText(exhibition.getTitle());
+        layout.addView(etTitle);
+
+        // Поле для описания
+        EditText etDescription = new EditText(this);
+        etDescription.setHint("Описание выставки");
+        etDescription.setText(exhibition.getDescription());
+        etDescription.setMinLines(3);
+        layout.addView(etDescription);
+
+        // Чекбокс "Только для автора"
+        CheckBox cbAuthorOnly = new CheckBox(this);
+        cbAuthorOnly.setText("Только автор может добавлять работы");
+        cbAuthorOnly.setChecked(exhibition.isAuthorOnly());
+        layout.addView(cbAuthorOnly);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Редактирование выставки")
+                .setView(layout)
+                .setPositiveButton("Сохранить", (dialog, which) -> {
+                    String title = etTitle.getText().toString().trim();
+                    String description = etDescription.getText().toString().trim();
+                    boolean authorOnly = cbAuthorOnly.isChecked();
+
+                    if (title.isEmpty()) {
+                        Toast.makeText(this, "Название не может быть пустым", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    exhibitionViewModel.updateExhibition(exhibitionId, title, description, authorOnly);
+                })
+                .setNegativeButton("Отмена", null)
+                .show();
+    }
+
+    private void showDeleteConfirmationDialog() {
+        if (exhibition == null) return;
+
+        new AlertDialog.Builder(this)
+                .setTitle("Удаление выставки")
+                .setMessage("Вы действительно хотите удалить выставку \"" + exhibition.getTitle() + "\"? Это действие нельзя отменить.")
+                .setPositiveButton("Удалить", (dialog, which) -> {
+                    exhibitionViewModel.deleteExhibition(exhibitionId);
+                })
+                .setNegativeButton("Отмена", null)
+                .show();
     }
 }

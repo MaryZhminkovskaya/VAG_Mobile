@@ -20,6 +20,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.vagmobile.R;
 import com.example.vagmobile.model.Artwork;
 import com.example.vagmobile.model.User;
+import com.example.vagmobile.ui.activity.MainActivity;
 import com.example.vagmobile.ui.activity.ArtworkDetailActivity;
 import com.example.vagmobile.ui.activity.ArtistArtworksActivity;
 import com.example.vagmobile.ui.activity.ArtworkListActivity;
@@ -107,10 +108,10 @@ public class HomeFragment extends Fragment {
         rvFeaturedArtworks.setAdapter(featuredArtworkAdapter);
 
         featuredArtistsAdapter = new ArtistsAdapter(featuredArtists, artist -> {
-            Intent intent = new Intent(getActivity(), ArtistArtworksActivity.class);
-            intent.putExtra("artist_id", artist.getId());
-            intent.putExtra("artist_name", artist.getUsername());
-            startActivity(intent);
+            // Открываем профиль пользователя вместо публикаций
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).openUserProfile(artist.getId());
+            }
         });
 
         LinearLayoutManager artistsLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);

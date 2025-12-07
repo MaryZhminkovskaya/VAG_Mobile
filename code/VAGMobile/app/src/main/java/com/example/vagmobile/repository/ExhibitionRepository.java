@@ -26,6 +26,10 @@ public class ExhibitionRepository {
         apiService = ApiClient.getClient().create(ApiService.class);
     }
 
+    public void setContext(Context context) {
+        this.context = context;
+    }
+
     private String getAuthHeader() {
         if (context != null) {
             SharedPreferencesHelper prefs = new SharedPreferencesHelper(context);
