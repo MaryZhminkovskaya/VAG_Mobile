@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -15,6 +16,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,10 +48,12 @@ public class ArtworkDetailActivity extends AppCompatActivity {
     private ImageView ivArtwork;
     private TextView tvTitle, tvArtist, tvDescription, tvLikes, tvViews, tvCategories;
     private ImageButton btnLike;
-    private Button btnComment;
+    private Button btnComment, btnEdit, btnDelete;
     private EditText etComment;
+    private LinearLayout layoutAuthorActions;
     private RecyclerView recyclerViewComments;
     private ProgressBar progressBar;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     private CommentAdapter commentAdapter;
     private List<Comment> commentList = new ArrayList<>();
@@ -73,12 +77,14 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         }
 
         initViews();
+        setupSwipeRefresh();
         setupRecyclerView();
         observeViewModels();
         loadArtwork();
     }
 
     private void initViews() {
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         ivArtwork = findViewById(R.id.ivArtwork);
         tvTitle = findViewById(R.id.tvTitle);
         tvArtist = findViewById(R.id.tvArtist);
@@ -88,18 +94,34 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         tvCategories = findViewById(R.id.tvCategories);
         btnLike = findViewById(R.id.btnLike);
         btnComment = findViewById(R.id.btnComment);
+        btnEdit = findViewById(R.id.btnEdit);
+        btnDelete = findViewById(R.id.btnDelete);
         etComment = findViewById(R.id.etComment);
         recyclerViewComments = findViewById(R.id.recyclerViewComments);
         progressBar = findViewById(R.id.progressBar);
+        layoutAuthorActions = findViewById(R.id.layoutAuthorActions);
 
         btnLike.setOnClickListener(v -> toggleLike());
         btnComment.setOnClickListener(v -> addComment());
+        btnEdit.setOnClickListener(v -> editArtwork());
+        btnDelete.setOnClickListener(v -> showDeleteConfirmationDialog());
 
         if (!prefs.isLoggedIn()) {
             btnLike.setVisibility(View.GONE);
             btnComment.setVisibility(View.GONE);
             etComment.setVisibility(View.GONE);
         }
+    }
+
+    private void setupSwipeRefresh() {
+        swipeRefreshLayout.setOnRefreshListener(this::loadArtwork);
+        // Настраиваем цвета индикатора обновления
+        swipeRefreshLayout.setColorSchemeResources(
+            android.R.color.holo_blue_bright,
+            android.R.color.holo_green_light,
+            android.R.color.holo_orange_light,
+            android.R.color.holo_red_light
+        );
     }
 
     private void setupRecyclerView() {
@@ -132,6 +154,7 @@ public class ArtworkDetailActivity extends AppCompatActivity {
                     Toast.makeText(this, "Не удалось загрузить публикацию: " + message, Toast.LENGTH_SHORT).show();
                 }
             }
+            swipeRefreshLayout.setRefreshing(false);
         });
 
         artworkViewModel.getToggleLikeResult().observe(this, result -> {
@@ -189,6 +212,19 @@ public class ArtworkDetailActivity extends AppCompatActivity {
                 }
             }
         });
+
+        artworkViewModel.getDeleteResult().observe(this, result -> {
+            if (result != null) {
+                Boolean success = (Boolean) result.get("success");
+                if (success != null && success) {
+                    Toast.makeText(this, "Публикация успешно удалена", Toast.LENGTH_SHORT).show();
+                    finish(); // Закрываем активность после успешного удаления
+                } else {
+                    String message = (String) result.get("message");
+                    Toast.makeText(this, "Не удалось удалить публикацию: " + message, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     private void loadArtwork() {
@@ -231,8 +267,8 @@ public class ArtworkDetailActivity extends AppCompatActivity {
             if (imagePath.startsWith("/")) {
                 imagePath = imagePath.substring(1);
             }
-//            String imageUrl = "http://192.168.0.38:8080/vag/uploads/" + imagePath;
-            String imageUrl = "http://192.168.0.38:8080/vag/uploads/" + imagePath;
+//            String imageUrl = "http://192.168.0.40:8080/vag/uploads/" + imagePath;
+            String imageUrl = "http://192.168.0.40:8080/vag/uploads/" + imagePath;
             Log.d("ArtworkDetail", "Загрузка изображения с URL: " + imageUrl);
             Glide.with(this)
                     .load(imageUrl)
@@ -264,6 +300,7 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         }
 
         updateLikeButton();
+        updateAuthorActions();
     }
 
     private void updateLikeButton() {
@@ -281,6 +318,36 @@ public class ArtworkDetailActivity extends AppCompatActivity {
             btnLike.setImageResource(R.drawable.ic_heart_outline);
             btnLike.setColorFilter(Color.GRAY);
             Log.d("LIKE_DEBUG", "Setting heart to GRAY (not liked)");
+        }
+    }
+
+    private void updateAuthorActions() {
+        if (artwork == null || !prefs.isLoggedIn()) {
+            if (layoutAuthorActions != null) {
+                layoutAuthorActions.setVisibility(View.GONE);
+            }
+            return;
+        }
+
+        Long currentUserId = prefs.getUserId();
+        Long artworkAuthorId = artwork.getUser() != null ? artwork.getUser().getId() : null;
+
+        if (currentUserId != null && currentUserId.equals(artworkAuthorId)) {
+            // Показываем кнопки действий автора
+            layoutAuthorActions.setVisibility(View.VISIBLE);
+
+            // Кнопка "Редактировать" только для отклоненных публикаций
+            if ("REJECTED".equals(artwork.getStatus())) {
+                btnEdit.setVisibility(View.VISIBLE);
+            } else {
+                btnEdit.setVisibility(View.GONE);
+            }
+
+            // Кнопка "Удалить" всегда видима для автора
+            btnDelete.setVisibility(View.VISIBLE);
+        } else {
+            // Скрываем кнопки действий для не-авторов
+            layoutAuthorActions.setVisibility(View.GONE);
         }
     }
 
@@ -336,6 +403,37 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         etComment.setText("");
         btnComment.setEnabled(false);
         artworkViewModel.addComment(artworkId, content);
+    }
+
+    private void editArtwork() {
+        if (artwork == null) {
+            Toast.makeText(this, "Данные публикации не загружены", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Intent intent = new Intent(this, EditArtworkActivity.class);
+        intent.putExtra("artwork_id", artwork.getId());
+        startActivity(intent);
+    }
+
+    private void showDeleteConfirmationDialog() {
+        if (artwork == null) {
+            Toast.makeText(this, "Данные публикации не загружены", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Удаление публикации")
+                .setMessage("Вы действительно хотите удалить публикацию \"" + artwork.getTitle() + "\"? Это действие нельзя отменить.")
+                .setPositiveButton("Удалить", (dialog, which) -> deleteArtwork())
+                .setNegativeButton("Отмена", null)
+                .show();
+    }
+
+    private void deleteArtwork() {
+        if (artworkId != null) {
+            artworkViewModel.deleteArtwork(artworkId);
+        }
     }
 
     private void saveLikeState(Long artworkId, boolean liked) {

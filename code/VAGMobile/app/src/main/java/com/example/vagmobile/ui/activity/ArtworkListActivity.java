@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -30,6 +31,7 @@ public class ArtworkListActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private TextView tvTitle;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private ArtworkAdapter artworkAdapter;
     private List<Artwork> artworkList = new ArrayList<>();
 
@@ -47,12 +49,14 @@ public class ArtworkListActivity extends AppCompatActivity {
         categoryName = getIntent().getStringExtra("category_name");
 
         initViews();
+        setupSwipeRefresh();
         setupRecyclerView();
         observeViewModels();
         loadArtworks();
     }
 
     private void initViews() {
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         recyclerView = findViewById(R.id.recyclerView);
         progressBar = findViewById(R.id.progressBar);
         tvTitle = findViewById(R.id.tvTitle);
@@ -64,6 +68,17 @@ public class ArtworkListActivity extends AppCompatActivity {
         } else {
             tvTitle.setText("Artworks");
         }
+    }
+
+    private void setupSwipeRefresh() {
+        swipeRefreshLayout.setOnRefreshListener(this::loadArtworks);
+        // Настраиваем цвета индикатора обновления
+        swipeRefreshLayout.setColorSchemeResources(
+            android.R.color.holo_blue_bright,
+            android.R.color.holo_green_light,
+            android.R.color.holo_orange_light,
+            android.R.color.holo_red_light
+        );
     }
 
     private void setupRecyclerView() {
@@ -110,6 +125,7 @@ public class ArtworkListActivity extends AppCompatActivity {
 
     private void handleArtworksResult(Map<String, Object> result) {
         progressBar.setVisibility(View.GONE);
+        swipeRefreshLayout.setRefreshing(false);
 
         if (result != null) {
             Boolean success = (Boolean) result.get("success");

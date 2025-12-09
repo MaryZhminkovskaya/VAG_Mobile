@@ -249,6 +249,45 @@ public class MobileArtworkController {
         }
     }
 
+    @PostMapping("/artworks/create-simple")
+    public ResponseEntity<?> createArtworkSimple(
+            @RequestParam String title,
+            @RequestParam String description,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        try {
+            User currentUser = getCurrentUser(authHeader);
+
+            if (currentUser == null) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "Требуется аутентификация");
+                return ResponseEntity.status(401).body(response);
+            }
+
+            Artwork artwork = new Artwork();
+            artwork.setTitle(title);
+            artwork.setDescription(description);
+            artwork.setStatus("PENDING"); // Устанавливаем статус PENDING для новых работ
+
+            // Создаем работу без изображения и категорий
+            Artwork savedArtwork = artworkService.create(artwork, null, currentUser);
+            ArtworkDTO artworkDTO = artworkMapper.toSimpleDTO(savedArtwork);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("artwork", artworkDTO);
+            response.put("message", "Работа успешно создана");
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Не удалось создать работу");
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
     @GetMapping("/users/{userId}/artworks/all")
     public ResponseEntity<?> getAllUserArtworks(
             @PathVariable Long userId,
@@ -304,6 +343,41 @@ public class MobileArtworkController {
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/artworks/{id}/update")
+    public ResponseEntity<?> updateArtwork(@PathVariable Long id,
+                                           @RequestParam String title,
+                                           @RequestParam String description,
+                                           @RequestParam List<Long> categoryIds,
+                                           @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
+                                           @RequestHeader(value = "Authorization", required = false) String authHeader) {
+
+        try {
+            User currentUser = getCurrentUser(authHeader);
+
+            if (currentUser == null) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "Требуется аутентификация");
+                return ResponseEntity.status(401).body(response);
+            }
+
+            Artwork updatedArtwork = artworkService.updateWithCategories(id, title, description, imageFile, currentUser, categoryIds);
+            ArtworkDTO artworkDTO = artworkMapper.toSimpleDTO(updatedArtwork);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("artwork", artworkDTO);
+            response.put("message", "Публикация успешно обновлена");
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Не удалось обновить публикацию: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         }
     }
 }

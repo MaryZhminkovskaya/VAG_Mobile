@@ -224,6 +224,49 @@ public class ArtworkRepository {
         return result;
     }
 
+    public MutableLiveData<Map<String, Object>> updateArtwork(
+            Long artworkId,
+            String title,
+            String description,
+            String categoryIds,
+            MultipartBody.Part image) {
+
+        MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
+
+        RequestBody titleBody = RequestBody.create(MultipartBody.FORM, title);
+        RequestBody descriptionBody = RequestBody.create(MultipartBody.FORM, description);
+        RequestBody categoryIdsBody = RequestBody.create(MultipartBody.FORM, categoryIds);
+
+        String authHeader = getAuthHeader();
+        System.out.println("ArtworkRepository: Updating artwork with authHeader: " + authHeader);
+
+        ApiService authApiService = getApiServiceWithAuth();
+        authApiService.updateArtwork(authHeader, artworkId, titleBody, descriptionBody, categoryIdsBody, image)
+                .enqueue(new Callback<Map<String, Object>>() {
+                    @Override
+                    public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            result.setValue(response.body());
+                        } else {
+                            Map<String, Object> error = new HashMap<>();
+                            error.put("success", false);
+                            error.put("message", "Failed to update artwork: " + response.message());
+                            result.setValue(error);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                        Map<String, Object> error = new HashMap<>();
+                        error.put("success", false);
+                        error.put("message", "Network error: " + t.getMessage());
+                        result.setValue(error);
+                    }
+                });
+
+        return result;
+    }
+
     public MutableLiveData<Map<String, Object>> likeArtwork(Long id) {
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
 
@@ -606,6 +649,44 @@ public class ArtworkRepository {
                         err.put("success", false);
                         err.put("message", "Нет интернета");
                         result.setValue(err);
+                    }
+                });
+
+        return result;
+    }
+
+    public MutableLiveData<Map<String, Object>> createArtworkSimple(String title, String description) {
+        MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
+
+        String authHeader = getAuthHeader();
+        if (authHeader == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Требуется аутентификация");
+            result.setValue(error);
+            return result;
+        }
+
+        apiService.createArtworkSimple(authHeader, title, description)
+                .enqueue(new Callback<Map<String, Object>>() {
+                    @Override
+                    public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            result.setValue(response.body());
+                        } else {
+                            Map<String, Object> error = new HashMap<>();
+                            error.put("success", false);
+                            error.put("message", "Не удалось создать работу: " + response.message());
+                            result.setValue(error);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                        Map<String, Object> error = new HashMap<>();
+                        error.put("success", false);
+                        error.put("message", "Network error: " + t.getMessage());
+                        result.setValue(error);
                     }
                 });
 

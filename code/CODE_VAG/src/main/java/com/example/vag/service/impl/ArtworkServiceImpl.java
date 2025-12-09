@@ -397,4 +397,43 @@ public class ArtworkServiceImpl implements ArtworkService {
         // 4. Удаляем сам Artwork — каскадно удалит связи с категориями
         artworkRepository.delete(artwork);
     }
+
+    @Override
+    public Artwork updateWithCategories(Long artworkId, String title, String description, MultipartFile imageFile, User user, List<Long> categoryIds) throws IOException {
+        Artwork existingArtwork = artworkRepository.findById(artworkId)
+                .orElseThrow(() -> new RuntimeException("Artwork not found"));
+
+        // Проверяем права доступа - только автор или админ могут редактировать
+        if (!existingArtwork.getUser().getId().equals(user.getId()) && !user.hasRole("ADMIN")) {
+            throw new RuntimeException("Access denied");
+        }
+
+        // Обновляем поля
+        existingArtwork.setTitle(title);
+        existingArtwork.setDescription(description);
+
+        // Устанавливаем статус PENDING после редактирования
+        existingArtwork.setStatus("PENDING");
+
+        // Обновляем категории
+        if (categoryIds != null && !categoryIds.isEmpty()) {
+            List<Category> categories = categoryRepository.findAllById(categoryIds);
+            existingArtwork.setCategories(new HashSet<>(categories));
+        } else {
+            existingArtwork.getCategories().clear();
+        }
+
+        // Обновляем изображение, если оно предоставлено
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String relativePath = fileUploadUtil.saveFileWithOriginalName(user.getId(), imageFile);
+            existingArtwork.setImagePath(relativePath);
+
+            System.out.println("=== ARTWORK UPDATE DEBUG ===");
+            System.out.println("Original filename: " + imageFile.getOriginalFilename());
+            System.out.println("Saved image path: " + relativePath);
+            System.out.println("Final filename in DB: " + FileUploadUtil.getFileNameFromPath(relativePath));
+        }
+
+        return artworkRepository.save(existingArtwork);
+    }
 }

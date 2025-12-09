@@ -52,6 +52,10 @@
             android:exported="false" />
 
         <activity
+            android:name=".ui.activity.EditArtworkActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".ui.activity.CategoryActivity"
             android:exported="false" />
 
@@ -100,6 +104,10 @@
 
         <activity
             android:name=".ui.activity.CreateExhibitionActivity"
+            android:exported="false"/>
+
+        <activity
+            android:name=".ui.activity.AddArtworkToExhibitionActivity"
             android:exported="false"/>
 
     </application>

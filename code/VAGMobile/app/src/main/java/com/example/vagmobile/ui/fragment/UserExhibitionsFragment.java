@@ -20,17 +20,17 @@ import com.example.vagmobile.R;
 import com.example.vagmobile.model.Exhibition;
 import com.example.vagmobile.ui.activity.ExhibitionDetailActivity;
 import com.example.vagmobile.ui.adapter.ExhibitionAdapter;
-import com.example.vagmobile.viewmodel.UserViewModel;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class UserExhibitionsFragment extends Fragment {
 
     private static final String ARG_USER_ID = "user_id";
 
-    private UserViewModel userViewModel;
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private TextView tvEmpty;
@@ -61,19 +61,11 @@ public class UserExhibitionsFragment extends Fragment {
 
         initViews(view);
         setupRecyclerView();
-        observeViewModels();
         loadUserExhibitions();
 
         return view;
     }
 
-    @Override
-    public void onAttach(@NonNull android.content.Context context) {
-        super.onAttach(context);
-        // Передаем контекст в ViewModel
-        userViewModel = new androidx.lifecycle.ViewModelProvider(this, androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().getApplication())).get(com.example.vagmobile.viewmodel.UserViewModel.class);
-        userViewModel.setContext(context);
-    }
 
     private void initViews(View view) {
         recyclerView = view.findViewById(R.id.recyclerView);
@@ -100,35 +92,6 @@ public class UserExhibitionsFragment extends Fragment {
         recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
     }
 
-    private void observeViewModels() {
-        userViewModel = new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().getApplication())).get(UserViewModel.class);
-
-        userViewModel.getUserExhibitionsResult().observe(getViewLifecycleOwner(), result -> {
-            progressBar.setVisibility(View.GONE);
-
-            if (result != null) {
-                Boolean success = (Boolean) result.get("success");
-                if (success != null && success) {
-                    List<Map<String, Object>> exhibitionsData = (List<Map<String, Object>>) result.get("exhibitions");
-
-                    if (exhibitionsData != null && !exhibitionsData.isEmpty()) {
-                        exhibitionList.clear();
-                        for (Map<String, Object> exhibitionData : exhibitionsData) {
-                            Exhibition exhibition = convertToExhibition(exhibitionData);
-                            exhibitionList.add(exhibition);
-                        }
-                        exhibitionAdapter.notifyDataSetChanged();
-                        showContent();
-                    } else {
-                        showEmpty("У пользователя пока нет выставок");
-                    }
-                } else {
-                    String message = (String) result.get("message");
-                    showError("Не удалось загрузить выставки: " + message);
-                }
-            }
-        });
-    }
 
     private void loadUserExhibitions() {
         if (userId != null) {
@@ -145,9 +108,15 @@ public class UserExhibitionsFragment extends Fragment {
 
                         if (exhibitionsData != null && !exhibitionsData.isEmpty()) {
                             exhibitionList.clear();
+                            // Используем Set для отслеживания уже добавленных ID и предотвращения дубликатов
+                            java.util.Set<Long> addedExhibitionIds = new java.util.HashSet<>();
                             for (Map<String, Object> exhibitionData : exhibitionsData) {
                                 Exhibition exhibition = convertToExhibition(exhibitionData);
-                                exhibitionList.add(exhibition);
+                                // Проверяем, не добавляли ли уже эту выставку
+                                if (exhibition.getId() != null && !addedExhibitionIds.contains(exhibition.getId())) {
+                                    exhibitionList.add(exhibition);
+                                    addedExhibitionIds.add(exhibition.getId());
+                                }
                             }
                             exhibitionAdapter.notifyDataSetChanged();
                             showContent();

@@ -30,6 +30,7 @@ import com.example.vagmobile.model.Category;
 import com.example.vagmobile.util.ImageUtils;
 import com.example.vagmobile.viewmodel.ArtworkViewModel;
 import com.example.vagmobile.viewmodel.CategoryViewModel;
+import com.example.vagmobile.viewmodel.ExhibitionViewModel;
 import com.github.dhaval2404.imagepicker.ImagePicker;
 
 import okhttp3.MultipartBody;
@@ -43,6 +44,7 @@ public class CreateArtworkActivity extends AppCompatActivity {
 
     private ArtworkViewModel artworkViewModel;
     private CategoryViewModel categoryViewModel;
+    private ExhibitionViewModel exhibitionViewModel;
 
     private EditText etTitle, etDescription;
     private ImageView ivArtworkImage;
@@ -57,19 +59,38 @@ public class CreateArtworkActivity extends AppCompatActivity {
     private ArrayAdapter<Category> categoryAdapter;
     private List<Long> selectedCategoryIds = new ArrayList<>();
 
+    // Параметры для создания из выставки
+    private boolean fromExhibition = false;
+    private Long exhibitionId;
+    private String exhibitionTitle;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_artwork);
 
+        // Проверяем, открыта ли активность из выставки
+        Intent intent = getIntent();
+        fromExhibition = intent.getBooleanExtra("from_exhibition", false);
+        exhibitionId = intent.getLongExtra("exhibition_id", -1);
+        exhibitionTitle = intent.getStringExtra("exhibition_title");
+
         artworkViewModel = new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication())).get(ArtworkViewModel.class);
         categoryViewModel = new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(getApplication())).get(CategoryViewModel.class);
+        exhibitionViewModel = new ViewModelProvider(this).get(ExhibitionViewModel.class);
 
         initViews();
         setupClickListeners();
         setupCategorySelection();
         loadCategories();
         observeViewModels();
+
+        // Обновляем заголовок, если создание из выставки
+        if (fromExhibition && exhibitionTitle != null && !exhibitionTitle.isEmpty()) {
+            if (getSupportActionBar() != null) {
+                getSupportActionBar().setTitle("Добавить работу в \"" + exhibitionTitle + "\"");
+            }
+        }
     }
 
     private void initViews() {
@@ -252,6 +273,27 @@ public class CreateArtworkActivity extends AppCompatActivity {
             if (result != null) {
                 Boolean success = (Boolean) result.get("success");
                 if (success != null && success) {
+                    if (fromExhibition && exhibitionId != null && exhibitionId != -1) {
+                        // Если создание из выставки, получаем ID работы и добавляем в выставку
+                        Map<String, Object> artworkData = (Map<String, Object>) result.get("artwork");
+                        if (artworkData != null) {
+                            Long artworkId = null;
+                            Object idObj = artworkData.get("id");
+                            if (idObj instanceof Double) {
+                                artworkId = ((Double) idObj).longValue();
+                            } else if (idObj instanceof Long) {
+                                artworkId = (Long) idObj;
+                            }
+
+                            if (artworkId != null) {
+                                // Добавляем работу в выставку
+                                addArtworkToExhibitionAndFinish(artworkId);
+                                return; // Не завершаем активность сразу, ждем результат добавления
+                            }
+                        }
+                    }
+
+                    // Обычное завершение создания
                     Toast.makeText(this, "Artwork created successfully!", Toast.LENGTH_SHORT).show();
                     resetForm();
                     finish();
@@ -269,6 +311,34 @@ public class CreateArtworkActivity extends AppCompatActivity {
                 Log.e("CreateArtwork", "Create artwork failed: null result");
             }
         });
+
+        exhibitionViewModel.getAddArtworkResult().observe(this, result -> {
+            if (result != null) {
+                Boolean success = (Boolean) result.get("success");
+                String message = (String) result.get("message");
+
+                if (success != null && success) {
+                    Toast.makeText(this, "Работа создана и добавлена в выставку!", Toast.LENGTH_SHORT).show();
+                    resetForm();
+                    finish();
+                } else {
+                    Toast.makeText(this, message != null ? message : "Не удалось добавить работу в выставку", Toast.LENGTH_SHORT).show();
+                    // Даже если не удалось добавить в выставку, работа создана, завершаем активность
+                    finish();
+                }
+            }
+        });
+    }
+
+    private void addArtworkToExhibitionAndFinish(Long artworkId) {
+        if (exhibitionId != null && exhibitionId != -1) {
+            exhibitionViewModel.addArtworkToExhibition(exhibitionId, artworkId);
+        } else {
+            // Если exhibitionId не найден, просто завершаем
+            Toast.makeText(this, "Работа создана!", Toast.LENGTH_SHORT).show();
+            resetForm();
+            finish();
+        }
     }
 
     private Category convertToCategory(Map<String, Object> categoryData) {

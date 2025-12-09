@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.app.AlertDialog;
 import android.os.Bundle;
@@ -29,6 +30,7 @@ public class AdminCategoriesActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private Button btnAddCategory;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private AdminCategoryAdapter categoryAdapter;
     private List<Category> categoryList = new ArrayList<>();
 
@@ -38,17 +40,30 @@ public class AdminCategoriesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_admin_categories);
 
         initViews();
+        setupSwipeRefresh();
         setupRecyclerView();
         observeViewModels();
         loadCategories();
     }
 
     private void initViews() {
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         recyclerView = findViewById(R.id.recyclerView);
         progressBar = findViewById(R.id.progressBar);
         btnAddCategory = findViewById(R.id.btnAddCategory);
 
         btnAddCategory.setOnClickListener(v -> showAddCategoryDialog());
+    }
+
+    private void setupSwipeRefresh() {
+        swipeRefreshLayout.setOnRefreshListener(this::loadCategories);
+        // Настраиваем цвета индикатора обновления
+        swipeRefreshLayout.setColorSchemeResources(
+            android.R.color.holo_blue_bright,
+            android.R.color.holo_green_light,
+            android.R.color.holo_orange_light,
+            android.R.color.holo_red_light
+        );
     }
 
     private void setupRecyclerView() {
@@ -74,6 +89,7 @@ public class AdminCategoriesActivity extends AppCompatActivity {
         // Наблюдатель для загрузки категорий
         categoryViewModel.getCategoriesResult().observe(this, result -> {
             progressBar.setVisibility(View.GONE);
+            swipeRefreshLayout.setRefreshing(false);
 
             if (result != null) {
                 Boolean success = (Boolean) result.get("success");

@@ -102,7 +102,7 @@ import java.util.concurrent.TimeUnit;
 
 public class ApiClient {
     // Базовый URL сервера
-    private static final String BASE_URL = "http://192.168.0.38:8080/";
+    private static final String BASE_URL = "http://192.168.0.40:8080/";
     private static Retrofit retrofit = null;
 
     // Создает клиент без авторизации

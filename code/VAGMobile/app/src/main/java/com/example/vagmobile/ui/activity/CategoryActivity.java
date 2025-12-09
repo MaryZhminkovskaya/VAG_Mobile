@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ProgressBar;
@@ -21,6 +22,7 @@ public class CategoryActivity extends AppCompatActivity {
     private CategoryViewModel categoryViewModel;
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private CategoryAdapter categoryAdapter;
     private List<Category> categoryList = new ArrayList<>();
 
@@ -30,14 +32,27 @@ public class CategoryActivity extends AppCompatActivity {
         setContentView(R.layout.activity_category);
 
         initViews();
+        setupSwipeRefresh();
         setupRecyclerView();
         observeViewModels();
         loadCategories();
     }
 
     private void initViews() {
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         recyclerView = findViewById(R.id.recyclerView);
         progressBar = findViewById(R.id.progressBar);
+    }
+
+    private void setupSwipeRefresh() {
+        swipeRefreshLayout.setOnRefreshListener(this::loadCategories);
+        // Настраиваем цвета индикатора обновления
+        swipeRefreshLayout.setColorSchemeResources(
+            android.R.color.holo_blue_bright,
+            android.R.color.holo_green_light,
+            android.R.color.holo_orange_light,
+            android.R.color.holo_red_light
+        );
     }
 
     private void setupRecyclerView() {
@@ -58,6 +73,7 @@ public class CategoryActivity extends AppCompatActivity {
 
         categoryViewModel.getCategoriesResult().observe(this, result -> {
             progressBar.setVisibility(android.view.View.GONE);
+            swipeRefreshLayout.setRefreshing(false);
 
             if (result != null) {
                 System.out.println("CategoryActivity: Received result: " + result);

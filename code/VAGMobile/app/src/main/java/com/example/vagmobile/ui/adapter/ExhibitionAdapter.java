@@ -92,7 +92,7 @@ public class ExhibitionAdapter extends RecyclerView.Adapter<ExhibitionAdapter.Ex
                 // Преобразуем относительный путь в полный URL
                 String relativePath = exhibition.getFirstArtwork().getImagePath();
                 if (!relativePath.startsWith("http")) {
-                    imageUrl = "http://192.168.0.38:8080/uploads/" + relativePath;
+                    imageUrl = "http://192.168.0.40:8080/vag/uploads/" + relativePath;
                 } else {
                     imageUrl = relativePath;
                 }

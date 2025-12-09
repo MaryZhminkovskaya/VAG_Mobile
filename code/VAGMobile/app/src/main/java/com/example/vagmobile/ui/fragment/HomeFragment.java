@@ -16,18 +16,24 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.vagmobile.R;
 import com.example.vagmobile.model.Artwork;
+import com.example.vagmobile.model.Exhibition;
 import com.example.vagmobile.model.User;
 import com.example.vagmobile.ui.activity.MainActivity;
 import com.example.vagmobile.ui.activity.ArtworkDetailActivity;
 import com.example.vagmobile.ui.activity.ArtistArtworksActivity;
 import com.example.vagmobile.ui.activity.ArtworkListActivity;
 import com.example.vagmobile.ui.activity.ArtistsActivity;
+import com.example.vagmobile.ui.activity.ExhibitionDetailActivity;
+import com.example.vagmobile.ui.activity.ExhibitionListActivity;
 import com.example.vagmobile.ui.adapter.ArtworkAdapter;
 import com.example.vagmobile.ui.adapter.ArtistsAdapter;
+import com.example.vagmobile.ui.adapter.ExhibitionAdapter;
 import com.example.vagmobile.viewmodel.ArtworkViewModel;
+import com.example.vagmobile.viewmodel.ExhibitionViewModel;
 import com.example.vagmobile.viewmodel.UserViewModel;
 
 import java.util.ArrayList;
@@ -39,14 +45,18 @@ public class HomeFragment extends Fragment {
 
     private ArtworkViewModel artworkViewModel;
     private UserViewModel userViewModel;
+    private ExhibitionViewModel exhibitionViewModel;
 
-    private RecyclerView rvFeaturedArtworks, rvFeaturedArtists;
+    private RecyclerView rvFeaturedArtworks, rvFeaturedArtists, rvFeaturedExhibitions;
     private ArtworkAdapter featuredArtworkAdapter;
     private ArtistsAdapter featuredArtistsAdapter;
+    private ExhibitionAdapter featuredExhibitionAdapter;
     private List<Artwork> featuredArtworks = new ArrayList<>();
     private List<User> featuredArtists = new ArrayList<>();
+    private List<Exhibition> featuredExhibitions = new ArrayList<>();
     private ProgressBar progressBar;
-    private TextView tvArtworksEmpty, tvArtistsEmpty;
+    private TextView tvArtworksEmpty, tvArtistsEmpty, tvExhibitionsEmpty;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     @Nullable
     @Override
@@ -54,6 +64,7 @@ public class HomeFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
         initViews(view);
+        setupSwipeRefresh();
         setupRecyclerViews();
         loadFeaturedContent();
 
@@ -61,11 +72,14 @@ public class HomeFragment extends Fragment {
     }
 
     private void initViews(View view) {
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         rvFeaturedArtworks = view.findViewById(R.id.rvFeaturedArtworks);
         rvFeaturedArtists = view.findViewById(R.id.rvFeaturedArtists);
+        rvFeaturedExhibitions = view.findViewById(R.id.rvFeaturedExhibitions);
         progressBar = view.findViewById(R.id.progressBar);
         tvArtworksEmpty = view.findViewById(R.id.tvArtworksEmpty);
         tvArtistsEmpty = view.findViewById(R.id.tvArtistsEmpty);
+        tvExhibitionsEmpty = view.findViewById(R.id.tvExhibitionsEmpty);
 
         TextView tvSeeAllArtworks = view.findViewById(R.id.tvSeeAllArtworks);
         TextView tvSeeAllArtists = view.findViewById(R.id.tvSeeAllArtists);
@@ -80,6 +94,24 @@ public class HomeFragment extends Fragment {
         tvSeeAllArtists.setOnClickListener(v -> {
             startActivity(new Intent(getActivity(), ArtistsActivity.class));
         });
+
+        TextView tvSeeAllExhibitions = view.findViewById(R.id.tvSeeAllExhibitions);
+        tvSeeAllExhibitions.setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), ExhibitionListActivity.class);
+            intent.putExtra("list_type", "all");
+            startActivity(intent);
+        });
+    }
+
+    private void setupSwipeRefresh() {
+        swipeRefreshLayout.setOnRefreshListener(this::loadFeaturedContent);
+        // Настраиваем цвета индикатора обновления
+        swipeRefreshLayout.setColorSchemeResources(
+            android.R.color.holo_blue_bright,
+            android.R.color.holo_green_light,
+            android.R.color.holo_orange_light,
+            android.R.color.holo_red_light
+        );
     }
 
     private void setupRecyclerViews() {
@@ -117,6 +149,16 @@ public class HomeFragment extends Fragment {
         LinearLayoutManager artistsLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         rvFeaturedArtists.setLayoutManager(artistsLayoutManager);
         rvFeaturedArtists.setAdapter(featuredArtistsAdapter);
+
+        featuredExhibitionAdapter = new ExhibitionAdapter(featuredExhibitions, exhibition -> {
+            Intent intent = new Intent(getActivity(), ExhibitionDetailActivity.class);
+            intent.putExtra("exhibition_id", exhibition.getId());
+            startActivity(intent);
+        });
+
+        LinearLayoutManager exhibitionsLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
+        rvFeaturedExhibitions.setLayoutManager(exhibitionsLayoutManager);
+        rvFeaturedExhibitions.setAdapter(featuredExhibitionAdapter);
     }
 
     private void loadFeaturedContent() {
@@ -124,9 +166,11 @@ public class HomeFragment extends Fragment {
 
         artworkViewModel = new ViewModelProvider(requireActivity()).get(ArtworkViewModel.class);
         userViewModel = new ViewModelProvider(requireActivity()).get(UserViewModel.class);
+        exhibitionViewModel = new ViewModelProvider(requireActivity()).get(ExhibitionViewModel.class);
 
         artworkViewModel.getArtworksResult().observe(getViewLifecycleOwner(), result -> {
             progressBar.setVisibility(View.GONE);
+            swipeRefreshLayout.setRefreshing(false);
 
             if (result != null) {
                 Boolean success = (Boolean) result.get("success");
@@ -167,6 +211,8 @@ public class HomeFragment extends Fragment {
         });
 
         userViewModel.getArtistsResult().observe(getViewLifecycleOwner(), result -> {
+            swipeRefreshLayout.setRefreshing(false);
+
             if (result != null) {
                 Boolean success = (Boolean) result.get("success");
                 if (success != null && success) {
@@ -212,8 +258,57 @@ public class HomeFragment extends Fragment {
             }
         });
 
+        exhibitionViewModel.getExhibitionsResult().observe(getViewLifecycleOwner(), result -> {
+            swipeRefreshLayout.setRefreshing(false);
+
+            if (result != null) {
+                Boolean success = (Boolean) result.get("success");
+                if (success != null && success) {
+                    Object exhibitionsObj = result.get("exhibitions");
+                    if (exhibitionsObj instanceof List) {
+                        List<?> exhibitionsList = (List<?>) exhibitionsObj;
+                        List<Exhibition> allExhibitions = new ArrayList<>();
+
+                        for (Object exhibitionObj : exhibitionsList) {
+                            if (exhibitionObj instanceof Exhibition) {
+                                allExhibitions.add((Exhibition) exhibitionObj);
+                            } else if (exhibitionObj instanceof Map) {
+                                Exhibition exhibition = convertToExhibition((Map<String, Object>) exhibitionObj);
+                                if (exhibition != null) {
+                                    allExhibitions.add(exhibition);
+                                }
+                            }
+                        }
+
+                        featuredExhibitions.clear();
+                        if (allExhibitions.size() > 4) {
+                            Collections.shuffle(allExhibitions);
+                            featuredExhibitions.addAll(allExhibitions.subList(0, 4));
+                        } else {
+                            featuredExhibitions.addAll(allExhibitions);
+                        }
+                        featuredExhibitionAdapter.updateData(featuredExhibitions);
+
+                        tvExhibitionsEmpty.setVisibility(View.GONE);
+                        rvFeaturedExhibitions.setVisibility(View.VISIBLE);
+                        Log.d("HomeFragment", "Loaded " + featuredExhibitions.size() + " featured exhibitions");
+                    } else {
+                        tvExhibitionsEmpty.setVisibility(View.VISIBLE);
+                        rvFeaturedExhibitions.setVisibility(View.GONE);
+                        Log.d("HomeFragment", "No exhibitions data found in response");
+                    }
+                } else {
+                    String message = (String) result.get("message");
+                    Toast.makeText(getContext(), "Failed to load exhibitions: " + message, Toast.LENGTH_SHORT).show();
+                    tvExhibitionsEmpty.setVisibility(View.VISIBLE);
+                    rvFeaturedExhibitions.setVisibility(View.GONE);
+                }
+            }
+        });
+
         artworkViewModel.getArtworks(0, 50);
         userViewModel.getAllArtists();
+        exhibitionViewModel.getExhibitions(0, 50);
     }
 
     private Artwork convertToArtwork(Map<String, Object> artworkData) {
@@ -279,6 +374,45 @@ public class HomeFragment extends Fragment {
             return user;
         } catch (Exception e) {
             Log.e("HomeFragment", "Error converting user: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private Exhibition convertToExhibition(Map<String, Object> exhibitionData) {
+        try {
+            Exhibition exhibition = new Exhibition();
+
+            if (exhibitionData.get("id") != null) {
+                exhibition.setId(((Number) exhibitionData.get("id")).longValue());
+            }
+
+            exhibition.setTitle((String) exhibitionData.get("title"));
+            exhibition.setDescription((String) exhibitionData.get("description"));
+            exhibition.setImageUrl((String) exhibitionData.get("imageUrl"));
+
+            if (exhibitionData.get("authorOnly") != null) {
+                exhibition.setAuthorOnly((Boolean) exhibitionData.get("authorOnly"));
+            }
+
+            if (exhibitionData.get("artworksCount") != null) {
+                exhibition.setArtworksCount(((Number) exhibitionData.get("artworksCount")).intValue());
+            }
+
+            if (exhibitionData.get("user") != null) {
+                Map<String, Object> userData = (Map<String, Object>) exhibitionData.get("user");
+                User user = convertToUser(userData);
+                exhibition.setUser(user);
+            }
+
+            if (exhibitionData.get("firstArtwork") != null) {
+                Map<String, Object> artworkData = (Map<String, Object>) exhibitionData.get("firstArtwork");
+                Artwork artwork = convertToArtwork(artworkData);
+                exhibition.setFirstArtwork(artwork);
+            }
+
+            return exhibition;
+        } catch (Exception e) {
+            Log.e("HomeFragment", "Error converting exhibition: " + e.getMessage());
             return null;
         }
     }

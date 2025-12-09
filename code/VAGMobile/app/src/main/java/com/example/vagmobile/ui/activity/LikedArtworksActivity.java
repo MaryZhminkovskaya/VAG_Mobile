@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -28,6 +29,7 @@ public class LikedArtworksActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private TextView tvEmpty;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private ArtworkAdapter artworkAdapter;
     private List<Artwork> artworkList = new ArrayList<>();
 
@@ -37,18 +39,31 @@ public class LikedArtworksActivity extends AppCompatActivity {
         setContentView(R.layout.activity_liked_artworks);
 
         initViews();
+        setupSwipeRefresh();
         setupRecyclerView();
         observeViewModels();
         loadLikedArtworks();
     }
 
     private void initViews() {
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         recyclerView = findViewById(R.id.recyclerView);
         progressBar = findViewById(R.id.progressBar);
         tvEmpty = findViewById(R.id.tvEmpty);
 
         TextView tvTitle = findViewById(R.id.tvTitle);
         tvTitle.setText("Liked Artworks");
+    }
+
+    private void setupSwipeRefresh() {
+        swipeRefreshLayout.setOnRefreshListener(this::loadLikedArtworks);
+        // Настраиваем цвета индикатора обновления
+        swipeRefreshLayout.setColorSchemeResources(
+            android.R.color.holo_blue_bright,
+            android.R.color.holo_green_light,
+            android.R.color.holo_orange_light,
+            android.R.color.holo_red_light
+        );
     }
 
     private void setupRecyclerView() {
@@ -81,6 +96,7 @@ public class LikedArtworksActivity extends AppCompatActivity {
 
         artworkViewModel.getLikedArtworksResult().observe(this, result -> {
             progressBar.setVisibility(View.GONE);
+            swipeRefreshLayout.setRefreshing(false);
 
             if (result != null) {
                 Boolean success = (Boolean) result.get("success");

@@ -18,20 +18,21 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.vagmobile.R;
 import com.example.vagmobile.model.Artwork;
+import com.example.vagmobile.model.Category;
 import com.example.vagmobile.model.User;
 import com.example.vagmobile.ui.activity.ArtworkDetailActivity;
 import com.example.vagmobile.ui.adapter.ArtworkAdapter;
-import com.example.vagmobile.viewmodel.UserViewModel;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class UserArtworksFragment extends Fragment {
 
     private static final String ARG_USER_ID = "user_id";
 
-    private UserViewModel userViewModel;
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private TextView tvEmpty;
@@ -62,19 +63,11 @@ public class UserArtworksFragment extends Fragment {
 
         initViews(view);
         setupRecyclerView();
-        observeViewModels();
         loadUserArtworks();
 
         return view;
     }
 
-    @Override
-    public void onAttach(@NonNull android.content.Context context) {
-        super.onAttach(context);
-        // Передаем контекст в ViewModel
-        userViewModel = new androidx.lifecycle.ViewModelProvider(this, androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().getApplication())).get(com.example.vagmobile.viewmodel.UserViewModel.class);
-        userViewModel.setContext(context);
-    }
 
     private void initViews(View view) {
         recyclerView = view.findViewById(R.id.recyclerView);
@@ -113,36 +106,6 @@ public class UserArtworksFragment extends Fragment {
         recyclerView.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
     }
 
-    private void observeViewModels() {
-        userViewModel = new ViewModelProvider(this, ViewModelProvider.AndroidViewModelFactory.getInstance(requireActivity().getApplication())).get(UserViewModel.class);
-
-        userViewModel.getUserArtworksResult().observe(getViewLifecycleOwner(), result -> {
-            progressBar.setVisibility(View.GONE);
-
-            if (result != null) {
-                Boolean success = (Boolean) result.get("success");
-                if (success != null && success) {
-                    Map<String, Object> userData = (Map<String, Object>) result.get("user");
-                    List<Map<String, Object>> artworksData = (List<Map<String, Object>>) result.get("artworks");
-
-                    if (artworksData != null && !artworksData.isEmpty()) {
-                        artworkList.clear();
-                        for (Map<String, Object> artworkData : artworksData) {
-                            Artwork artwork = convertToArtwork(artworkData);
-                            artworkList.add(artwork);
-                        }
-                        artworkAdapter.notifyDataSetChanged();
-                        showContent();
-                    } else {
-                        showEmpty("У пользователя пока нет публикаций");
-                    }
-                } else {
-                    String message = (String) result.get("message");
-                    showError("Не удалось загрузить публикации: " + message);
-                }
-            }
-        });
-    }
 
     private void loadUserArtworks() {
         if (userId != null) {
@@ -160,9 +123,15 @@ public class UserArtworksFragment extends Fragment {
 
                         if (artworksData != null && !artworksData.isEmpty()) {
                             artworkList.clear();
+                            // Используем Set для отслеживания уже добавленных ID и предотвращения дубликатов
+                            java.util.Set<Long> addedArtworkIds = new java.util.HashSet<>();
                             for (Map<String, Object> artworkData : artworksData) {
                                 Artwork artwork = convertToArtwork(artworkData);
-                                artworkList.add(artwork);
+                                // Проверяем, не добавляли ли уже эту публикацию
+                                if (artwork.getId() != null && !addedArtworkIds.contains(artwork.getId())) {
+                                    artworkList.add(artwork);
+                                    addedArtworkIds.add(artwork.getId());
+                                }
                             }
                             artworkAdapter.notifyDataSetChanged();
                             showContent();
@@ -223,6 +192,33 @@ public class UserArtworksFragment extends Fragment {
         }
 
         artwork.setUser(parseUserFromArtworkData(artworkData));
+
+        // Обработка категорий
+        Object categoriesObj = artworkData.get("categories");
+        if (categoriesObj instanceof List) {
+            List<Map<String, Object>> categoriesData = (List<Map<String, Object>>) categoriesObj;
+            List<com.example.vagmobile.model.Category> categories = new ArrayList<>();
+            for (Map<String, Object> categoryData : categoriesData) {
+                com.example.vagmobile.model.Category category = new com.example.vagmobile.model.Category();
+
+                Object categoryIdObj = categoryData.get("id");
+                if (categoryIdObj != null) {
+                    if (categoryIdObj instanceof Double) {
+                        category.setId(((Double) categoryIdObj).longValue());
+                    } else if (categoryIdObj instanceof Integer) {
+                        category.setId(((Integer) categoryIdObj).longValue());
+                    } else if (categoryIdObj instanceof Long) {
+                        category.setId((Long) categoryIdObj);
+                    }
+                }
+
+                category.setName((String) categoryData.get("name"));
+                category.setDescription((String) categoryData.get("description"));
+
+                categories.add(category);
+            }
+            artwork.setCategories(categories);
+        }
 
         return artwork;
     }
