@@ -85,6 +85,23 @@ public class MobileUserController {
             String username = profileRequest.get("username");
             String email = profileRequest.get("email");
             String description = profileRequest.get("description");
+            String currentPassword = profileRequest.get("currentPassword");
+
+            // Проверяем текущий пароль (обязательно для любых изменений)
+            if (currentPassword == null || currentPassword.trim().isEmpty()) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "Current password is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Проверяем текущий пароль
+            if (userService.authenticate(user.getUsername(), currentPassword) == null) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "Current password is incorrect");
+                return ResponseEntity.badRequest().body(response);
+            }
 
             // Проверяем уникальность username
             if (username != null && !username.equals(user.getUsername())) {
@@ -179,7 +196,7 @@ public class MobileUserController {
             User user = userService.findById(userId)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
-            User currentUser = mobileAuthController.getUserFromToken(authHeader);
+            mobileAuthController.getUserFromToken(authHeader);
 
             // ВАЖНОЕ ИСПРАВЛЕНИЕ: Всегда показываем ВСЕ публикации пользователя
             // независимо от того, свой это профиль или чужой
@@ -287,6 +304,171 @@ public class MobileUserController {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "Failed to fetch artists: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    // Обновить профиль с проверкой пароля
+    @PutMapping("/profile/update-with-password")
+    public ResponseEntity<?> updateUserProfileWithPassword(@RequestBody Map<String, String> profileRequest,
+                                                          @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        try {
+            User user = mobileAuthController.getUserFromToken(authHeader);
+            if (user == null) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "Authentication required");
+                return ResponseEntity.status(401).body(response);
+            }
+
+            String username = profileRequest.get("username");
+            String email = profileRequest.get("email");
+            String description = profileRequest.get("description");
+            String currentPassword = profileRequest.get("currentPassword");
+
+            // Проверяем текущий пароль (обязательно для любых изменений)
+            if (currentPassword == null || currentPassword.trim().isEmpty()) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "Current password is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Проверяем текущий пароль
+            if (userService.authenticate(user.getUsername(), currentPassword) == null) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "Current password is incorrect");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Проверяем уникальность username
+            if (username != null && !username.equals(user.getUsername())) {
+                if (userService.findByUsername(username).isPresent()) {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("success", false);
+                    response.put("message", "Username already exists");
+                    return ResponseEntity.badRequest().body(response);
+                }
+            }
+
+            // Проверяем уникальность email
+            if (email != null && !email.equals(user.getEmail())) {
+                if (userService.findByEmail(email).isPresent()) {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("success", false);
+                    response.put("message", "Email already exists");
+                    return ResponseEntity.badRequest().body(response);
+                }
+            }
+
+            // Создаем обновленного пользователя
+            User updatedUser = new User();
+            updatedUser.setId(user.getId());
+            if (username != null && !username.trim().isEmpty()) {
+                updatedUser.setUsername(username.trim());
+            } else {
+                updatedUser.setUsername(user.getUsername());
+            }
+
+            if (email != null && !email.trim().isEmpty()) {
+                updatedUser.setEmail(email.trim());
+            } else {
+                updatedUser.setEmail(user.getEmail());
+            }
+
+            if (description != null) {
+                updatedUser.setDescription(description.trim());
+            } else {
+                updatedUser.setDescription(user.getDescription());
+            }
+
+            User savedUser = userService.update(updatedUser);
+            UserDTO userDTO = artworkMapper.toUserDTO(savedUser);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("user", userDTO);
+            response.put("message", "Profile updated successfully");
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Failed to update profile: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    // Изменить пароль пользователя
+    @PutMapping("/profile/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody Map<String, String> passwordRequest,
+                                           @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        try {
+            User user = mobileAuthController.getUserFromToken(authHeader);
+            if (user == null) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "Authentication required");
+                return ResponseEntity.status(401).body(response);
+            }
+
+            String currentPassword = passwordRequest.get("currentPassword");
+            String newPassword = passwordRequest.get("newPassword");
+
+            // Проверяем обязательные поля
+            if (currentPassword == null || currentPassword.trim().isEmpty()) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "Current password is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            if (newPassword == null || newPassword.trim().isEmpty()) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "New password is required");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Проверяем текущий пароль (пропускаем если пароль уже проверен в updateProfile)
+            boolean skipPasswordCheck = "true".equals(passwordRequest.get("skipPasswordCheck"));
+            if (!skipPasswordCheck && userService.authenticate(user.getUsername(), currentPassword) == null) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "Current password is incorrect");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Проверяем, что новый пароль отличается от текущего
+            if (currentPassword.equals(newPassword)) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "New password must be different from current password");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Обновляем пароль
+            User updatedUser = new User();
+            updatedUser.setId(user.getId());
+            updatedUser.setPassword(newPassword);
+            updatedUser.setUsername(user.getUsername());
+            updatedUser.setEmail(user.getEmail());
+            updatedUser.setDescription(user.getDescription());
+
+            userService.update(updatedUser);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Password changed successfully");
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Failed to change password: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.badRequest().body(response);
         }

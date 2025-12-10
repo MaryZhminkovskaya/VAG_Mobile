@@ -42,7 +42,7 @@
                 android:layout_height="wrap_content"
                 android:text="Категории"
                 android:textSize="12sp"
-                android:textColor="#666"
+                android:textColor="@color/on_secondary_light"
                 android:maxLines="1"
                 android:ellipsize="end"
                 android:layout_marginTop="4dp"
@@ -54,7 +54,7 @@
                 android:layout_height="wrap_content"
                 android:text="Artist Name"
                 android:textSize="14sp"
-                android:textColor="#666"
+                android:textColor="@color/on_secondary_light"
                 android:layout_marginTop="4dp" />
 
             <LinearLayout

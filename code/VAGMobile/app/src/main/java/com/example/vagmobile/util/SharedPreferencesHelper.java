@@ -11,6 +11,7 @@ public class SharedPreferencesHelper {
     private static final String KEY_IS_LOGGED_IN = "is_logged_in";
     private static final String KEY_USER_ROLE = "user_role";
     private static final String KEY_TOKEN = "token";
+    private static final String KEY_DESCRIPTION = "description";
 
     private SharedPreferences sharedPreferences;
 
@@ -51,7 +52,19 @@ public class SharedPreferencesHelper {
         return sharedPreferences.getString(KEY_EMAIL, null);
     }
 
+    public void setDescription(String description) {
+        sharedPreferences.edit().putString(KEY_DESCRIPTION, description).apply();
+    }
+
+    public String getDescription() {
+        return sharedPreferences.getString(KEY_DESCRIPTION, null);
+    }
+
     public void saveUserData(Long userId, String username, String email, String role) {
+        saveUserData(userId, username, email, null, role);
+    }
+
+    public void saveUserData(Long userId, String username, String email, String description, String role) {
         try {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             if (userId != null) {
@@ -62,6 +75,9 @@ public class SharedPreferencesHelper {
             }
             if (email != null) {
                 editor.putString(KEY_EMAIL, email);
+            }
+            if (description != null) {
+                editor.putString(KEY_DESCRIPTION, description);
             }
             editor.putString(KEY_USER_ROLE, role != null ? role : "USER");
             editor.putBoolean(KEY_IS_LOGGED_IN, true);
@@ -88,6 +104,7 @@ public class SharedPreferencesHelper {
         editor.remove(KEY_USER_ID);
         editor.remove(KEY_USERNAME);
         editor.remove(KEY_EMAIL);
+        editor.remove(KEY_DESCRIPTION);
         editor.remove(KEY_USER_ROLE);
         editor.remove(KEY_IS_LOGGED_IN);
         editor.remove(KEY_TOKEN);

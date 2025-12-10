@@ -50,7 +50,7 @@
                 android:layout_height="wrap_content"
                 android:text="5 публикаций"
                 android:textSize="12sp"
-                android:textColor="@color/purple_500"
+                android:textColor="@color/accent_primary"
                 android:layout_marginTop="4dp" />
 
         </LinearLayout>

@@ -25,6 +25,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+
 import com.example.vagmobile.R;
 import com.example.vagmobile.model.Category;
 import com.example.vagmobile.util.ImageUtils;
@@ -50,7 +53,7 @@ public class CreateArtworkActivity extends AppCompatActivity {
     private ImageView ivArtworkImage;
     private Button btnSelectImage, btnCreateArtwork;
     private ProgressBar progressBar;
-    private LinearLayout chipContainer;
+    private ChipGroup chipContainer;
     private AutoCompleteTextView autoCompleteCategories;
     private TextView tvSelectedCategories;
 
@@ -167,7 +170,7 @@ public class CreateArtworkActivity extends AppCompatActivity {
                     autoCompleteCategories.setText("");
                     Log.d("CreateArtwork", "Category selected from dropdown: " + selectedCategory.getName());
                 } else {
-                    Toast.makeText(CreateArtworkActivity.this, "Category already selected", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(CreateArtworkActivity.this, getString(R.string.category_already_selected), Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -201,41 +204,29 @@ public class CreateArtworkActivity extends AppCompatActivity {
     }
 
     private void addCategoryChip(Category category) {
-        TextView chipView = new TextView(this);
-        chipView.setText(category.getName());
-        chipView.setBackgroundResource(R.drawable.chip_background);
-        chipView.setPadding(32, 16, 32, 16);
-        chipView.setTextColor(Color.WHITE);
-        chipView.setGravity(Gravity.CENTER);
-        chipView.setTextSize(14);
+        Chip chip = new Chip(this);
+        chip.setText(category.getName());
+        chip.setCloseIconVisible(true);
+        chip.setChipBackgroundColorResource(R.color.accent_primary);
+        chip.setTextColor(Color.WHITE);
+        chip.setCloseIconTintResource(R.color.surface_primary);
+        chip.setTag(category.getId());
 
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        params.setMargins(0, 0, 16, 16);
-        chipView.setLayoutParams(params);
-
-        chipView.setTag(category.getId());
-
-        chipView.setCompoundDrawablesWithIntrinsicBounds(0, 0, android.R.drawable.ic_menu_close_clear_cancel, 0);
-        chipView.setCompoundDrawablePadding(8);
-
-        chipView.setOnClickListener(v -> {
+        chip.setOnCloseIconClickListener(v -> {
             chipContainer.removeView(v);
             selectedCategoryIds.remove(category.getId());
             updateSelectedCategoriesText();
             categoryAdapter.notifyDataSetChanged();
-            Toast.makeText(CreateArtworkActivity.this, "Removed: " + category.getName(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(CreateArtworkActivity.this, getString(R.string.removed_category, category.getName()), Toast.LENGTH_SHORT).show();
         });
 
         selectedCategoryIds.add(category.getId());
-        chipContainer.addView(chipView);
+        chipContainer.addView(chip);
         updateSelectedCategoriesText();
 
         categoryAdapter.notifyDataSetChanged();
 
-        Toast.makeText(this, "Added: " + category.getName(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, getString(R.string.added_category, category.getName()), Toast.LENGTH_SHORT).show();
     }
 
     private void observeViewModels() {
@@ -257,11 +248,11 @@ public class CreateArtworkActivity extends AppCompatActivity {
                         categoryAdapter.notifyDataSetChanged();
                         btnCreateArtwork.setEnabled(true);
 
-                        Toast.makeText(this, "Loaded " + categoryList.size() + " categories", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, getString(R.string.loaded_categories, categoryList.size()), Toast.LENGTH_SHORT).show();
                     }
                 } else {
                     String message = (String) result.get("message");
-                    Toast.makeText(this, "Failed to load categories: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.failed_to_load_categories, message), Toast.LENGTH_SHORT).show();
                     btnCreateArtwork.setEnabled(true);
                 }
             }
@@ -294,7 +285,7 @@ public class CreateArtworkActivity extends AppCompatActivity {
                     }
 
                     // Обычное завершение создания
-                    Toast.makeText(this, "Artwork created successfully!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.artwork_created_successfully), Toast.LENGTH_SHORT).show();
                     resetForm();
                     finish();
                 } else {
@@ -307,7 +298,7 @@ public class CreateArtworkActivity extends AppCompatActivity {
                     Log.e("CreateArtwork", "Create artwork failed: " + message);
                 }
             } else {
-                Toast.makeText(this, "Failed to create artwork: null result", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.failed_to_create_artwork, "null result"), Toast.LENGTH_LONG).show();
                 Log.e("CreateArtwork", "Create artwork failed: null result");
             }
         });
@@ -423,12 +414,12 @@ public class CreateArtworkActivity extends AppCompatActivity {
         }
 
         if (selectedImageUri == null) {
-            Toast.makeText(this, "Please select an image", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.please_select_an_image), Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (selectedCategoryIds.isEmpty()) {
-            Toast.makeText(this, "Please select at least one category", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.please_select_at_least_one_category), Toast.LENGTH_SHORT).show();
             autoCompleteCategories.requestFocus();
             return;
         }
@@ -436,7 +427,7 @@ public class CreateArtworkActivity extends AppCompatActivity {
         try {
             File imageFile = ImageUtils.uriToFile(selectedImageUri, this);
             if (imageFile == null || !imageFile.exists()) {
-                Toast.makeText(this, "Failed to process image file", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.failed_to_process_image_file), Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -458,7 +449,7 @@ public class CreateArtworkActivity extends AppCompatActivity {
 
         } catch (Exception e) {
             Log.e("CreateArtwork", "Error creating artwork: " + e.getMessage(), e);
-            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.error_message, e.getMessage()), Toast.LENGTH_LONG).show();
             resetCreateButton();
         }
     }
@@ -508,12 +499,12 @@ public class CreateArtworkActivity extends AppCompatActivity {
                 selectedImageUri = data.getData();
                 if (selectedImageUri != null) {
                     ivArtworkImage.setImageURI(selectedImageUri);
-                    Toast.makeText(this, "Image selected", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.image_selected), Toast.LENGTH_SHORT).show();
                 }
             } else if (resultCode == ImagePicker.RESULT_ERROR) {
                 Toast.makeText(this, ImagePicker.getError(data), Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, "Image selection cancelled", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.image_selection_cancelled), Toast.LENGTH_SHORT).show();
             }
         }
     }

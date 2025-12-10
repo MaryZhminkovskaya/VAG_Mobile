@@ -144,6 +144,16 @@ public interface ApiService {
             @Header("Authorization") String authHeader,
             @Body Map<String, String> profileData);
 
+    @PUT("vag/api/mobile/users/profile/update-with-password")
+    Call<Map<String, Object>> updateProfileWithPassword(
+            @Header("Authorization") String authHeader,
+            @Body Map<String, String> profileData);
+
+    @PUT("vag/api/mobile/users/profile/change-password")
+    Call<Map<String, Object>> changePassword(
+            @Header("Authorization") String authHeader,
+            @Body Map<String, String> passwordData);
+
     @DELETE("vag/api/mobile/users/artworks/{artworkId}")
     Call<Map<String, Object>> deleteUserArtwork(
             @Header("Authorization") String authHeader,

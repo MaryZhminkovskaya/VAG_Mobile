@@ -7,13 +7,14 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:background="@color/background_primary">
 
     <TextView
         android:id="@+id/tvTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Artworks"
+        android:text="@string/screen_artworks"
         android:textSize="24sp"
         android:textStyle="bold"
         android:padding="16dp" />

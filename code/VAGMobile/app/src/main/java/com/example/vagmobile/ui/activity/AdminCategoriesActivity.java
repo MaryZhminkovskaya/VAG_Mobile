@@ -105,7 +105,7 @@ public class AdminCategoriesActivity extends AppCompatActivity {
                     }
                 } else {
                     String message = (String) result.get("message");
-                    Toast.makeText(this, "Failed to load categories: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.failed_to_load_categories, message), Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -115,11 +115,11 @@ public class AdminCategoriesActivity extends AppCompatActivity {
             if (result != null) {
                 Boolean success = (Boolean) result.get("success");
                 if (success != null && success) {
-                    Toast.makeText(this, "Category created successfully", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.category_created_successfully), Toast.LENGTH_SHORT).show();
                     loadCategories(); // Перезагружаем список
                 } else {
                     String message = (String) result.get("message");
-                    Toast.makeText(this, "Failed to create category: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.failed_to_create_category, message), Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -129,11 +129,11 @@ public class AdminCategoriesActivity extends AppCompatActivity {
             if (result != null) {
                 Boolean success = (Boolean) result.get("success");
                 if (success != null && success) {
-                    Toast.makeText(this, "Category updated successfully", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.category_updated_successfully), Toast.LENGTH_SHORT).show();
                     loadCategories(); // Перезагружаем список
                 } else {
                     String message = (String) result.get("message");
-                    Toast.makeText(this, "Failed to update category: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.failed_to_update_category, message), Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -143,11 +143,11 @@ public class AdminCategoriesActivity extends AppCompatActivity {
             if (result != null) {
                 Boolean success = (Boolean) result.get("success");
                 if (success != null && success) {
-                    Toast.makeText(this, "Category deleted successfully", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.category_deleted_successfully), Toast.LENGTH_SHORT).show();
                     loadCategories(); // Перезагружаем список
                 } else {
                     String message = (String) result.get("message");
-                    Toast.makeText(this, "Failed to delete category: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.failed_to_delete_category, message), Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -167,19 +167,19 @@ public class AdminCategoriesActivity extends AppCompatActivity {
         EditText etDescription = dialogView.findViewById(R.id.etDescription);
 
         builder.setView(dialogView)
-                .setTitle("Add Category")
-                .setPositiveButton("Add", (dialog, which) -> {
+                .setTitle(getString(R.string.dialog_add_category))
+                .setPositiveButton(getString(R.string.btn_add), (dialog, which) -> {
                     String name = etName.getText().toString().trim();
                     String description = etDescription.getText().toString().trim();
 
                     if (name.isEmpty()) {
-                        Toast.makeText(this, "Please enter category name", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, getString(R.string.please_enter_category_name), Toast.LENGTH_SHORT).show();
                         return;
                     }
 
                     createCategory(name, description);
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(getString(R.string.btn_cancel), null)
                 .show();
     }
 
@@ -195,30 +195,30 @@ public class AdminCategoriesActivity extends AppCompatActivity {
         etDescription.setText(category.getDescription());
 
         builder.setView(dialogView)
-                .setTitle("Edit Category")
-                .setPositiveButton("Save", (dialog, which) -> {
+                .setTitle(getString(R.string.dialog_edit_category))
+                .setPositiveButton(getString(R.string.btn_save), (dialog, which) -> {
                     String name = etName.getText().toString().trim();
                     String description = etDescription.getText().toString().trim();
 
                     if (name.isEmpty()) {
-                        Toast.makeText(this, "Please enter category name", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, getString(R.string.please_enter_category_name), Toast.LENGTH_SHORT).show();
                         return;
                     }
 
                     updateCategory(category.getId(), name, description);
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(getString(R.string.btn_cancel), null)
                 .show();
     }
 
     private void showDeleteConfirmationDialog(Category category) {
         new AlertDialog.Builder(this)
-                .setTitle("Delete Category")
-                .setMessage("Are you sure you want to delete '" + category.getName() + "'?")
-                .setPositiveButton("Delete", (dialog, which) -> {
+                .setTitle(getString(R.string.dialog_delete_category))
+                .setMessage(getString(R.string.confirm_delete_category, category.getName()))
+                .setPositiveButton(getString(R.string.btn_delete), (dialog, which) -> {
                     deleteCategory(category.getId());
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(getString(R.string.btn_cancel), null)
                 .show();
     }
 

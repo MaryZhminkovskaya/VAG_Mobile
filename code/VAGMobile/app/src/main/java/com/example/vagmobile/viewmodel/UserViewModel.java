@@ -17,6 +17,7 @@ public class UserViewModel extends ViewModel {
     private MutableLiveData<Map<String, Object>> userExhibitionsResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> likedArtworksResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> updateProfileResult = new MutableLiveData<>();
+    private MutableLiveData<Map<String, Object>> changePasswordResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> deleteArtworkResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> artistsResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> artistsWithArtworksResult = new MutableLiveData<>();
@@ -83,6 +84,24 @@ public class UserViewModel extends ViewModel {
         });
     }
 
+    public void updateProfileWithPassword(String username, String email, String description, String currentPassword) {
+        userRepository.updateProfileWithPassword(username, email, description, currentPassword).observeForever(result -> {
+            updateProfileResult.setValue(result);
+        });
+    }
+
+    public void changePassword(String currentPassword, String newPassword) {
+        userRepository.changePassword(currentPassword, newPassword, false).observeForever(result -> {
+            changePasswordResult.setValue(result);
+        });
+    }
+
+    public void changePasswordSkipValidation(String currentPassword, String newPassword) {
+        userRepository.changePassword(currentPassword, newPassword, true).observeForever(result -> {
+            changePasswordResult.setValue(result);
+        });
+    }
+
     public void deleteArtwork(Long artworkId) {
         userRepository.deleteArtwork(artworkId).observeForever(result -> {
             deleteArtworkResult.setValue(result);
@@ -120,6 +139,10 @@ public class UserViewModel extends ViewModel {
 
     public LiveData<Map<String, Object>> getUpdateProfileResult() {
         return updateProfileResult;
+    }
+
+    public LiveData<Map<String, Object>> getChangePasswordResult() {
+        return changePasswordResult;
     }
 
     public LiveData<Map<String, Object>> getDeleteArtworkResult() {

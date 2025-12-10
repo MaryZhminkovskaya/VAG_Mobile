@@ -68,7 +68,7 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
                     String message = (String) result.get("message");
                     Toast.makeText(this, "Не удалось загрузить детали публикации: " + message, Toast.LENGTH_SHORT).show();
 
-                    if (message != null && message.contains("Access denied")) {
+                    if (message != null && message.contains(getString(R.string.access_denied))) {
                         loadArtworkWithRegularEndpoint(artworkId);
                     }
                 }
@@ -121,7 +121,7 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
             }
         }
 
-        artwork.setTitle(artworkData.get("title") != null ? artworkData.get("title").toString() : "Без названия");
+        artwork.setTitle(artworkData.get("title") != null ? artworkData.get("title").toString() : getString(R.string.no_title));
         artwork.setDescription(artworkData.get("description") != null ? artworkData.get("description").toString() : "Нет описания");
         artwork.setImagePath(artworkData.get("imagePath") != null ? artworkData.get("imagePath").toString() : "");
         artwork.setStatus(artworkData.get("status") != null ? artworkData.get("status").toString() : "UNKNOWN");

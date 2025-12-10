@@ -30,7 +30,7 @@
                 android:id="@+id/tvTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Title"
+                android:text="@string/title"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp" />
@@ -39,7 +39,7 @@
                 android:id="@+id/tvArtist"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Artist"
+                android:text="@string/artist"
                 android:textSize="14sp"
                 android:textColor="#666"
                 android:layout_marginBottom="4dp" />
@@ -48,7 +48,7 @@
                 android:id="@+id/tvStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Status"
+                android:text="@string/status"
                 android:textSize="12sp"
                 android:textColor="#999"
                 android:layout_marginBottom="8dp" />
@@ -57,7 +57,7 @@
                 android:id="@+id/tvDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Description"
+                android:text="@string/description"
                 android:textSize="12sp"
                 android:maxLines="2"
                 android:ellipsize="end"
@@ -73,8 +73,9 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Approve"
-                    android:backgroundTint="#4CAF50"
+                    android:text="@string/btn_approve"
+                    android:backgroundTint="@color/status_approved"
+                    android:textColor="@color/surface_primary"
                     android:layout_marginEnd="4dp" />
 
                 <Button
@@ -82,8 +83,9 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Reject"
-                    android:backgroundTint="#F44336"
+                    android:text="@string/btn_reject"
+                    android:backgroundTint="@color/status_rejected"
+                    android:textColor="@color/surface_primary"
                     android:layout_marginStart="4dp" />
 
             </LinearLayout>

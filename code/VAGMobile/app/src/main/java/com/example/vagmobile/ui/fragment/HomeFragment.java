@@ -196,14 +196,14 @@ public class HomeFragment extends Fragment {
 
                         tvArtworksEmpty.setVisibility(View.GONE);
                         rvFeaturedArtworks.setVisibility(View.VISIBLE);
-                        Log.d("HomeFragment", "Loaded " + featuredArtworks.size() + " featured artworks");
+                        Log.d("HomeFragment", getString(R.string.loaded_featured_artworks, featuredArtworks.size()));
                     } else {
                         tvArtworksEmpty.setVisibility(View.VISIBLE);
                         rvFeaturedArtworks.setVisibility(View.GONE);
                     }
                 } else {
                     String message = (String) result.get("message");
-                    Toast.makeText(getContext(), "Failed to load artworks: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), getString(R.string.failed_to_load_artworks, message), Toast.LENGTH_SHORT).show();
                     tvArtworksEmpty.setVisibility(View.VISIBLE);
                     rvFeaturedArtworks.setVisibility(View.GONE);
                 }
@@ -243,7 +243,7 @@ public class HomeFragment extends Fragment {
 
                         tvArtistsEmpty.setVisibility(View.GONE);
                         rvFeaturedArtists.setVisibility(View.VISIBLE);
-                        Log.d("HomeFragment", "Loaded " + featuredArtists.size() + " featured artists");
+                        Log.d("HomeFragment", getString(R.string.loaded_featured_artists, featuredArtists.size()));
                     } else {
                         tvArtistsEmpty.setVisibility(View.VISIBLE);
                         rvFeaturedArtists.setVisibility(View.GONE);
@@ -251,7 +251,7 @@ public class HomeFragment extends Fragment {
                     }
                 } else {
                     String message = (String) result.get("message");
-                    Toast.makeText(getContext(), "Failed to load artists: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), getString(R.string.failed_to_load_artists, message), Toast.LENGTH_SHORT).show();
                     tvArtistsEmpty.setVisibility(View.VISIBLE);
                     rvFeaturedArtists.setVisibility(View.GONE);
                 }
@@ -291,7 +291,7 @@ public class HomeFragment extends Fragment {
 
                         tvExhibitionsEmpty.setVisibility(View.GONE);
                         rvFeaturedExhibitions.setVisibility(View.VISIBLE);
-                        Log.d("HomeFragment", "Loaded " + featuredExhibitions.size() + " featured exhibitions");
+                        Log.d("HomeFragment", getString(R.string.loaded_featured_exhibitions, featuredExhibitions.size()));
                     } else {
                         tvExhibitionsEmpty.setVisibility(View.VISIBLE);
                         rvFeaturedExhibitions.setVisibility(View.GONE);
@@ -299,7 +299,7 @@ public class HomeFragment extends Fragment {
                     }
                 } else {
                     String message = (String) result.get("message");
-                    Toast.makeText(getContext(), "Failed to load exhibitions: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), getString(R.string.failed_to_load_exhibitions, message), Toast.LENGTH_SHORT).show();
                     tvExhibitionsEmpty.setVisibility(View.VISIBLE);
                     rvFeaturedExhibitions.setVisibility(View.GONE);
                 }

@@ -46,17 +46,17 @@ public class RegisterActivity extends AppCompatActivity {
         String confirmPassword = etConfirmPassword.getText().toString().trim();
 
         if (username.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
-            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.please_fill_all_fields), Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (!password.equals(confirmPassword)) {
-            Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.passwords_do_not_match), Toast.LENGTH_SHORT).show();
             return;
         }
 
         if (password.length() < 6) {
-            Toast.makeText(this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.password_must_be_at_least_6_characters), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -75,7 +75,7 @@ public class RegisterActivity extends AppCompatActivity {
                 if (success != null && success) {
                     AuthResponse authResponse = (AuthResponse) result.get("user");
                     if (authResponse != null) {
-                        Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, getString(R.string.registration_successful), Toast.LENGTH_SHORT).show();
                         startActivity(new Intent(this, MainActivity.class));
                         finish();
                     }

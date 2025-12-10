@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/white">
+    android:background="@color/background_primary">
 
 
     <!-- Progress Bar -->
@@ -22,7 +22,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
-        android:background="@color/chip_background_color"
+        android:background="@color/surface_primary"
         android:visibility="gone">
 
         <TextView
@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:text="Добавление работ в выставку:"
             android:textSize="14sp"
-            android:textColor="@color/gray" />
+            android:textColor="@color/on_secondary_light" />
 
         <TextView
             android:id="@+id/tvExhibitionTitle"
@@ -38,7 +38,7 @@
             android:layout_height="wrap_content"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="@color/black"
+            android:textColor="@color/text_primary"
             android:layout_marginTop="4dp" />
 
         <TextView
@@ -104,7 +104,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="16dp"
-        android:background="@color/card_background"
+        android:background="@color/surface_primary"
         android:elevation="4dp"
         android:visibility="gone">
 
@@ -115,8 +115,8 @@
             android:layout_weight="1"
             android:layout_marginEnd="8dp"
             android:text="Отмена"
-            android:textColor="@color/purple_500"
-            android:backgroundTint="@color/white"
+            android:textColor="@color/accent_primary"
+            android:backgroundTint="@color/surface_primary"
             style="?android:attr/borderlessButtonStyle" />
 
         <Button
@@ -126,8 +126,8 @@
             android:layout_weight="1"
             android:layout_marginStart="8dp"
             android:text="Добавить выбранные"
-            android:textColor="@color/white"
-            android:backgroundTint="@color/purple_500"
+            android:textColor="@color/surface_primary"
+            android:backgroundTint="@color/accent_primary"
             android:enabled="false" />
 
     </LinearLayout>

@@ -127,7 +127,7 @@ public class AdminArtworksActivity extends AppCompatActivity {
                     }
                 } else {
                     String message = (String) result.get("message");
-                    Toast.makeText(this, "Failed to load artworks: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.failed_to_load_artworks, message), Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -136,11 +136,11 @@ public class AdminArtworksActivity extends AppCompatActivity {
             if (result != null) {
                 Boolean success = (Boolean) result.get("success");
                 if (success != null && success) {
-                    Toast.makeText(this, "Artwork approved successfully", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.artwork_approved_successfully), Toast.LENGTH_SHORT).show();
                     loadArtworks(null);
                 } else {
                     String message = (String) result.get("message");
-                    Toast.makeText(this, "Failed to approve artwork: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.failed_to_approve_artwork, message), Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -149,11 +149,11 @@ public class AdminArtworksActivity extends AppCompatActivity {
             if (result != null) {
                 Boolean success = (Boolean) result.get("success");
                 if (success != null && success) {
-                    Toast.makeText(this, "Artwork rejected successfully", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.artwork_rejected_successfully), Toast.LENGTH_SHORT).show();
                     loadArtworks(null);
                 } else {
                     String message = (String) result.get("message");
-                    Toast.makeText(this, "Failed to reject artwork: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.failed_to_reject_artwork, message), Toast.LENGTH_SHORT).show();
                 }
             }
         });

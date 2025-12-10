@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Register"
+        android:text="@string/screen_register"
         android:textSize="32sp"
         android:textStyle="bold"
         android:layout_marginBottom="48dp" />
@@ -18,14 +18,14 @@
         android:id="@+id/etUsername"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Username"
+        android:hint="@string/hint_username"
         android:layout_marginBottom="16dp" />
 
     <EditText
         android:id="@+id/etEmail"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Email"
+        android:hint="@string/hint_email"
         android:inputType="textEmailAddress"
         android:layout_marginBottom="16dp" />
 
@@ -33,7 +33,7 @@
         android:id="@+id/etPassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Password"
+        android:hint="@string/hint_password"
         android:inputType="textPassword"
         android:layout_marginBottom="16dp" />
 
@@ -41,7 +41,7 @@
         android:id="@+id/etConfirmPassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Confirm Password"
+        android:hint="@string/hint_confirm_password"
         android:inputType="textPassword"
         android:layout_marginBottom="24dp" />
 
@@ -49,7 +49,7 @@
         android:id="@+id/btnRegister"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Register"
+        android:text="@string/screen_register"
         android:backgroundTint="@color/purple_500"
         android:textColor="@color/white" />
 

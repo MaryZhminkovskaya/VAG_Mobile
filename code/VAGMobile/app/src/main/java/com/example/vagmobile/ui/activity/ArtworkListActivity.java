@@ -148,7 +148,7 @@ public class ArtworkListActivity extends AppCompatActivity {
                 }
             } else {
                 String message = (String) result.get("message");
-                Toast.makeText(this, "Failed to load artworks: " + message, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.failed_to_load_artworks, message), Toast.LENGTH_SHORT).show();
             }
         }
     }

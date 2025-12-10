@@ -126,8 +126,10 @@ public class ArtworkDetailActivity extends AppCompatActivity {
 
     private void setupRecyclerView() {
         commentAdapter = new CommentAdapter(commentList);
-        recyclerViewComments.setLayoutManager(new LinearLayoutManager(this));
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        recyclerViewComments.setLayoutManager(layoutManager);
         recyclerViewComments.setAdapter(commentAdapter);
+        recyclerViewComments.setNestedScrollingEnabled(false);
     }
 
     private void observeViewModels() {
@@ -280,6 +282,13 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         }
 
         if (artwork.getComments() != null) {
+            Log.d("COMMENTS_DEBUG", "=== updateUI: Обработка комментариев ===");
+            Log.d("COMMENTS_DEBUG", "artwork.getComments().size(): " + artwork.getComments().size());
+
+            for (Comment c : artwork.getComments()) {
+                Log.d("COMMENTS_DEBUG", "Комментарий ID: " + c.getId() + ", content: " + c.getContent());
+            }
+
             List<Comment> tempComments = new ArrayList<>();
 
             for (Comment comment : commentList) {
@@ -288,15 +297,22 @@ public class ArtworkDetailActivity extends AppCompatActivity {
                 }
             }
 
+            Log.d("COMMENTS_DEBUG", "tempComments.size(): " + tempComments.size());
+            Log.d("COMMENTS_DEBUG", "commentList.size() до очистки: " + commentList.size());
+
             commentList.clear();
             commentList.addAll(artwork.getComments());
             commentList.addAll(tempComments);
+
+            Log.d("COMMENTS_DEBUG", "commentList.size() после добавления: " + commentList.size());
 
             commentAdapter.notifyDataSetChanged();
 
             if (!commentList.isEmpty()) {
                 recyclerViewComments.smoothScrollToPosition(commentList.size() - 1);
             }
+        } else {
+            Log.d("COMMENTS_DEBUG", "artwork.getComments() is null");
         }
 
         updateLikeButton();
@@ -423,8 +439,8 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         }
 
         new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Удаление публикации")
-                .setMessage("Вы действительно хотите удалить публикацию \"" + artwork.getTitle() + "\"? Это действие нельзя отменить.")
+                .setTitle(getString(R.string.dialog_delete_category))
+                .setMessage(getString(R.string.confirm_delete_artwork, artwork.getTitle()))
                 .setPositiveButton("Удалить", (dialog, which) -> deleteArtwork())
                 .setNegativeButton("Отмена", null)
                 .show();
@@ -575,12 +591,17 @@ public class ArtworkDetailActivity extends AppCompatActivity {
 
         if (artworkData.get("comments") != null) {
             List<Map<String, Object>> commentsData = (List<Map<String, Object>>) artworkData.get("comments");
+            Log.d("COMMENTS_DEBUG", "convertToArtwork: commentsData.size(): " + commentsData.size());
             List<Comment> comments = new ArrayList<>();
             for (Map<String, Object> commentData : commentsData) {
                 Comment comment = convertToComment(commentData);
                 comments.add(comment);
+                Log.d("COMMENTS_DEBUG", "convertToArtwork: Добавлен комментарий ID: " + comment.getId());
             }
             artwork.setComments(comments);
+            Log.d("COMMENTS_DEBUG", "convertToArtwork: Всего комментариев: " + comments.size());
+        } else {
+            Log.d("COMMENTS_DEBUG", "convertToArtwork: commentsData is null");
         }
 
         if (artworkData.get("categories") != null) {

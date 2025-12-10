@@ -84,6 +84,7 @@ public class MobileArtworkController {
                                         @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
             Artwork artwork = artworkService.findByIdWithComments(id);
+            System.out.println("MobileArtworkController: Found artwork with ID: " + id + ", comments count: " + (artwork.getComments() != null ? artwork.getComments().size() : 0));
 
             User currentUser = getCurrentUser(authHeader);
 

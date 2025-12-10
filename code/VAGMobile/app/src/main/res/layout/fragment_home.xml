@@ -58,7 +58,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Все"
-                    android:textColor="@color/purple_500"
+                    android:textColor="@color/accent_primary"
                     android:textStyle="bold"
                     android:clickable="true"
                     android:focusable="true" />
@@ -108,7 +108,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Все"
-                    android:textColor="@color/purple_500"
+                    android:textColor="@color/accent_primary"
                     android:textStyle="bold"
                     android:clickable="true"
                     android:focusable="true" />
@@ -157,7 +157,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Все"
-                    android:textColor="@color/purple_500"
+                    android:textColor="@color/accent_primary"
                     android:textStyle="bold"
                     android:clickable="true"
                     android:focusable="true" />

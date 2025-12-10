@@ -53,7 +53,7 @@ public class LoginActivity extends AppCompatActivity {
         String password = etPassword.getText().toString().trim();
 
         if (username.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.please_fill_all_fields), Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -68,26 +68,26 @@ public class LoginActivity extends AppCompatActivity {
                     if (success != null && success) {
                         AuthResponse authResponse = (AuthResponse) result.get("user");
                         if (authResponse != null) {
-                            Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, getString(R.string.login_successful), Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(this, MainActivity.class);
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                             startActivity(intent);
                             finish();
                         } else {
-                            Toast.makeText(this, "Login failed: Invalid response", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, getString(R.string.login_failed_invalid_response), Toast.LENGTH_SHORT).show();
                         }
                     } else {
                         String message = (String) result.get("message");
                         if (message != null && !message.isEmpty()) {
                             Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
                         } else {
-                            Toast.makeText(this, "Login failed", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, getString(R.string.login_failed), Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.error_message, e.getMessage()), Toast.LENGTH_SHORT).show();
             }
         });
     }

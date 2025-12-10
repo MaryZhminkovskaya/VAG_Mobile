@@ -55,8 +55,19 @@ public class ArtworkServiceImpl implements ArtworkService {
     @Override
     public Artwork findByIdWithComments(Long id) {
         // ИСПРАВЛЕНО: Используем метод с полной загрузкой всех данных
-        return artworkRepository.findByIdWithUserAndCommentsAndCategories(id)
+        Artwork artwork = artworkRepository.findByIdWithUserAndCommentsAndCategories(id)
                 .orElseThrow(() -> new RuntimeException("Artwork not found"));
+
+        System.out.println("ArtworkServiceImpl: findByIdWithComments - публикация ID: " + id);
+        System.out.println("ArtworkServiceImpl: комментарии до сортировки: " + (artwork.getComments() != null ? artwork.getComments().size() : 0));
+
+        // Сортируем комментарии по дате создания
+        if (artwork.getComments() != null) {
+            artwork.getComments().sort((c1, c2) -> c1.getDateCreated().compareTo(c2.getDateCreated()));
+            System.out.println("ArtworkServiceImpl: комментарии после сортировки: " + artwork.getComments().size());
+        }
+
+        return artwork;
     }
 
     @Transactional(readOnly = true)
@@ -222,6 +233,9 @@ public class ArtworkServiceImpl implements ArtworkService {
         Artwork artwork = artworkRepository.findById(artworkId)
                 .orElseThrow(() -> new RuntimeException("Artwork not found"));
 
+        System.out.println("ArtworkServiceImpl: Добавляем комментарий к публикации ID: " + artworkId);
+        System.out.println("ArtworkServiceImpl: Текущие комментарии: " + (artwork.getComments() != null ? artwork.getComments().size() : 0));
+
         // ИСПРАВЛЕНО: Создаем и сохраняем комментарий
         Comment comment = new Comment();
         comment.setContent(content);
@@ -229,7 +243,8 @@ public class ArtworkServiceImpl implements ArtworkService {
         comment.setArtwork(artwork);
         comment.setDateCreated(LocalDateTime.now());
 
-        commentRepository.save(comment);
+        Comment savedComment = commentRepository.save(comment);
+        System.out.println("ArtworkServiceImpl: Комментарий сохранен с ID: " + savedComment.getId());
 
         // Добавляем комментарий к публикации
         if (artwork.getComments() == null) {
@@ -238,6 +253,7 @@ public class ArtworkServiceImpl implements ArtworkService {
         artwork.getComments().add(comment);
 
         artworkRepository.save(artwork);
+        System.out.println("ArtworkServiceImpl: После добавления комментариев: " + artwork.getComments().size());
 
         System.out.println("Comment added by " + user.getUsername() + " to artwork " + artworkId);
     }

@@ -603,7 +603,7 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
         layout.addView(cbAuthorOnly);
 
         new AlertDialog.Builder(this)
-                .setTitle("Редактирование выставки")
+                .setTitle(getString(R.string.dialog_edit_exhibition))
                 .setView(layout)
                 .setPositiveButton("Сохранить", (dialog, which) -> {
                     String title = etTitle.getText().toString().trim();
@@ -625,8 +625,8 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
         if (exhibition == null) return;
 
         new AlertDialog.Builder(this)
-                .setTitle("Удаление выставки")
-                .setMessage("Вы действительно хотите удалить выставку \"" + exhibition.getTitle() + "\"? Это действие нельзя отменить.")
+                .setTitle(getString(R.string.dialog_delete_exhibition))
+                .setMessage(getString(R.string.confirm_delete_exhibition, exhibition.getTitle()))
                 .setPositiveButton("Удалить", (dialog, which) -> {
                     exhibitionViewModel.deleteExhibition(exhibitionId);
                 })
@@ -648,7 +648,7 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
         String[] options = {"Добавить работу из профиля", "Добавить новую работу"};
 
         new AlertDialog.Builder(this)
-                .setTitle("Добавить работу")
+                .setTitle(getString(R.string.dialog_add_artwork))
                 .setItems(options, (dialog, which) -> {
                     switch (which) {
                         case 0: // Добавить работу из профиля
@@ -681,8 +681,8 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
         String artworkTitle = artwork.getTitle() != null ? artwork.getTitle() : "Без названия";
 
         new AlertDialog.Builder(this)
-                .setTitle("Удаление работы из выставки")
-                .setMessage("Вы действительно хотите удалить работу \"" + artworkTitle + "\" из выставки \"" + (exhibition != null ? exhibition.getTitle() : "") + "\"?")
+                .setTitle(getString(R.string.dialog_remove_artwork_from_exhibition))
+                .setMessage(getString(R.string.confirm_remove_artwork_from_exhibition, artworkTitle, exhibition != null ? exhibition.getTitle() : ""))
                 .setPositiveButton("Удалить", (dialog, which) -> {
                     exhibitionViewModel.removeArtworkFromExhibition(exhibitionId, artwork.getId());
                 })
