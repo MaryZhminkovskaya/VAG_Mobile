@@ -44,7 +44,10 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginBottom="24dp"
-            android:text="@string/btn_select_image" />
+            android:text="@string/btn_select_image"
+            android:textColor="#FFFFFF"
+            android:drawableLeft="@drawable/ic_attach"
+            android:drawablePadding="8dp" />
 
         <!-- Title -->
         <TextView

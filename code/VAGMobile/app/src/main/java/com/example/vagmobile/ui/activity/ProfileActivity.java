@@ -163,8 +163,11 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void setupTabs() {
-        // Создаем адаптер для ViewPager
-        ProfilePagerAdapter adapter = new ProfilePagerAdapter(this, userId);
+        // Определяем, является ли профиль собственным
+        boolean isOwnProfile = isOwnProfile();
+
+        // Создаем адаптер для ViewPager с параметром isOwnProfile
+        ProfilePagerAdapter adapter = new ProfilePagerAdapter(this, userId, isOwnProfile);
         viewPager.setAdapter(adapter);
 
         // Отключаем прокрутку ViewPager2, чтобы NestedScrollView мог обрабатывать всю прокрутку
@@ -181,6 +184,15 @@ public class ProfileActivity extends AppCompatActivity {
                     break;
             }
         }).attach();
+    }
+
+    private boolean isOwnProfile() {
+        // Получаем ID текущего пользователя из SharedPreferences
+        SharedPreferencesHelper prefs = new SharedPreferencesHelper(this);
+        Long currentUserId = prefs.getUserId();
+
+        // Если ID пользователя совпадает с текущим, то это собственный профиль
+        return currentUserId != null && currentUserId.equals(userId);
     }
 
     private void showError(String message) {

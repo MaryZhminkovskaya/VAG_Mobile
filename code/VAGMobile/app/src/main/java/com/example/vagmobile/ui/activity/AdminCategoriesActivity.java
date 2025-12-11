@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -29,7 +30,7 @@ public class AdminCategoriesActivity extends AppCompatActivity {
     private CategoryViewModel categoryViewModel;
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
-    private Button btnAddCategory;
+    private ImageButton btnAddCategory;
     private SwipeRefreshLayout swipeRefreshLayout;
     private AdminCategoryAdapter categoryAdapter;
     private List<Category> categoryList = new ArrayList<>();

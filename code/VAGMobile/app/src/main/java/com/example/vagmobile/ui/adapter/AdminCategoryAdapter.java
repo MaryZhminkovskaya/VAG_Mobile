@@ -4,6 +4,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -43,7 +44,7 @@ public class AdminCategoryAdapter extends RecyclerView.Adapter<AdminCategoryAdap
 
         holder.tvName.setText(category.getName());
         holder.tvDescription.setText(category.getDescription());
-        holder.tvArtworksCount.setText(String.valueOf(category.getApprovedArtworksCount()) + " artworks");
+        holder.tvArtworksCount.setText(String.valueOf(category.getApprovedArtworksCount()) + " публикаций");
 
         holder.btnEdit.setOnClickListener(v -> {
             if (actionListener != null) {
@@ -65,7 +66,7 @@ public class AdminCategoryAdapter extends RecyclerView.Adapter<AdminCategoryAdap
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvName, tvDescription, tvArtworksCount;
-        Button btnEdit, btnDelete;
+        ImageButton btnEdit, btnDelete;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);

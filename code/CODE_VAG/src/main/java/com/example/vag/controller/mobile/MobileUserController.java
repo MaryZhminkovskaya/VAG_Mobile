@@ -196,16 +196,25 @@ public class MobileUserController {
             User user = userService.findById(userId)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
-            mobileAuthController.getUserFromToken(authHeader);
+            User currentUser = null;
+            if (authHeader != null && !authHeader.trim().isEmpty()) {
+                currentUser = mobileAuthController.getUserFromToken(authHeader);
+            }
 
-            // ВАЖНОЕ ИСПРАВЛЕНИЕ: Всегда показываем ВСЕ публикации пользователя
-            // независимо от того, свой это профиль или чужой
-            List<Artwork> artworks = artworkService.findByUserWithDetails(user);
+            // Определяем, является ли просматриваемый профиль собственным
+            boolean isOwnProfile = currentUser != null && currentUser.getId().equals(userId);
 
-            // Альтернативный вариант: показывать все, кроме REJECTED
-            // List<Artwork> artworks = artworkService.findByUserWithDetails(user).stream()
-            //         .filter(artwork -> !"REJECTED".equals(artwork.getStatus()))
-            //         .collect(Collectors.toList());
+            List<Artwork> artworks;
+
+            if (isOwnProfile) {
+                // Для собственного профиля показываем все публикации
+                artworks = artworkService.findByUserWithDetails(user);
+            } else {
+                // Для чужого профиля показываем только APPROVED публикации
+                artworks = artworkService.findByUserWithDetails(user).stream()
+                        .filter(artwork -> "APPROVED".equals(artwork.getStatus()))
+                        .collect(Collectors.toList());
+            }
 
             List<ArtworkDTO> artworkDTOs = artworkMapper.toSimpleDTOList(artworks);
             UserDTO userDTO = artworkMapper.toUserDTO(user);

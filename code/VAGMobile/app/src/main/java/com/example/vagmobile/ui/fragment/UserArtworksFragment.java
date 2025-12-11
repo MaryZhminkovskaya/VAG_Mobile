@@ -32,6 +32,7 @@ import java.util.Set;
 public class UserArtworksFragment extends Fragment {
 
     private static final String ARG_USER_ID = "user_id";
+    private static final String ARG_IS_OWN_PROFILE = "is_own_profile";
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
@@ -39,11 +40,13 @@ public class UserArtworksFragment extends Fragment {
     private ArtworkAdapter artworkAdapter;
     private List<Artwork> artworkList = new ArrayList<>();
     private Long userId;
+    private boolean isOwnProfile;
 
-    public static UserArtworksFragment newInstance(Long userId) {
+    public static UserArtworksFragment newInstance(Long userId, boolean isOwnProfile) {
         UserArtworksFragment fragment = new UserArtworksFragment();
         Bundle args = new Bundle();
         args.putLong(ARG_USER_ID, userId);
+        args.putBoolean(ARG_IS_OWN_PROFILE, isOwnProfile);
         fragment.setArguments(args);
         return fragment;
     }
@@ -53,6 +56,7 @@ public class UserArtworksFragment extends Fragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
             userId = getArguments().getLong(ARG_USER_ID);
+            isOwnProfile = getArguments().getBoolean(ARG_IS_OWN_PROFILE, false);
         }
     }
 
@@ -112,38 +116,52 @@ public class UserArtworksFragment extends Fragment {
             progressBar.setVisibility(View.VISIBLE);
             // Создаем репозиторий с контекстом для загрузки публикаций пользователя
             com.example.vagmobile.repository.UserRepository repoWithContext = new com.example.vagmobile.repository.UserRepository(getContext());
-            repoWithContext.getUserArtworks(userId, 0, 50).observe(getViewLifecycleOwner(), result -> {
-                progressBar.setVisibility(View.GONE);
 
-                if (result != null) {
-                    Boolean success = (Boolean) result.get("success");
-                    if (success != null && success) {
-                        Map<String, Object> userData = (Map<String, Object>) result.get("user");
-                        List<Map<String, Object>> artworksData = (List<Map<String, Object>>) result.get("artworks");
+            // Выбираем метод в зависимости от того, является ли профиль собственным
+            if (isOwnProfile) {
+                // Для собственного профиля загружаем все публикации
+                repoWithContext.getAllUserArtworks(userId, 0, 50).observe(getViewLifecycleOwner(), result -> {
+                    handleArtworksResult(result);
+                });
+            } else {
+                // Для чужого профиля загружаем только APPROVED публикации
+                repoWithContext.getUserArtworks(userId, 0, 50).observe(getViewLifecycleOwner(), result -> {
+                    handleArtworksResult(result);
+                });
+            }
+        }
+    }
 
-                        if (artworksData != null && !artworksData.isEmpty()) {
-                            artworkList.clear();
-                            // Используем Set для отслеживания уже добавленных ID и предотвращения дубликатов
-                            java.util.Set<Long> addedArtworkIds = new java.util.HashSet<>();
-                            for (Map<String, Object> artworkData : artworksData) {
-                                Artwork artwork = convertToArtwork(artworkData);
-                                // Проверяем, не добавляли ли уже эту публикацию
-                                if (artwork.getId() != null && !addedArtworkIds.contains(artwork.getId())) {
-                                    artworkList.add(artwork);
-                                    addedArtworkIds.add(artwork.getId());
-                                }
-                            }
-                            artworkAdapter.notifyDataSetChanged();
-                            showContent();
-                        } else {
-                            showEmpty("У пользователя пока нет публикаций");
+    private void handleArtworksResult(Map<String, Object> result) {
+        progressBar.setVisibility(View.GONE);
+
+        if (result != null) {
+            Boolean success = (Boolean) result.get("success");
+            if (success != null && success) {
+                Map<String, Object> userData = (Map<String, Object>) result.get("user");
+                List<Map<String, Object>> artworksData = (List<Map<String, Object>>) result.get("artworks");
+
+                if (artworksData != null && !artworksData.isEmpty()) {
+                    artworkList.clear();
+                    // Используем Set для отслеживания уже добавленных ID и предотвращения дубликатов
+                    java.util.Set<Long> addedArtworkIds = new java.util.HashSet<>();
+                    for (Map<String, Object> artworkData : artworksData) {
+                        Artwork artwork = convertToArtwork(artworkData);
+                        // Проверяем, не добавляли ли уже эту публикацию
+                        if (artwork.getId() != null && !addedArtworkIds.contains(artwork.getId())) {
+                            artworkList.add(artwork);
+                            addedArtworkIds.add(artwork.getId());
                         }
-                    } else {
-                        String message = (String) result.get("message");
-                        showError("Не удалось загрузить публикации: " + message);
                     }
+                    artworkAdapter.notifyDataSetChanged();
+                    showContent();
+                } else {
+                    showEmpty("У пользователя пока нет публикаций");
                 }
-            });
+            } else {
+                String message = (String) result.get("message");
+                showError("Не удалось загрузить публикации: " + message);
+            }
         }
     }
 

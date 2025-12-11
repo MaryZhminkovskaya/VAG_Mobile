@@ -48,7 +48,8 @@ public class ArtworkDetailActivity extends AppCompatActivity {
     private ImageView ivArtwork;
     private TextView tvTitle, tvArtist, tvDescription, tvLikes, tvViews, tvCategories;
     private ImageButton btnLike;
-    private Button btnComment, btnEdit, btnDelete;
+    private Button btnComment;
+    private ImageButton btnEdit, btnDelete;
     private EditText etComment;
     private LinearLayout layoutAuthorActions;
     private RecyclerView recyclerViewComments;
@@ -277,8 +278,16 @@ public class ArtworkDetailActivity extends AppCompatActivity {
                     .placeholder(R.drawable.ic_placeholder)
                     .error(R.drawable.ic_error)
                     .into(ivArtwork);
+
+            // Добавляем клик для открытия полноэкранного просмотра
+            ivArtwork.setOnClickListener(v -> {
+                Intent intent = new Intent(this, FullscreenImageActivity.class);
+                intent.putExtra("image_url", imageUrl);
+                startActivity(intent);
+            });
         } else {
             Log.d("ArtworkDetail", "Путь к изображению пуст");
+            ivArtwork.setOnClickListener(null); // Убираем клик если нет изображения
         }
 
         if (artwork.getComments() != null) {

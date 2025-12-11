@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -40,9 +41,10 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
     private Long exhibitionId;
 
     private ImageView ivExhibitionImage;
-    private TextView tvTitle, tvAuthor, tvAuthorOnly, tvDescription, tvArtworksCount;
+    private TextView tvTitle, tvAuthor, tvDescription, tvArtworksCount;
+    private ImageView ivPrivate;
     private LinearLayout layoutActions;
-    private Button btnEdit, btnAddArtworks, btnDelete;
+    private ImageButton btnEdit, btnAddArtworks, btnDelete;
     private RecyclerView recyclerViewArtworks;
     private ProgressBar progressBar;
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -83,7 +85,7 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
         ivExhibitionImage = findViewById(R.id.ivExhibitionImage);
         tvTitle = findViewById(R.id.tvTitle);
         tvAuthor = findViewById(R.id.tvAuthor);
-        tvAuthorOnly = findViewById(R.id.tvAuthorOnly);
+        ivPrivate = findViewById(R.id.ivPrivate);
         tvDescription = findViewById(R.id.tvDescription);
         tvArtworksCount = findViewById(R.id.tvArtworksCount);
         layoutActions = findViewById(R.id.layoutActions);
@@ -351,9 +353,9 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
         }
 
         if (exhibition.isAuthorOnly()) {
-            tvAuthorOnly.setVisibility(View.VISIBLE);
+            ivPrivate.setVisibility(View.VISIBLE);
         } else {
-            tvAuthorOnly.setVisibility(View.GONE);
+            ivPrivate.setVisibility(View.GONE);
         }
 
         // Загрузка изображения
@@ -368,15 +370,26 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
             }
         }
 
-        if (imageUrl != null) {
+        // Создаем финальную копию для использования в lambda
+        final String finalImageUrl = imageUrl;
+
+        if (finalImageUrl != null) {
             Glide.with(this)
-                    .load(imageUrl)
+                    .load(finalImageUrl)
                     .placeholder(R.drawable.placeholder_image)
                     .error(R.drawable.placeholder_image)
                     .centerCrop()
                     .into(ivExhibitionImage);
+
+            // Добавляем клик для открытия полноэкранного просмотра
+            ivExhibitionImage.setOnClickListener(v -> {
+                Intent intent = new Intent(this, FullscreenImageActivity.class);
+                intent.putExtra("image_url", finalImageUrl);
+                startActivity(intent);
+            });
         } else {
             ivExhibitionImage.setImageResource(R.drawable.placeholder_image);
+            ivExhibitionImage.setOnClickListener(null); // Убираем клик если нет изображения
         }
 
         // Показываем кнопки действий только если пользователь - владелец выставки

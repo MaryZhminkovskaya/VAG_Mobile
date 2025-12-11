@@ -252,7 +252,7 @@ public class ProfileFragment extends Fragment {
     private void setupTabs() {
         if (getActivity() != null && viewPager != null && tabLayout != null) {
             // Создаем адаптер для ViewPager
-            ProfilePagerAdapter adapter = new ProfilePagerAdapter(getActivity(), userId);
+            ProfilePagerAdapter adapter = new ProfilePagerAdapter(getActivity(), userId, isOwnProfile);
             viewPager.setAdapter(adapter);
 
             // Отключаем прокрутку ViewPager2, чтобы NestedScrollView мог обрабатывать всю прокрутку

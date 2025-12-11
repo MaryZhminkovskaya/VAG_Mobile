@@ -4,7 +4,7 @@ import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -47,13 +47,13 @@ public class AdminArtworkAdapter extends RecyclerView.Adapter<AdminArtworkAdapte
 
         holder.tvTitle.setText(artwork.getTitle());
         holder.tvDescription.setText(artwork.getDescription());
-        holder.tvStatus.setText("Status: " + artwork.getStatus());
+        holder.tvStatus.setText("Статус: " + getStatusText(artwork.getStatus()));
 
         // Отображение реального пользователя
         if (artwork.getUser() != null && artwork.getUser().getUsername() != null) {
-            holder.tvArtist.setText("By: " + artwork.getUser().getUsername());
+            holder.tvArtist.setText("Автор: " + artwork.getUser().getUsername());
         } else {
-            holder.tvArtist.setText("By: Unknown User");
+            holder.tvArtist.setText("Автор: Неизвестный пользователь");
         }
 
         // Загрузка изображения
@@ -106,10 +106,21 @@ public class AdminArtworkAdapter extends RecyclerView.Adapter<AdminArtworkAdapte
         return artworkList != null ? artworkList.size() : 0;
     }
 
+    private String getStatusText(String status) {
+        if ("PENDING".equals(status)) {
+            return "ОЖИДАЕТ";
+        } else if ("APPROVED".equals(status)) {
+            return "ОДОБРЕНО";
+        } else if ("REJECTED".equals(status)) {
+            return "ОТКЛОНЕНО";
+        }
+        return status;
+    }
+
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView ivArtwork;
         TextView tvTitle, tvDescription, tvStatus, tvArtist;
-        Button btnApprove, btnReject;
+        ImageButton btnApprove, btnReject;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);

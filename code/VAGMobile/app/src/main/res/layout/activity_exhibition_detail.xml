@@ -35,14 +35,32 @@
             android:src="@drawable/placeholder_image"
             android:layout_marginBottom="16dp" />
 
-        <TextView
-            android:id="@+id/tvTitle"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Название выставки"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="8dp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Название выставки"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <ImageView
+                android:id="@+id/ivPrivate"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_private"
+                android:layout_marginStart="8dp"
+                android:visibility="gone"
+                android:contentDescription="Приватная выставка" />
+
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tvAuthor"
@@ -52,21 +70,6 @@
             android:textSize="16sp"
             android:textColor="#666"
             android:layout_marginBottom="8dp" />
-
-        <TextView
-            android:id="@+id/tvAuthorOnly"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Приватная"
-            android:textSize="12sp"
-            android:textColor="#FF6B6B"
-            android:background="@drawable/bg_rounded_red"
-            android:paddingLeft="8dp"
-            android:paddingRight="8dp"
-            android:paddingTop="4dp"
-            android:paddingBottom="4dp"
-            android:layout_marginBottom="16dp"
-            android:visibility="gone" />
 
         <TextView
             android:id="@+id/tvDescription"
@@ -101,34 +104,39 @@
                 android:orientation="horizontal"
                 android:layout_marginBottom="8dp">
 
-                <Button
-                    android:id="@+id/btnEdit"
-                    android:layout_width="0dp"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Редактировать"
-                    android:layout_marginEnd="4dp" />
+                    android:orientation="horizontal"
+                    android:gravity="end">
 
-                <Button
-                    android:id="@+id/btnAddArtworks"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Добавить работы"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginEnd="4dp"
-                    android:backgroundTint="@color/status_approved"
-                    android:textColor="@color/surface_primary" />
+                    <ImageButton
+                        android:id="@+id/btnEdit"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_edit"
+                        android:background="@drawable/edit_button_background"
+                        android:layout_marginEnd="8dp"
+                        android:contentDescription="Редактировать выставку" />
 
-                <Button
-                    android:id="@+id/btnDelete"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Удалить"
-                    android:layout_marginStart="4dp"
-                    android:backgroundTint="@color/status_rejected"
-                    android:textColor="@color/surface_primary" />
+                    <ImageButton
+                        android:id="@+id/btnAddArtworks"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_add_white"
+                        android:background="@drawable/approve_button_background"
+                        android:layout_marginEnd="8dp"
+                        android:contentDescription="Добавить работы" />
+
+                    <ImageButton
+                        android:id="@+id/btnDelete"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:src="@drawable/ic_delete"
+                        android:background="@drawable/reject_button_background"
+                        android:contentDescription="Удалить выставку" />
+
+                </LinearLayout>
 
             </LinearLayout>
 

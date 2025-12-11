@@ -3,6 +3,7 @@ package com.example.vagmobile.ui.activity;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -267,9 +268,17 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
                     .placeholder(R.drawable.ic_image_placeholder)
                     .error(R.drawable.ic_error_image)
                     .into(ivArtwork);
+
+            // Добавляем клик для открытия полноэкранного просмотра
+            ivArtwork.setOnClickListener(v -> {
+                Intent intent = new Intent(this, FullscreenImageActivity.class);
+                intent.putExtra("image_url", imageUrl);
+                startActivity(intent);
+            });
         } else {
             System.out.println("AdminArtworkDetailActivity: Путь к изображению пуст");
             ivArtwork.setImageResource(R.drawable.ic_image_placeholder);
+            ivArtwork.setOnClickListener(null); // Убираем клик если нет изображения
         }
     }
 }

@@ -6,6 +6,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import android.content.Intent;
+
+import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -321,6 +323,15 @@ public class EditArtworkActivity extends AppCompatActivity {
                     .placeholder(R.drawable.ic_placeholder)
                     .error(R.drawable.ic_error)
                     .into(ivArtworkImage);
+
+            // Добавляем клик для открытия полноэкранного просмотра
+            ivArtworkImage.setOnClickListener(v -> {
+                Intent intent = new Intent(this, FullscreenImageActivity.class);
+                intent.putExtra("image_url", imageUrl);
+                startActivity(intent);
+            });
+        } else {
+            ivArtworkImage.setOnClickListener(null); // Убираем клик если нет изображения
         }
 
         // Добавляем категории
@@ -550,11 +561,20 @@ public class EditArtworkActivity extends AppCompatActivity {
                 if (selectedImageUri != null) {
                     ivArtworkImage.setImageURI(selectedImageUri);
                     Toast.makeText(this, getString(R.string.image_selected), Toast.LENGTH_SHORT).show();
+
+                    // Добавляем клик для открытия полноэкранного просмотра
+                    ivArtworkImage.setOnClickListener(v -> {
+                        Intent intent = new Intent(this, FullscreenImageActivity.class);
+                        intent.putExtra("image_url", selectedImageUri.toString());
+                        startActivity(intent);
+                    });
                 }
             } else if (resultCode == ImagePicker.RESULT_ERROR) {
                 Toast.makeText(this, ImagePicker.getError(data), Toast.LENGTH_SHORT).show();
+                ivArtworkImage.setOnClickListener(null);
             } else {
                 Toast.makeText(this, getString(R.string.image_selection_cancelled), Toast.LENGTH_SHORT).show();
+                ivArtworkImage.setOnClickListener(null);
             }
         }
     }

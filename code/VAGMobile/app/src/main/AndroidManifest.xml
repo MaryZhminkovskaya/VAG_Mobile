@@ -110,6 +110,11 @@
             android:name=".ui.activity.AddArtworkToExhibitionActivity"
             android:exported="false"/>
 
+        <activity
+            android:name=".ui.activity.FullscreenImageActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
+
     </application>
 
 </manifest>

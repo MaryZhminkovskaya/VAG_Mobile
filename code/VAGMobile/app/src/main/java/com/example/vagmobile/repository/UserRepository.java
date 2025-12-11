@@ -397,6 +397,45 @@ public class UserRepository {
         return result;
     }
 
+    // Метод для получения всех публикаций пользователя (включая не APPROVED)
+    public MutableLiveData<Map<String, Object>> getAllUserArtworks(Long userId, int page, int size) {
+        MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
+
+        String authHeader = getAuthHeader();
+        if (authHeader == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Authentication required");
+            result.setValue(error);
+            return result;
+        }
+
+        ApiService authApiService = ApiClient.getClientWithAuth(authHeader).create(ApiService.class);
+        authApiService.getAllUserArtworks(authHeader, userId, page, size).enqueue(new Callback<Map<String, Object>>() {
+            @Override
+            public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    result.setValue(response.body());
+                } else {
+                    Map<String, Object> error = new HashMap<>();
+                    error.put("success", false);
+                    error.put("message", "Failed to get all user artworks: " + response.message());
+                    result.setValue(error);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "Network error: " + t.getMessage());
+                result.setValue(error);
+            }
+        });
+
+        return result;
+    }
+
     public MutableLiveData<Map<String, Object>> deleteArtwork(Long artworkId) {
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
 
