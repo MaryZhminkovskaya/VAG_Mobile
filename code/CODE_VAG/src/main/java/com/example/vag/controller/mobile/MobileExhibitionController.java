@@ -41,15 +41,15 @@ public class MobileExhibitionController {
         this.artworkMapper = artworkMapper;
     }
 
-    // Упрощенный метод для демонстрации - в реальном приложении используйте Spring Security
+    // Метод для получения текущего пользователя из токена
     private User getCurrentUser(String authHeader) {
-        // Временная реализация - возвращаем первого пользователя для тестирования
-        // В реальном приложении здесь должна быть логика аутентификации
-        try {
-            return userService.findAll().stream().findFirst().orElse(null);
-        } catch (Exception e) {
+        if (authHeader == null) {
             return null;
         }
+
+        // Используем MobileAuthController для извлечения пользователя из токена
+        MobileAuthController authController = new MobileAuthController(userService);
+        return authController.getUserFromToken(authHeader);
     }
 
     @GetMapping("/exhibitions")

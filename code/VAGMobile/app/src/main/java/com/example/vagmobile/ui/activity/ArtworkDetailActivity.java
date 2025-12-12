@@ -108,9 +108,9 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         btnDelete.setOnClickListener(v -> showDeleteConfirmationDialog());
 
         if (!prefs.isLoggedIn()) {
-            btnLike.setVisibility(View.GONE);
             btnComment.setVisibility(View.GONE);
             etComment.setVisibility(View.GONE);
+            // btnLike остается видимым для показа приглашения к авторизации
         }
     }
 
@@ -300,6 +300,7 @@ public class ArtworkDetailActivity extends AppCompatActivity {
 
             List<Comment> tempComments = new ArrayList<>();
 
+            // Сохраняем только временные комментарии (еще не отправленные на сервер)
             for (Comment comment : commentList) {
                 if (comment.getId() == null || comment.getId() == 0) {
                     tempComments.add(comment);
@@ -310,7 +311,22 @@ public class ArtworkDetailActivity extends AppCompatActivity {
             Log.d("COMMENTS_DEBUG", "commentList.size() до очистки: " + commentList.size());
 
             commentList.clear();
-            commentList.addAll(artwork.getComments());
+
+            // Добавляем комментарии от сервера, избегая дублирования
+            for (Comment serverComment : artwork.getComments()) {
+                boolean alreadyExists = false;
+                for (Comment existingComment : commentList) {
+                    if (existingComment.getId() != null && existingComment.getId().equals(serverComment.getId())) {
+                        alreadyExists = true;
+                        break;
+                    }
+                }
+                if (!alreadyExists) {
+                    commentList.add(serverComment);
+                }
+            }
+
+            // Добавляем временные комментарии
             commentList.addAll(tempComments);
 
             Log.d("COMMENTS_DEBUG", "commentList.size() после добавления: " + commentList.size());
@@ -326,6 +342,7 @@ public class ArtworkDetailActivity extends AppCompatActivity {
 
         updateLikeButton();
         updateAuthorActions();
+        updateCommentVisibility();
     }
 
     private void updateLikeButton() {
@@ -335,14 +352,22 @@ public class ArtworkDetailActivity extends AppCompatActivity {
                 ", artwork.isLiked(): " + artwork.isLiked() +
                 ", artwork.likes: " + artwork.getLikes());
 
-        if (artwork.isLiked()) {
-            btnLike.setImageResource(R.drawable.ic_heart_filled);
-            btnLike.setColorFilter(Color.RED);
-            Log.d("LIKE_DEBUG", "Setting heart to RED (liked)");
+        if (prefs.isLoggedIn()) {
+            // Для авторизованных пользователей показываем реальное состояние лайка
+            if (artwork.isLiked()) {
+                btnLike.setImageResource(R.drawable.ic_heart_filled);
+                btnLike.setColorFilter(Color.RED);
+                Log.d("LIKE_DEBUG", "Setting heart to RED (liked)");
+            } else {
+                btnLike.setImageResource(R.drawable.ic_heart_outline);
+                btnLike.setColorFilter(Color.GRAY);
+                Log.d("LIKE_DEBUG", "Setting heart to GRAY (not liked)");
+            }
         } else {
+            // Для неавторизованных пользователей всегда показываем outline сердце
             btnLike.setImageResource(R.drawable.ic_heart_outline);
             btnLike.setColorFilter(Color.GRAY);
-            Log.d("LIKE_DEBUG", "Setting heart to GRAY (not liked)");
+            Log.d("LIKE_DEBUG", "Setting heart to GRAY outline (not logged in)");
         }
     }
 
@@ -378,7 +403,7 @@ public class ArtworkDetailActivity extends AppCompatActivity {
 
     private void toggleLike() {
         if (!prefs.isLoggedIn()) {
-            Toast.makeText(this, "Пожалуйста, войдите в систему чтобы ставить лайки", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Авторизуйтесь, чтобы оценить публикацию", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -448,7 +473,7 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         }
 
         new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle(getString(R.string.dialog_delete_category))
+                .setTitle(getString(R.string.dialog_delete_artwork))
                 .setMessage(getString(R.string.confirm_delete_artwork, artwork.getTitle()))
                 .setPositiveButton("Удалить", (dialog, which) -> deleteArtwork())
                 .setNegativeButton("Отмена", null)
@@ -755,5 +780,28 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         }
 
         return category;
+    }
+
+    private void updateCommentVisibility() {
+        if (artwork == null) return;
+
+        String status = artwork.getStatus();
+
+        // Скрываем комментарии для работ со статусом PENDING или REJECTED
+        if ("PENDING".equals(status) || "REJECTED".equals(status)) {
+            btnComment.setVisibility(View.GONE);
+            etComment.setVisibility(View.GONE);
+            recyclerViewComments.setVisibility(View.GONE);
+        } else {
+            // Для APPROVED работ показываем комментарии если пользователь авторизован
+            if (prefs.isLoggedIn()) {
+                btnComment.setVisibility(View.VISIBLE);
+                etComment.setVisibility(View.VISIBLE);
+            } else {
+                btnComment.setVisibility(View.GONE);
+                etComment.setVisibility(View.GONE);
+            }
+            recyclerViewComments.setVisibility(View.VISIBLE);
+        }
     }
 }

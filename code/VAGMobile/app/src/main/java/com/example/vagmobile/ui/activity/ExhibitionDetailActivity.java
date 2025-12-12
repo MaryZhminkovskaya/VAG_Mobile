@@ -392,11 +392,29 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
             ivExhibitionImage.setOnClickListener(null); // Убираем клик если нет изображения
         }
 
-        // Показываем кнопки действий только если пользователь - владелец выставки
-        if (prefs.getUserId() != null &&
-            exhibition.getUser() != null &&
-            prefs.getUserId().equals(exhibition.getUser().getId())) {
+        // Управляем видимостью кнопок действий
+        boolean isLoggedIn = prefs.getUserId() != null;
+        boolean isOwner = isLoggedIn && exhibition.getUser() != null &&
+                         prefs.getUserId().equals(exhibition.getUser().getId());
+        boolean isPublicExhibition = exhibition.isAuthorOnly() == false;
+
+        // Показываем кнопки редактирования и удаления только владельцу
+        if (isOwner) {
+            btnEdit.setVisibility(View.VISIBLE);
+            btnDelete.setVisibility(View.VISIBLE);
+        } else {
+            btnEdit.setVisibility(View.GONE);
+            btnDelete.setVisibility(View.GONE);
+        }
+
+        // Показываем кнопку добавления работ владельцу или любому авторизованному пользователю для публичных выставок
+        if (isOwner || (isLoggedIn && isPublicExhibition)) {
+            btnAddArtworks.setVisibility(View.VISIBLE);
             layoutActions.setVisibility(View.VISIBLE);
+        } else {
+            btnAddArtworks.setVisibility(View.GONE);
+            // Скрываем layout действий, если нет видимых кнопок
+            layoutActions.setVisibility(View.GONE);
         }
     }
 

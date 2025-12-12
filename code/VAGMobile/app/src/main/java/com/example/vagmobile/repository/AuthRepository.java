@@ -173,32 +173,82 @@ public class AuthRepository {
                     responseMap.put("message", responseBody.get("message"));
 
                     if (success != null && success) {
-                        AuthResponse authResponse = new AuthResponse();
-                        authResponse.setSuccess(true);
-                        authResponse.setMessage((String) responseBody.get("message"));
+                        try {
+                            AuthResponse authResponse = new AuthResponse();
+                            authResponse.setSuccess(true);
+                            authResponse.setMessage((String) responseBody.get("message"));
 
-                        if (responseBody.get("id") != null) {
-                            authResponse.setId(((Number) responseBody.get("id")).longValue());
-                        }
-                        if (responseBody.get("username") != null) {
-                            authResponse.setUsername((String) responseBody.get("username"));
-                        }
-                        if (responseBody.get("email") != null) {
-                            authResponse.setEmail((String) responseBody.get("email"));
-                        }
-                        if (responseBody.get("role") != null) {
-                            authResponse.setRole((String) responseBody.get("role"));
-                        }
+                            // Парсим данные пользователя из вложенного объекта "user", как в login()
+                            Object userObj = responseBody.get("user");
+                            if (userObj instanceof Map) {
+                                Map<String, Object> userData = (Map<String, Object>) userObj;
+                                if (userData.get("id") != null) {
+                                    authResponse.setId(((Number) userData.get("id")).longValue());
+                                }
+                                if (userData.get("username") != null) {
+                                    authResponse.setUsername((String) userData.get("username"));
+                                }
+                                if (userData.get("email") != null) {
+                                    authResponse.setEmail((String) userData.get("email"));
+                                }
+                                if (userData.get("role") != null) {
+                                    authResponse.setRole((String) userData.get("role"));
+                                }
+                            } else {
+                                // Fallback: если структура ответа отличается
+                                if (responseBody.get("id") != null) {
+                                    authResponse.setId(((Number) responseBody.get("id")).longValue());
+                                }
+                                if (responseBody.get("username") != null) {
+                                    authResponse.setUsername((String) responseBody.get("username"));
+                                }
+                                if (responseBody.get("email") != null) {
+                                    authResponse.setEmail((String) responseBody.get("email"));
+                                }
+                                if (responseBody.get("role") != null) {
+                                    authResponse.setRole((String) responseBody.get("role"));
+                                }
+                            }
+                            
+                            if (authResponse.getId() == null || authResponse.getUsername() == null) {
+                                System.out.println("Warning: Incomplete user data in registration response");
+                                System.out.println("Response body: " + responseBody);
+                            }
 
-                        responseMap.put("user", authResponse);
+                            responseMap.put("user", authResponse);
 
-                        SharedPreferencesHelper prefs = new SharedPreferencesHelper(context);
-                        prefs.saveUserData(
-                                authResponse.getId(),
-                                authResponse.getUsername(),
-                                authResponse.getEmail(),
-                                authResponse.getRole()
-                        );
+                            if (context != null) {
+                                SharedPreferencesHelper prefs = new SharedPreferencesHelper(context);
+                                
+                                // Сохраняем токен
+                                Object tokenObj = responseBody.get("token");
+                                if (tokenObj != null) {
+                                    String token = tokenObj.toString();
+                                    prefs.saveToken(token);
+                                    System.out.println("Token saved during registration: " + token);
+                                }
+                                
+                                // Сохраняем данные пользователя
+                                if (authResponse.getId() != null && authResponse.getUsername() != null) {
+                                    prefs.saveUserData(
+                                            authResponse.getId(),
+                                            authResponse.getUsername(),
+                                            authResponse.getEmail(),
+                                            authResponse.getRole()
+                                    );
+                                    System.out.println("User data saved during registration: " + authResponse.getUsername());
+                                } else {
+                                    System.out.println("Warning: User data incomplete during registration, not saving");
+                                }
+                            } else {
+                                System.out.println("Error: Context is null during registration, cannot save user data");
+                            }
+                        } catch (Exception e) {
+                            System.out.println("Error processing registration response: " + e.getMessage());
+                            e.printStackTrace();
+                            responseMap.put("success", false);
+                            responseMap.put("message", "Error processing registration: " + e.getMessage());
+                        }
                     }
 
                     result.setValue(responseMap);

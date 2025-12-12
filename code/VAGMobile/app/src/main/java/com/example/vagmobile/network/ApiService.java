@@ -63,6 +63,9 @@ public interface ApiService {
     @GET("vag/api/mobile/artworks/{id}")
     Call<Map<String, Object>> getArtwork(@Path("id") Long id);
 
+    @GET("vag/api/mobile/artworks/{id}")
+    Call<Map<String, Object>> getArtworkWithAuth(@Header("Authorization") String authHeader, @Path("id") Long id);
+
     @Multipart
     @POST("vag/api/mobile/artworks/create")
     Call<Map<String, Object>> createArtwork(

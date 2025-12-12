@@ -119,7 +119,18 @@ public class ArtworkRepository {
     public MutableLiveData<Map<String, Object>> getArtwork(Long id) {
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
 
-        apiService.getArtwork(id).enqueue(new Callback<Map<String, Object>>() {
+        String authHeader = getAuthHeader();
+        Call<Map<String, Object>> call;
+
+        if (authHeader != null) {
+            // Если есть токен, используем метод с авторизацией
+            call = apiService.getArtworkWithAuth(authHeader, id);
+        } else {
+            // Если токена нет, используем метод без авторизации
+            call = apiService.getArtwork(id);
+        }
+
+        call.enqueue(new Callback<Map<String, Object>>() {
             @Override
             public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
                 if (response.isSuccessful() && response.body() != null) {

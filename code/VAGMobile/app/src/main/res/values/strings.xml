@@ -149,6 +149,7 @@
     <string name="dialog_add_category">Добавить категорию</string>
     <string name="dialog_edit_category">Редактировать категорию</string>
     <string name="dialog_delete_category">Удалить категорию</string>
+    <string name="dialog_delete_artwork">Удалить публикацию</string>
     <string name="dialog_confirm_delete">Подтвердить удаление</string>
     <string name="confirm_delete_category">Вы уверены, что хотите удалить категорию \'%s\'?</string>
     <string name="no_title">Без названия</string>

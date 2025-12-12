@@ -3,6 +3,7 @@ package com.example.vag.service.impl;
 import com.example.vag.model.*;
 import com.example.vag.repository.ArtworkRepository;
 import com.example.vag.repository.CategoryRepository;
+import com.example.vag.repository.ExhibitionRepository;
 import com.example.vag.repository.LikeRepository;
 import com.example.vag.repository.CommentRepository; // ДОБАВЛЕНО
 import com.example.vag.service.ArtworkService;
@@ -21,23 +22,27 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ArtworkServiceImpl implements ArtworkService {
 
     private final ArtworkRepository artworkRepository;
     private final CategoryRepository categoryRepository;
+    private final ExhibitionRepository exhibitionRepository;
     private final LikeRepository likeRepository;
     private final CommentRepository commentRepository; // ДОБАВЛЕНО
     private final FileUploadUtil fileUploadUtil;
 
     public ArtworkServiceImpl(ArtworkRepository artworkRepository,
                               CategoryRepository categoryRepository,
+                              ExhibitionRepository exhibitionRepository,
                               LikeRepository likeRepository,
                               CommentRepository commentRepository, // ДОБАВЛЕНО
                               FileUploadUtil fileUploadUtil) {
         this.artworkRepository = artworkRepository;
         this.categoryRepository = categoryRepository;
+        this.exhibitionRepository = exhibitionRepository;
         this.likeRepository = likeRepository;
         this.commentRepository = commentRepository; // ДОБАВЛЕНО
         this.fileUploadUtil = fileUploadUtil;
@@ -410,7 +415,22 @@ public class ArtworkServiceImpl implements ArtworkService {
         // 3. Удаляем ВСЕ комментарии
         commentRepository.deleteAllByArtworkId(artworkId);
 
-        // 4. Удаляем сам Artwork — каскадно удалит связи с категориями
+        // 4. Удаляем связи с выставками
+        // Находим все выставки, которые содержат эту работу
+        List<Exhibition> exhibitionsWithArtwork = exhibitionRepository.findAll()
+                .stream()
+                .filter(exhibition -> exhibition.getArtworks()
+                        .stream()
+                        .anyMatch(exhibitionArtwork -> exhibitionArtwork.getId().equals(artworkId)))
+                .collect(Collectors.toList());
+
+        // Удаляем работу из каждой выставки
+        for (Exhibition exhibition : exhibitionsWithArtwork) {
+            exhibition.getArtworks().removeIf(exhibitionArtwork -> exhibitionArtwork.getId().equals(artworkId));
+            exhibitionRepository.save(exhibition);
+        }
+
+        // 5. Удаляем сам Artwork — каскадно удалит связи с категориями
         artworkRepository.delete(artwork);
     }
 

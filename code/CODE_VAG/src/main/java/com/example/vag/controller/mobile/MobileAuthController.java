@@ -217,7 +217,7 @@ public class MobileAuthController {
         }
     }
 
-    // Метод для проверки токена с исправлением LazyInitializationException
+    // Публичный метод для проверки токена с исправлением LazyInitializationException
     public User getUserFromToken(String authHeader) {
         try {
             String token = extractToken(authHeader);
