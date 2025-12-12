@@ -19,6 +19,7 @@ public class ExhibitionViewModel extends AndroidViewModel {
     private MutableLiveData<Map<String, Object>> addArtworkResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> removeArtworkResult = new MutableLiveData<>();
     private MutableLiveData<Map<String, Object>> userExhibitionsResult = new MutableLiveData<>();
+    private MutableLiveData<Map<String, Object>> userArtworksForExhibitionResult = new MutableLiveData<>();
 
     public ExhibitionViewModel(Application application) {
         super(application);
@@ -61,6 +62,10 @@ public class ExhibitionViewModel extends AndroidViewModel {
         return userExhibitionsResult;
     }
 
+    public MutableLiveData<Map<String, Object>> getUserArtworksForExhibitionResult() {
+        return userArtworksForExhibitionResult;
+    }
+
     public void getExhibitions(int page, int size) {
         exhibitionRepository.getExhibitions(page, size).observeForever(exhibitionsResult::setValue);
     }
@@ -95,5 +100,9 @@ public class ExhibitionViewModel extends AndroidViewModel {
 
     public void getUserExhibitions(Long userId, int page, int size) {
         exhibitionRepository.getUserExhibitions(userId, page, size).observeForever(userExhibitionsResult::setValue);
+    }
+
+    public void getUserArtworksForExhibition(Long exhibitionId, int page, int size) {
+        exhibitionRepository.getUserArtworksForExhibition(exhibitionId, page, size).observeForever(userArtworksForExhibitionResult::setValue);
     }
 }

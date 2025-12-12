@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/swipeRefreshLayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="16dp">
+    android:layout_height="match_parent">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -39,7 +44,7 @@
             android:layout_height="wrap_content"
             android:text="Художник: Неизвестно"
             android:textSize="16sp"
-            android:textColor="#666"
+            android:textColor="@color/on_secondary_light"
             android:layout_marginBottom="8dp" />
 
         <!-- Категории -->
@@ -49,7 +54,7 @@
             android:layout_height="wrap_content"
             android:text="Категории:"
             android:textSize="14sp"
-            android:textColor="#888"
+            android:textColor="@color/on_secondary_light"
             android:layout_marginBottom="16dp"
             android:visibility="gone" />
 
@@ -60,6 +65,42 @@
             android:text="Описание публикации"
             android:textSize="16sp"
             android:layout_marginBottom="16dp" />
+
+        <!-- Кнопки действий автора -->
+        <LinearLayout
+            android:id="@+id/layoutAuthorActions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="end">
+
+                <ImageButton
+                    android:id="@+id/btnEdit"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_edit"
+                    android:background="@drawable/edit_button_background"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="Редактировать публикацию" />
+
+                <ImageButton
+                    android:id="@+id/btnDelete"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_delete"
+                    android:background="@drawable/reject_button_background"
+                    android:contentDescription="Удалить публикацию" />
+
+            </LinearLayout>
+
+        </LinearLayout>
 
         <!-- Лайки с сердечком -->
         <LinearLayout
@@ -108,6 +149,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Добавить комментарий"
+            android:textColor="#FFFFFF"
             android:layout_marginBottom="24dp" />
 
         <TextView
@@ -122,8 +164,11 @@
             android:id="@+id/recyclerViewComments"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp" />
+            android:layout_marginBottom="16dp"
+            android:nestedScrollingEnabled="false" />
 
     </LinearLayout>
 
-</ScrollView>
+</androidx.core.widget.NestedScrollView>
+
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

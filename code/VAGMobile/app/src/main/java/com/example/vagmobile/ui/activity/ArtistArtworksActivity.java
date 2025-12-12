@@ -43,7 +43,7 @@ public class ArtistArtworksActivity extends AppCompatActivity {
         artistName = getIntent().getStringExtra("artist_name");
 
         if (artistId == -1) {
-            Toast.makeText(this, "Artist not found", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.artist_not_found), Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -127,7 +127,7 @@ public class ArtistArtworksActivity extends AppCompatActivity {
                     }
                 } else {
                     String message = (String) result.get("message");
-                    Toast.makeText(this, "Failed to load artworks: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.failed_to_load_artworks, message), Toast.LENGTH_SHORT).show();
                     showEmptyState("Ошибка загрузки публикаций");
                 }
             }

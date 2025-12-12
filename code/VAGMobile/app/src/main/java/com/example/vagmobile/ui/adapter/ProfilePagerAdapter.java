@@ -11,10 +11,12 @@ import com.example.vagmobile.ui.fragment.UserExhibitionsFragment;
 public class ProfilePagerAdapter extends FragmentStateAdapter {
 
     private final Long userId;
+    private final boolean isOwnProfile;
 
-    public ProfilePagerAdapter(@NonNull FragmentActivity fragmentActivity, Long userId) {
+    public ProfilePagerAdapter(@NonNull FragmentActivity fragmentActivity, Long userId, boolean isOwnProfile) {
         super(fragmentActivity);
         this.userId = userId;
+        this.isOwnProfile = isOwnProfile;
     }
 
     @NonNull
@@ -22,11 +24,11 @@ public class ProfilePagerAdapter extends FragmentStateAdapter {
     public Fragment createFragment(int position) {
         switch (position) {
             case 0:
-                return UserArtworksFragment.newInstance(userId);
+                return UserArtworksFragment.newInstance(userId, isOwnProfile);
             case 1:
                 return UserExhibitionsFragment.newInstance(userId);
             default:
-                return UserArtworksFragment.newInstance(userId);
+                return UserArtworksFragment.newInstance(userId, isOwnProfile);
         }
     }
 

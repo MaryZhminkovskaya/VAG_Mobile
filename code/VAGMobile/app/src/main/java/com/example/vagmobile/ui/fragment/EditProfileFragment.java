@@ -13,11 +13,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import com.example.vagmobile.R;
+import com.example.vagmobile.model.DocPage;
 import com.example.vagmobile.ui.activity.LoginActivity;
 import com.example.vagmobile.ui.activity.AdminCategoriesActivity;
 import com.example.vagmobile.ui.activity.AdminArtworksActivity;
 import com.example.vagmobile.ui.activity.LikedArtworksActivity;
 import com.example.vagmobile.ui.activity.EditProfileActivity;
+import com.example.vagmobile.ui.fragment.DocumentationDetailFragment;
 import com.example.vagmobile.util.SharedPreferencesHelper;
 
 public class EditProfileFragment extends Fragment {
@@ -111,8 +113,17 @@ public class EditProfileFragment extends Fragment {
 
         if (btnDocumentation != null) {
             btnDocumentation.setOnClickListener(v -> {
-                // TODO: Open documentation
-                Toast.makeText(getContext(), "Документация в разработке", Toast.LENGTH_SHORT).show();
+                // Открываем главную страницу документации
+                DocPage mainDocPage = new DocPage("Главная", "https://raw.githubusercontent.com/MaryZhminkovskaya/VAG_Mobile/main/docs/README.md");
+                DocumentationDetailFragment documentationFragment = DocumentationDetailFragment.newInstance(mainDocPage);
+
+                if (getActivity() != null) {
+                    getActivity().getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.fragment_container, documentationFragment)
+                            .addToBackStack("documentation")
+                            .commit();
+                }
             });
         }
 

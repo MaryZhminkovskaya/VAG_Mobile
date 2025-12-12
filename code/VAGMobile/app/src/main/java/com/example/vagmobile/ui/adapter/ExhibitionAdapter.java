@@ -52,17 +52,17 @@ public class ExhibitionAdapter extends RecyclerView.Adapter<ExhibitionAdapter.Ex
     }
 
     static class ExhibitionViewHolder extends RecyclerView.ViewHolder {
-        private ImageView ivExhibitionImage;
-        private TextView tvTitle, tvDescription, tvArtworksCount, tvAuthor, tvAuthorOnly;
+        private ImageView ivExhibitionImage, ivPrivate;
+        private TextView tvTitle, tvDescription, tvArtworksCount, tvAuthor;
 
         public ExhibitionViewHolder(@NonNull View itemView) {
             super(itemView);
             ivExhibitionImage = itemView.findViewById(R.id.ivExhibitionImage);
+            ivPrivate = itemView.findViewById(R.id.ivPrivate);
             tvTitle = itemView.findViewById(R.id.tvExhibitionTitle);
             tvDescription = itemView.findViewById(R.id.tvExhibitionDescription);
             tvArtworksCount = itemView.findViewById(R.id.tvArtworksCount);
             tvAuthor = itemView.findViewById(R.id.tvAuthor);
-            tvAuthorOnly = itemView.findViewById(R.id.tvAuthorOnly);
         }
 
         public void bind(Exhibition exhibition) {
@@ -77,11 +77,10 @@ public class ExhibitionAdapter extends RecyclerView.Adapter<ExhibitionAdapter.Ex
                 tvAuthor.setVisibility(View.GONE);
             }
 
-            tvAuthorOnly.setText(exhibition.getAuthorOnlyText());
             if (exhibition.isAuthorOnly()) {
-                tvAuthorOnly.setVisibility(View.VISIBLE);
+                ivPrivate.setVisibility(View.VISIBLE);
             } else {
-                tvAuthorOnly.setVisibility(View.GONE);
+                ivPrivate.setVisibility(View.GONE);
             }
 
             // Загрузка изображения первой работы или изображения выставки
@@ -92,7 +91,7 @@ public class ExhibitionAdapter extends RecyclerView.Adapter<ExhibitionAdapter.Ex
                 // Преобразуем относительный путь в полный URL
                 String relativePath = exhibition.getFirstArtwork().getImagePath();
                 if (!relativePath.startsWith("http")) {
-                    imageUrl = "http://192.168.0.38:8080/uploads/" + relativePath;
+                    imageUrl = "http://192.168.0.40:8080/vag/uploads/" + relativePath;
                 } else {
                     imageUrl = relativePath;
                 }

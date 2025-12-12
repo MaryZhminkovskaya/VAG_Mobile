@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.viewpager2.widget.ViewPager2;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.vagmobile.R;
 import com.example.vagmobile.repository.ExhibitionRepository;
@@ -33,6 +34,7 @@ public class ProfileFragment extends Fragment {
 
     private TextView tvUsername, tvEmail, tvDescription, tvArtworksCount, tvExhibitionsCount;
     private ProgressBar progressBar;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private TabLayout tabLayout;
     private ViewPager2 viewPager;
     private UserViewModel userViewModel;
@@ -60,6 +62,7 @@ public class ProfileFragment extends Fragment {
         }
 
         initViews(view);
+        setupSwipeRefresh();
         setupToolbar();
         loadUserData();
 
@@ -67,6 +70,7 @@ public class ProfileFragment extends Fragment {
     }
 
     private void initViews(View view) {
+        swipeRefreshLayout = view.findViewById(R.id.swipeRefreshLayout);
         tvUsername = view.findViewById(R.id.tvUsername);
         tvEmail = view.findViewById(R.id.tvEmail);
         tvDescription = view.findViewById(R.id.tvDescription);
@@ -75,6 +79,17 @@ public class ProfileFragment extends Fragment {
         progressBar = view.findViewById(R.id.progressBar);
         tabLayout = view.findViewById(R.id.tabLayout);
         viewPager = view.findViewById(R.id.viewPager);
+    }
+
+    private void setupSwipeRefresh() {
+        swipeRefreshLayout.setOnRefreshListener(this::loadUserData);
+        // Настраиваем цвета индикатора обновления
+        swipeRefreshLayout.setColorSchemeResources(
+            android.R.color.holo_blue_bright,
+            android.R.color.holo_green_light,
+            android.R.color.holo_orange_light,
+            android.R.color.holo_red_light
+        );
     }
 
     private void setupToolbar() {
@@ -151,6 +166,7 @@ public class ProfileFragment extends Fragment {
             if (progressBar != null) {
                 progressBar.setVisibility(View.GONE);
             }
+            swipeRefreshLayout.setRefreshing(false);
             handleUserData(result);
         });
     }
@@ -161,6 +177,7 @@ public class ProfileFragment extends Fragment {
             if (progressBar != null) {
                 progressBar.setVisibility(View.GONE);
             }
+            swipeRefreshLayout.setRefreshing(false);
             handleUserData(result);
         });
     }
@@ -235,7 +252,7 @@ public class ProfileFragment extends Fragment {
     private void setupTabs() {
         if (getActivity() != null && viewPager != null && tabLayout != null) {
             // Создаем адаптер для ViewPager
-            ProfilePagerAdapter adapter = new ProfilePagerAdapter(getActivity(), userId);
+            ProfilePagerAdapter adapter = new ProfilePagerAdapter(getActivity(), userId, isOwnProfile);
             viewPager.setAdapter(adapter);
 
             // Отключаем прокрутку ViewPager2, чтобы NestedScrollView мог обрабатывать всю прокрутку

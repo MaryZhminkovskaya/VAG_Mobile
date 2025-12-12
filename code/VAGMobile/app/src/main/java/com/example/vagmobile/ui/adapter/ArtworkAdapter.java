@@ -166,8 +166,8 @@ public class ArtworkAdapter extends RecyclerView.Adapter<ArtworkAdapter.ArtworkV
                 if (imagePath.startsWith("/")) {
                     imagePath = imagePath.substring(1);
                 }
-//                String imageUrl = "http://192.168.0.38:8080/vag/uploads/" + imagePath;
-                String imageUrl = "http://192.168.0.38:8080/vag/uploads/" + imagePath;
+//                String imageUrl = "http://192.168.0.40:8080/vag/uploads/" + imagePath;
+                String imageUrl = "http://192.168.0.40:8080/vag/uploads/" + imagePath;
                 Glide.with(itemView.getContext())
                         .load(imageUrl)
                         .placeholder(R.drawable.ic_placeholder)

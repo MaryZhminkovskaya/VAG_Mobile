@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.os.Bundle;
 import android.view.View;
@@ -26,6 +27,7 @@ public class AdminArtworksActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private Spinner statusSpinner;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private AdminArtworkAdapter artworkAdapter;
     private List<Artwork> artworkList = new ArrayList<>();
 
@@ -35,15 +37,28 @@ public class AdminArtworksActivity extends AppCompatActivity {
         setContentView(R.layout.activity_admin_artworks);
 
         initViews();
+        setupSwipeRefresh();
         setupRecyclerView();
         observeViewModels();
         loadArtworks(null);
     }
 
     private void initViews() {
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         recyclerView = findViewById(R.id.recyclerView);
         progressBar = findViewById(R.id.progressBar);
         statusSpinner = findViewById(R.id.statusSpinner);
+    }
+
+    private void setupSwipeRefresh() {
+        swipeRefreshLayout.setOnRefreshListener(() -> loadArtworks(null));
+        // Настраиваем цвета индикатора обновления
+        swipeRefreshLayout.setColorSchemeResources(
+            android.R.color.holo_blue_bright,
+            android.R.color.holo_green_light,
+            android.R.color.holo_orange_light,
+            android.R.color.holo_red_light
+        );
     }
 
     private void setupRecyclerView() {
@@ -68,6 +83,7 @@ public class AdminArtworksActivity extends AppCompatActivity {
 
         adminArtworkViewModel.getArtworksResult().observe(this, result -> {
             progressBar.setVisibility(View.GONE);
+            swipeRefreshLayout.setRefreshing(false);
 
             if (result != null) {
                 Boolean success = (Boolean) result.get("success");
@@ -111,7 +127,7 @@ public class AdminArtworksActivity extends AppCompatActivity {
                     }
                 } else {
                     String message = (String) result.get("message");
-                    Toast.makeText(this, "Failed to load artworks: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.failed_to_load_artworks, message), Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -120,11 +136,11 @@ public class AdminArtworksActivity extends AppCompatActivity {
             if (result != null) {
                 Boolean success = (Boolean) result.get("success");
                 if (success != null && success) {
-                    Toast.makeText(this, "Artwork approved successfully", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.artwork_approved_successfully), Toast.LENGTH_SHORT).show();
                     loadArtworks(null);
                 } else {
                     String message = (String) result.get("message");
-                    Toast.makeText(this, "Failed to approve artwork: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.failed_to_approve_artwork, message), Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -133,11 +149,11 @@ public class AdminArtworksActivity extends AppCompatActivity {
             if (result != null) {
                 Boolean success = (Boolean) result.get("success");
                 if (success != null && success) {
-                    Toast.makeText(this, "Artwork rejected successfully", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.artwork_rejected_successfully), Toast.LENGTH_SHORT).show();
                     loadArtworks(null);
                 } else {
                     String message = (String) result.get("message");
-                    Toast.makeText(this, "Failed to reject artwork: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, getString(R.string.failed_to_reject_artwork, message), Toast.LENGTH_SHORT).show();
                 }
             }
         });

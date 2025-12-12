@@ -275,6 +275,99 @@ public class UserRepository {
         return result;
     }
 
+    public MutableLiveData<Map<String, Object>> updateProfileWithPassword(String username, String email, String description, String currentPassword) {
+        MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
+
+        String authHeader = getAuthHeader();
+        if (authHeader == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Authentication required");
+            result.setValue(error);
+            return result;
+        }
+
+        Map<String, String> profileData = new HashMap<>();
+        profileData.put("username", username);
+        profileData.put("email", email);
+        if (description != null) {
+            profileData.put("description", description);
+        }
+        profileData.put("currentPassword", currentPassword);
+
+        apiService.updateProfileWithPassword(authHeader, profileData).enqueue(new Callback<Map<String, Object>>() {
+            @Override
+            public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    result.setValue(response.body());
+                } else {
+                    Map<String, Object> error = new HashMap<>();
+                    error.put("success", false);
+                    error.put("message", "Failed to update profile: " + response.message());
+                    result.setValue(error);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "Network error: " + t.getMessage());
+                result.setValue(error);
+            }
+        });
+
+        return result;
+    }
+
+    public MutableLiveData<Map<String, Object>> changePassword(String currentPassword, String newPassword) {
+        return changePassword(currentPassword, newPassword, false);
+    }
+
+    public MutableLiveData<Map<String, Object>> changePassword(String currentPassword, String newPassword, boolean skipPasswordCheck) {
+        MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
+
+        String authHeader = getAuthHeader();
+        if (authHeader == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Authentication required");
+            result.setValue(error);
+            return result;
+        }
+
+        Map<String, String> passwordData = new HashMap<>();
+        passwordData.put("currentPassword", currentPassword);
+        passwordData.put("newPassword", newPassword);
+        if (skipPasswordCheck) {
+            passwordData.put("skipPasswordCheck", "true");
+        }
+
+        apiService.changePassword(authHeader, passwordData).enqueue(new Callback<Map<String, Object>>() {
+            @Override
+            public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    result.setValue(response.body());
+                } else {
+                    Map<String, Object> error = new HashMap<>();
+                    error.put("success", false);
+                    error.put("message", "Failed to change password: " + response.message());
+                    result.setValue(error);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "Network error: " + t.getMessage());
+                result.setValue(error);
+            }
+        });
+
+        return result;
+    }
+
     // Метод для удаления публикации
     public MutableLiveData<Map<String, Object>> getUserArtworks(Long userId, int page, int size) {
         MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
@@ -288,6 +381,45 @@ public class UserRepository {
                     Map<String, Object> error = new HashMap<>();
                     error.put("success", false);
                     error.put("message", "Failed to get user artworks: " + response.message());
+                    result.setValue(error);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Map<String, Object>> call, Throwable t) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "Network error: " + t.getMessage());
+                result.setValue(error);
+            }
+        });
+
+        return result;
+    }
+
+    // Метод для получения всех публикаций пользователя (включая не APPROVED)
+    public MutableLiveData<Map<String, Object>> getAllUserArtworks(Long userId, int page, int size) {
+        MutableLiveData<Map<String, Object>> result = new MutableLiveData<>();
+
+        String authHeader = getAuthHeader();
+        if (authHeader == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Authentication required");
+            result.setValue(error);
+            return result;
+        }
+
+        ApiService authApiService = ApiClient.getClientWithAuth(authHeader).create(ApiService.class);
+        authApiService.getAllUserArtworks(authHeader, userId, page, size).enqueue(new Callback<Map<String, Object>>() {
+            @Override
+            public void onResponse(Call<Map<String, Object>> call, Response<Map<String, Object>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    result.setValue(response.body());
+                } else {
+                    Map<String, Object> error = new HashMap<>();
+                    error.put("success", false);
+                    error.put("message", "Failed to get all user artworks: " + response.message());
                     result.setValue(error);
                 }
             }

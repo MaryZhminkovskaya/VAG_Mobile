@@ -99,16 +99,16 @@ public class CategoriesFragment extends Fragment {
                         categoryAdapter.notifyDataSetChanged();
                     } else {
                         System.out.println("CategoriesFragment: Categories is not a List!");
-                        Toast.makeText(getContext(), "Failed to parse categories", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getContext(), getString(R.string.failed_to_parse_categories), Toast.LENGTH_SHORT).show();
                     }
                 } else {
                     String message = (String) result.get("message");
                     System.out.println("CategoriesFragment: Error message: " + message);
-                    Toast.makeText(getContext(), "Failed to load categories: " + message, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), getString(R.string.failed_to_load_categories, message), Toast.LENGTH_SHORT).show();
                 }
             } else {
                 System.out.println("CategoriesFragment: Result is null!");
-                Toast.makeText(getContext(), "No data received", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), getString(R.string.no_data_received), Toast.LENGTH_SHORT).show();
             }
         });
     }

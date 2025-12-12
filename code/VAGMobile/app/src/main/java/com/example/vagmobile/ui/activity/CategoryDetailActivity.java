@@ -190,7 +190,7 @@ public class CategoryDetailActivity extends AppCompatActivity {
             }
         }
 
-        artwork.setTitle(artworkData.get("title") != null ? artworkData.get("title").toString() : "Без названия");
+        artwork.setTitle(artworkData.get("title") != null ? artworkData.get("title").toString() : getString(R.string.no_title));
         artwork.setDescription(artworkData.get("description") != null ? artworkData.get("description").toString() : "Нет описания");
         artwork.setImagePath(artworkData.get("imagePath") != null ? artworkData.get("imagePath").toString() : "");
 

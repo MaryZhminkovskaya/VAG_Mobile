@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -27,6 +28,7 @@ public class ArtistsActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
     private TextView tvEmpty;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private ArtistsAdapter artistsAdapter;
     private List<User> artistList = new ArrayList<>();
 
@@ -36,15 +38,28 @@ public class ArtistsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_artists);
 
         initViews();
+        setupSwipeRefresh();
         setupRecyclerView();
         observeViewModels();
         loadArtists();
     }
 
     private void initViews() {
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         recyclerView = findViewById(R.id.recyclerView);
         progressBar = findViewById(R.id.progressBar);
         tvEmpty = findViewById(R.id.tvEmpty);
+    }
+
+    private void setupSwipeRefresh() {
+        swipeRefreshLayout.setOnRefreshListener(this::loadArtists);
+        // Настраиваем цвета индикатора обновления
+        swipeRefreshLayout.setColorSchemeResources(
+            android.R.color.holo_blue_bright,
+            android.R.color.holo_green_light,
+            android.R.color.holo_orange_light,
+            android.R.color.holo_red_light
+        );
     }
 
     private void setupRecyclerView() {
@@ -67,6 +82,7 @@ public class ArtistsActivity extends AppCompatActivity {
 
         userViewModel.getArtistsResult().observe(this, result -> {
             progressBar.setVisibility(View.GONE);
+            swipeRefreshLayout.setRefreshing(false);
 
             if (result != null) {
                 Boolean success = (Boolean) result.get("success");

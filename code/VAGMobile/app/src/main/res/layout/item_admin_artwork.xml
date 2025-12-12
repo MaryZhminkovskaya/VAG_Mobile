@@ -30,7 +30,7 @@
                 android:id="@+id/tvTitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Title"
+                android:text="@string/title"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:layout_marginBottom="4dp" />
@@ -39,7 +39,7 @@
                 android:id="@+id/tvArtist"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Artist"
+                android:text="@string/artist"
                 android:textSize="14sp"
                 android:textColor="#666"
                 android:layout_marginBottom="4dp" />
@@ -48,7 +48,7 @@
                 android:id="@+id/tvStatus"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Status"
+                android:text="@string/status"
                 android:textSize="12sp"
                 android:textColor="#999"
                 android:layout_marginBottom="8dp" />
@@ -57,7 +57,7 @@
                 android:id="@+id/tvDescription"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Description"
+                android:text="@string/description"
                 android:textSize="12sp"
                 android:maxLines="2"
                 android:ellipsize="end"
@@ -66,25 +66,25 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:gravity="end">
 
-                <Button
+                <ImageButton
                     android:id="@+id/btnApprove"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Approve"
-                    android:backgroundTint="#4CAF50"
-                    android:layout_marginEnd="4dp" />
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_approve"
+                    android:background="@drawable/approve_button_background"
+                    android:layout_marginEnd="8dp"
+                    android:contentDescription="Одобрить публикацию" />
 
-                <Button
+                <ImageButton
                     android:id="@+id/btnReject"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Reject"
-                    android:backgroundTint="#F44336"
-                    android:layout_marginStart="4dp" />
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_reject"
+                    android:background="@drawable/reject_button_background"
+                    android:contentDescription="Отклонить публикацию" />
 
             </LinearLayout>
 

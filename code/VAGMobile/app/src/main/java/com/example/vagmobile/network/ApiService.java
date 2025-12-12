@@ -73,6 +73,24 @@ public interface ApiService {
             @Part MultipartBody.Part imageFile
     );
 
+    @Multipart
+    @POST("vag/api/mobile/artworks/{id}/update")
+    Call<Map<String, Object>> updateArtwork(
+            @Header("Authorization") String authHeader,
+            @Path("id") Long artworkId,
+            @Part("title") RequestBody title,
+            @Part("description") RequestBody description,
+            @Part("categoryIds") RequestBody categoryIds,
+            @Part MultipartBody.Part imageFile
+    );
+
+    @POST("vag/api/mobile/artworks/create-simple")
+    Call<Map<String, Object>> createArtworkSimple(
+            @Header("Authorization") String authHeader,
+            @Query("title") String title,
+            @Query("description") String description
+    );
+
     @POST("vag/api/mobile/artworks/{id}/like")
     Call<Map<String, Object>> likeArtwork(@Header("Authorization") String authHeader, @Path("id") Long id);
 
@@ -125,6 +143,16 @@ public interface ApiService {
     Call<Map<String, Object>> updateProfile(
             @Header("Authorization") String authHeader,
             @Body Map<String, String> profileData);
+
+    @PUT("vag/api/mobile/users/profile/update-with-password")
+    Call<Map<String, Object>> updateProfileWithPassword(
+            @Header("Authorization") String authHeader,
+            @Body Map<String, String> profileData);
+
+    @PUT("vag/api/mobile/users/profile/change-password")
+    Call<Map<String, Object>> changePassword(
+            @Header("Authorization") String authHeader,
+            @Body Map<String, String> passwordData);
 
     @DELETE("vag/api/mobile/users/artworks/{artworkId}")
     Call<Map<String, Object>> deleteUserArtwork(
@@ -232,6 +260,14 @@ public interface ApiService {
     @GET("vag/api/mobile/users/{userId}/exhibitions")
     Call<Map<String, Object>> getUserExhibitions(
             @Path("userId") Long userId,
+            @Query("page") int page,
+            @Query("size") int size
+    );
+
+    @GET("vag/api/mobile/exhibitions/{exhibitionId}/add-existing-artworks")
+    Call<Map<String, Object>> getUserArtworksForExhibition(
+            @Header("Authorization") String authHeader,
+            @Path("exhibitionId") Long exhibitionId,
             @Query("page") int page,
             @Query("size") int size
     );

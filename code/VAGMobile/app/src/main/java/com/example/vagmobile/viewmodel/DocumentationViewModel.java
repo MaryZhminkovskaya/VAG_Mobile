@@ -17,7 +17,7 @@ public class DocumentationViewModel extends ViewModel {
     private final MutableLiveData<String> errorMessage = new MutableLiveData<>();
     private final MutableLiveData<Boolean> isLoading = new MutableLiveData<>();
 
-    private static final String DOCS_BASE_URL = "https://maryzhminkovskaya.github.io/VAG_Mobile/";
+    private static final String DOCS_BASE_URL = "https://raw.githubusercontent.com/MaryZhminkovskaya/VAG_Mobile/main/docs/";
 
     public final List<DocPage> docPages = Arrays.asList(
             new DocPage("Главная", DOCS_BASE_URL + "README.md"),

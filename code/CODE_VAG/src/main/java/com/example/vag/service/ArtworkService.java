@@ -48,6 +48,7 @@ public interface ArtworkService {
     long countArtworksByCategoryId(Long categoryId);
 
     Artwork createWithCategories(Artwork artwork, MultipartFile imageFile, User user, List<Long> categoryIds) throws IOException;
+    Artwork updateWithCategories(Long artworkId, String title, String description, MultipartFile imageFile, User user, List<Long> categoryIds) throws IOException;
 
     void incrementViews(Long artworkId);
     List<Artwork> findRandomArtworks(int count);

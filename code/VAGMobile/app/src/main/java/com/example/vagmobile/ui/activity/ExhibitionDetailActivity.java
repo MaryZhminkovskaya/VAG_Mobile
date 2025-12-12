@@ -5,11 +5,13 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -24,7 +26,7 @@ import com.bumptech.glide.Glide;
 import com.example.vagmobile.R;
 import com.example.vagmobile.model.Artwork;
 import com.example.vagmobile.model.Exhibition;
-import com.example.vagmobile.ui.adapter.ArtworkAdapter;
+import com.example.vagmobile.ui.adapter.ExhibitionArtworkAdapter;
 import com.example.vagmobile.util.SharedPreferencesHelper;
 import com.example.vagmobile.viewmodel.ExhibitionViewModel;
 
@@ -39,13 +41,15 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
     private Long exhibitionId;
 
     private ImageView ivExhibitionImage;
-    private TextView tvTitle, tvAuthor, tvAuthorOnly, tvDescription, tvArtworksCount;
+    private TextView tvTitle, tvAuthor, tvDescription, tvArtworksCount;
+    private ImageView ivPrivate;
     private LinearLayout layoutActions;
-    private Button btnEdit, btnDelete;
+    private ImageButton btnEdit, btnAddArtworks, btnDelete;
     private RecyclerView recyclerViewArtworks;
     private ProgressBar progressBar;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
-    private ArtworkAdapter artworkAdapter;
+    private ExhibitionArtworkAdapter artworkAdapter;
     private List<Artwork> artworkList = new ArrayList<>();
     private SharedPreferencesHelper prefs;
 
@@ -70,20 +74,23 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
         }
 
         initViews();
+        setupSwipeRefresh();
         setupRecyclerView();
         observeViewModels();
         loadExhibition();
     }
 
     private void initViews() {
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         ivExhibitionImage = findViewById(R.id.ivExhibitionImage);
         tvTitle = findViewById(R.id.tvTitle);
         tvAuthor = findViewById(R.id.tvAuthor);
-        tvAuthorOnly = findViewById(R.id.tvAuthorOnly);
+        ivPrivate = findViewById(R.id.ivPrivate);
         tvDescription = findViewById(R.id.tvDescription);
         tvArtworksCount = findViewById(R.id.tvArtworksCount);
         layoutActions = findViewById(R.id.layoutActions);
         btnEdit = findViewById(R.id.btnEdit);
+        btnAddArtworks = findViewById(R.id.btnAddArtworks);
         btnDelete = findViewById(R.id.btnDelete);
         recyclerViewArtworks = findViewById(R.id.recyclerViewArtworks);
         progressBar = findViewById(R.id.progressBar);
@@ -92,16 +99,36 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
             showEditDialog();
         });
 
+        btnAddArtworks.setOnClickListener(v -> {
+            showAddArtworkDialog();
+        });
+
         btnDelete.setOnClickListener(v -> {
             showDeleteConfirmationDialog();
         });
+    }
+
+    private void setupSwipeRefresh() {
+        swipeRefreshLayout.setOnRefreshListener(this::loadExhibition);
+        // Настраиваем цвета индикатора обновления
+        swipeRefreshLayout.setColorSchemeResources(
+            android.R.color.holo_blue_bright,
+            android.R.color.holo_green_light,
+            android.R.color.holo_orange_light,
+            android.R.color.holo_red_light
+        );
     }
 
     private void setupRecyclerView() {
         GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
         recyclerViewArtworks.setLayoutManager(layoutManager);
 
-        artworkAdapter = new ArtworkAdapter(artworkList, new ArtworkAdapter.OnArtworkClickListener() {
+        // Получаем информацию о текущем пользователе
+        Long currentUserId = prefs.getUserId();
+        boolean isLoggedIn = currentUserId != null;
+        Long exhibitionOwnerId = exhibition != null && exhibition.getUser() != null ? exhibition.getUser().getId() : null;
+
+        artworkAdapter = new ExhibitionArtworkAdapter(artworkList, new ExhibitionArtworkAdapter.OnArtworkClickListener() {
             @Override
             public void onArtworkClick(Artwork artwork) {
                 Intent intent = new Intent(ExhibitionDetailActivity.this, ArtworkDetailActivity.class);
@@ -116,9 +143,9 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
 
             @Override
             public void onDeleteClick(Artwork artwork) {
-                // Не используется в просмотре выставки
+                showRemoveArtworkConfirmationDialog(artwork);
             }
-        }, false);
+        }, currentUserId, exhibitionOwnerId, isLoggedIn);
 
         recyclerViewArtworks.setAdapter(artworkAdapter);
 
@@ -157,6 +184,9 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
                     exhibition = parseExhibitionFromMap(exhibitionData);
                     displayExhibition();
 
+                    // Обновляем адаптер с информацией о владельце выставки
+                    updateArtworkAdapterUserInfo();
+
                     // Загружаем работы выставки
                     loadExhibitionArtworks();
                 } else {
@@ -168,6 +198,7 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
                 }
             }
             progressBar.setVisibility(View.GONE);
+            swipeRefreshLayout.setRefreshing(false);
         });
 
         exhibitionViewModel.getExhibitionArtworksResult().observe(this, result -> {
@@ -240,6 +271,7 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
             } else {
                 isLoading = false;
             }
+            swipeRefreshLayout.setRefreshing(false);
         });
 
         exhibitionViewModel.getUpdateResult().observe(this, result -> {
@@ -256,6 +288,22 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
                 }
             }
         });
+
+        exhibitionViewModel.getRemoveArtworkResult().observe(this, result -> {
+            if (result != null) {
+                Boolean success = (Boolean) result.get("success");
+                String message = (String) result.get("message");
+
+                if (success != null && success) {
+                    Toast.makeText(this, message != null ? message : "Работа успешно удалена из выставки", Toast.LENGTH_SHORT).show();
+                    // Перезагружаем работы выставки
+                    loadExhibitionArtworks();
+                } else {
+                    Toast.makeText(this, message != null ? message : "Не удалось удалить работу из выставки", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
 
         exhibitionViewModel.getDeleteResult().observe(this, result -> {
             if (result != null) {
@@ -305,9 +353,9 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
         }
 
         if (exhibition.isAuthorOnly()) {
-            tvAuthorOnly.setVisibility(View.VISIBLE);
+            ivPrivate.setVisibility(View.VISIBLE);
         } else {
-            tvAuthorOnly.setVisibility(View.GONE);
+            ivPrivate.setVisibility(View.GONE);
         }
 
         // Загрузка изображения
@@ -316,21 +364,32 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
             // Преобразуем относительный путь в полный URL
             String relativePath = exhibition.getFirstArtwork().getImagePath();
             if (relativePath != null && !relativePath.startsWith("http")) {
-                imageUrl = "http://192.168.0.38:8080/uploads/" + relativePath;
+                imageUrl = "http://192.168.0.40:8080/vag/uploads/" + relativePath;
             } else {
                 imageUrl = relativePath;
             }
         }
 
-        if (imageUrl != null) {
+        // Создаем финальную копию для использования в lambda
+        final String finalImageUrl = imageUrl;
+
+        if (finalImageUrl != null) {
             Glide.with(this)
-                    .load(imageUrl)
+                    .load(finalImageUrl)
                     .placeholder(R.drawable.placeholder_image)
                     .error(R.drawable.placeholder_image)
                     .centerCrop()
                     .into(ivExhibitionImage);
+
+            // Добавляем клик для открытия полноэкранного просмотра
+            ivExhibitionImage.setOnClickListener(v -> {
+                Intent intent = new Intent(this, FullscreenImageActivity.class);
+                intent.putExtra("image_url", finalImageUrl);
+                startActivity(intent);
+            });
         } else {
             ivExhibitionImage.setImageResource(R.drawable.placeholder_image);
+            ivExhibitionImage.setOnClickListener(null); // Убираем клик если нет изображения
         }
 
         // Показываем кнопки действий только если пользователь - владелец выставки
@@ -557,7 +616,7 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
         layout.addView(cbAuthorOnly);
 
         new AlertDialog.Builder(this)
-                .setTitle("Редактирование выставки")
+                .setTitle(getString(R.string.dialog_edit_exhibition))
                 .setView(layout)
                 .setPositiveButton("Сохранить", (dialog, which) -> {
                     String title = etTitle.getText().toString().trim();
@@ -579,10 +638,66 @@ public class ExhibitionDetailActivity extends AppCompatActivity {
         if (exhibition == null) return;
 
         new AlertDialog.Builder(this)
-                .setTitle("Удаление выставки")
-                .setMessage("Вы действительно хотите удалить выставку \"" + exhibition.getTitle() + "\"? Это действие нельзя отменить.")
+                .setTitle(getString(R.string.dialog_delete_exhibition))
+                .setMessage(getString(R.string.confirm_delete_exhibition, exhibition.getTitle()))
                 .setPositiveButton("Удалить", (dialog, which) -> {
                     exhibitionViewModel.deleteExhibition(exhibitionId);
+                })
+                .setNegativeButton("Отмена", null)
+                .show();
+    }
+
+    private void updateArtworkAdapterUserInfo() {
+        if (artworkAdapter != null && exhibition != null) {
+            Long currentUserId = prefs.getUserId();
+            boolean isLoggedIn = currentUserId != null;
+            Long exhibitionOwnerId = exhibition.getUser() != null ? exhibition.getUser().getId() : null;
+
+            artworkAdapter.updateUserInfo(currentUserId, exhibitionOwnerId, isLoggedIn);
+        }
+    }
+
+    private void showAddArtworkDialog() {
+        String[] options = {"Добавить работу из профиля", "Добавить новую работу"};
+
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.dialog_add_artwork))
+                .setItems(options, (dialog, which) -> {
+                    switch (which) {
+                        case 0: // Добавить работу из профиля
+                            Intent intent = new Intent(ExhibitionDetailActivity.this, AddArtworkToExhibitionActivity.class);
+                            intent.putExtra("exhibition_id", exhibitionId);
+                            startActivity(intent);
+                            break;
+                        case 1: // Добавить новую работу
+                            showCreateArtworkDialog();
+                            break;
+                    }
+                })
+                .setNegativeButton("Отмена", null)
+                .show();
+    }
+
+    private void showCreateArtworkDialog() {
+        // Открываем активность создания работы с параметром выставки
+        Intent intent = new Intent(ExhibitionDetailActivity.this, CreateArtworkActivity.class);
+        intent.putExtra("from_exhibition", true);
+        intent.putExtra("exhibition_id", exhibitionId);
+        intent.putExtra("exhibition_title", exhibition != null ? exhibition.getTitle() : "");
+        startActivity(intent);
+    }
+
+
+    private void showRemoveArtworkConfirmationDialog(Artwork artwork) {
+        if (artwork == null) return;
+
+        String artworkTitle = artwork.getTitle() != null ? artwork.getTitle() : "Без названия";
+
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.dialog_remove_artwork_from_exhibition))
+                .setMessage(getString(R.string.confirm_remove_artwork_from_exhibition, artworkTitle, exhibition != null ? exhibition.getTitle() : ""))
+                .setPositiveButton("Удалить", (dialog, which) -> {
+                    exhibitionViewModel.removeArtworkFromExhibition(exhibitionId, artwork.getId());
                 })
                 .setNegativeButton("Отмена", null)
                 .show();

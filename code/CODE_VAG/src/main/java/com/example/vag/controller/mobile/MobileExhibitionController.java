@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -373,6 +374,62 @@ public class MobileExhibitionController {
             Map<String, Object> response = new HashMap<>();
             response.put("success", false);
             response.put("message", "Не удалось загрузить выставки пользователя");
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @GetMapping("/exhibitions/{exhibitionId}/add-existing-artworks")
+    public ResponseEntity<?> getUserArtworksForExhibition(
+            @PathVariable Long exhibitionId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+
+        try {
+            User currentUser = getCurrentUser(authHeader);
+
+            if (currentUser == null) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "Требуется аутентификация");
+                return ResponseEntity.status(401).body(response);
+            }
+
+            Exhibition exhibition = exhibitionService.findById(exhibitionId).orElseThrow();
+
+            // Проверяем, может ли пользователь добавлять работы в эту выставку
+            if (exhibition.isAuthorOnly() && !exhibition.getUser().getId().equals(currentUser.getId())) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("message", "Доступ запрещен");
+                return ResponseEntity.status(403).body(response);
+            }
+
+            // Получаем все работы пользователя (любого статуса)
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Artwork> userArtworksPage = artworkService.findByUser(currentUser, pageable);
+
+            // Получаем работы, которые уже в выставке
+            Set<Artwork> exhibitionArtworks = exhibition.getArtworks();
+
+            List<ArtworkDTO> availableArtworks = userArtworksPage.getContent().stream()
+                .filter(artwork -> !exhibitionArtworks.contains(artwork))
+                .map(artworkMapper::toSimpleDTO)
+                .collect(Collectors.toList());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("exhibition", convertToDTO(exhibition));
+            response.put("artworks", availableArtworks);
+            response.put("totalPages", userArtworksPage.getTotalPages());
+            response.put("currentPage", userArtworksPage.getNumber());
+            response.put("totalItems", userArtworksPage.getTotalElements());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("message", "Не удалось загрузить работы для добавления в выставку");
             return ResponseEntity.badRequest().body(response);
         }
     }

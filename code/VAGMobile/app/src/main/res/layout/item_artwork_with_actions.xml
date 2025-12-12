@@ -38,7 +38,7 @@
             android:layout_marginTop="4dp"
             android:text="Автор"
             android:textSize="12sp"
-            android:textColor="#666"
+            android:textColor="@color/on_secondary_light"
             android:maxLines="1"
             android:ellipsize="end" />
 
@@ -49,7 +49,7 @@
             android:layout_marginTop="4dp"
             android:text="Статус"
             android:textSize="12sp"
-            android:textColor="#FF9800"
+            android:textColor="@color/status_pending"
             android:maxLines="1"
             android:ellipsize="end" />
 
@@ -60,7 +60,7 @@
             android:layout_marginTop="4dp"
             android:text="Категории"
             android:textSize="12sp"
-            android:textColor="#2196F3"
+            android:textColor="@color/primary_color"
             android:maxLines="2"
             android:ellipsize="end" />
 
@@ -78,7 +78,7 @@
                 android:layout_weight="1"
                 android:text="0 лайков"
                 android:textSize="12sp"
-                android:textColor="#E91E63" />
+                android:textColor="@color/status_rejected" />
 
             <!-- Кнопки действий -->
             <Button

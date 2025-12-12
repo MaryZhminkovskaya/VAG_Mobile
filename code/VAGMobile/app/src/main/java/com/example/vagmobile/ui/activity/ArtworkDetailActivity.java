@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -15,6 +16,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -47,9 +49,12 @@ public class ArtworkDetailActivity extends AppCompatActivity {
     private TextView tvTitle, tvArtist, tvDescription, tvLikes, tvViews, tvCategories;
     private ImageButton btnLike;
     private Button btnComment;
+    private ImageButton btnEdit, btnDelete;
     private EditText etComment;
+    private LinearLayout layoutAuthorActions;
     private RecyclerView recyclerViewComments;
     private ProgressBar progressBar;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     private CommentAdapter commentAdapter;
     private List<Comment> commentList = new ArrayList<>();
@@ -73,12 +78,14 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         }
 
         initViews();
+        setupSwipeRefresh();
         setupRecyclerView();
         observeViewModels();
         loadArtwork();
     }
 
     private void initViews() {
+        swipeRefreshLayout = findViewById(R.id.swipeRefreshLayout);
         ivArtwork = findViewById(R.id.ivArtwork);
         tvTitle = findViewById(R.id.tvTitle);
         tvArtist = findViewById(R.id.tvArtist);
@@ -88,12 +95,17 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         tvCategories = findViewById(R.id.tvCategories);
         btnLike = findViewById(R.id.btnLike);
         btnComment = findViewById(R.id.btnComment);
+        btnEdit = findViewById(R.id.btnEdit);
+        btnDelete = findViewById(R.id.btnDelete);
         etComment = findViewById(R.id.etComment);
         recyclerViewComments = findViewById(R.id.recyclerViewComments);
         progressBar = findViewById(R.id.progressBar);
+        layoutAuthorActions = findViewById(R.id.layoutAuthorActions);
 
         btnLike.setOnClickListener(v -> toggleLike());
         btnComment.setOnClickListener(v -> addComment());
+        btnEdit.setOnClickListener(v -> editArtwork());
+        btnDelete.setOnClickListener(v -> showDeleteConfirmationDialog());
 
         if (!prefs.isLoggedIn()) {
             btnLike.setVisibility(View.GONE);
@@ -102,10 +114,23 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         }
     }
 
+    private void setupSwipeRefresh() {
+        swipeRefreshLayout.setOnRefreshListener(this::loadArtwork);
+        // Настраиваем цвета индикатора обновления
+        swipeRefreshLayout.setColorSchemeResources(
+            android.R.color.holo_blue_bright,
+            android.R.color.holo_green_light,
+            android.R.color.holo_orange_light,
+            android.R.color.holo_red_light
+        );
+    }
+
     private void setupRecyclerView() {
         commentAdapter = new CommentAdapter(commentList);
-        recyclerViewComments.setLayoutManager(new LinearLayoutManager(this));
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        recyclerViewComments.setLayoutManager(layoutManager);
         recyclerViewComments.setAdapter(commentAdapter);
+        recyclerViewComments.setNestedScrollingEnabled(false);
     }
 
     private void observeViewModels() {
@@ -132,6 +157,7 @@ public class ArtworkDetailActivity extends AppCompatActivity {
                     Toast.makeText(this, "Не удалось загрузить публикацию: " + message, Toast.LENGTH_SHORT).show();
                 }
             }
+            swipeRefreshLayout.setRefreshing(false);
         });
 
         artworkViewModel.getToggleLikeResult().observe(this, result -> {
@@ -189,6 +215,19 @@ public class ArtworkDetailActivity extends AppCompatActivity {
                 }
             }
         });
+
+        artworkViewModel.getDeleteResult().observe(this, result -> {
+            if (result != null) {
+                Boolean success = (Boolean) result.get("success");
+                if (success != null && success) {
+                    Toast.makeText(this, "Публикация успешно удалена", Toast.LENGTH_SHORT).show();
+                    finish(); // Закрываем активность после успешного удаления
+                } else {
+                    String message = (String) result.get("message");
+                    Toast.makeText(this, "Не удалось удалить публикацию: " + message, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     private void loadArtwork() {
@@ -231,19 +270,34 @@ public class ArtworkDetailActivity extends AppCompatActivity {
             if (imagePath.startsWith("/")) {
                 imagePath = imagePath.substring(1);
             }
-//            String imageUrl = "http://192.168.0.38:8080/vag/uploads/" + imagePath;
-            String imageUrl = "http://192.168.0.38:8080/vag/uploads/" + imagePath;
+//            String imageUrl = "http://192.168.0.40:8080/vag/uploads/" + imagePath;
+            String imageUrl = "http://192.168.0.40:8080/vag/uploads/" + imagePath;
             Log.d("ArtworkDetail", "Загрузка изображения с URL: " + imageUrl);
             Glide.with(this)
                     .load(imageUrl)
                     .placeholder(R.drawable.ic_placeholder)
                     .error(R.drawable.ic_error)
                     .into(ivArtwork);
+
+            // Добавляем клик для открытия полноэкранного просмотра
+            ivArtwork.setOnClickListener(v -> {
+                Intent intent = new Intent(this, FullscreenImageActivity.class);
+                intent.putExtra("image_url", imageUrl);
+                startActivity(intent);
+            });
         } else {
             Log.d("ArtworkDetail", "Путь к изображению пуст");
+            ivArtwork.setOnClickListener(null); // Убираем клик если нет изображения
         }
 
         if (artwork.getComments() != null) {
+            Log.d("COMMENTS_DEBUG", "=== updateUI: Обработка комментариев ===");
+            Log.d("COMMENTS_DEBUG", "artwork.getComments().size(): " + artwork.getComments().size());
+
+            for (Comment c : artwork.getComments()) {
+                Log.d("COMMENTS_DEBUG", "Комментарий ID: " + c.getId() + ", content: " + c.getContent());
+            }
+
             List<Comment> tempComments = new ArrayList<>();
 
             for (Comment comment : commentList) {
@@ -252,18 +306,26 @@ public class ArtworkDetailActivity extends AppCompatActivity {
                 }
             }
 
+            Log.d("COMMENTS_DEBUG", "tempComments.size(): " + tempComments.size());
+            Log.d("COMMENTS_DEBUG", "commentList.size() до очистки: " + commentList.size());
+
             commentList.clear();
             commentList.addAll(artwork.getComments());
             commentList.addAll(tempComments);
+
+            Log.d("COMMENTS_DEBUG", "commentList.size() после добавления: " + commentList.size());
 
             commentAdapter.notifyDataSetChanged();
 
             if (!commentList.isEmpty()) {
                 recyclerViewComments.smoothScrollToPosition(commentList.size() - 1);
             }
+        } else {
+            Log.d("COMMENTS_DEBUG", "artwork.getComments() is null");
         }
 
         updateLikeButton();
+        updateAuthorActions();
     }
 
     private void updateLikeButton() {
@@ -281,6 +343,36 @@ public class ArtworkDetailActivity extends AppCompatActivity {
             btnLike.setImageResource(R.drawable.ic_heart_outline);
             btnLike.setColorFilter(Color.GRAY);
             Log.d("LIKE_DEBUG", "Setting heart to GRAY (not liked)");
+        }
+    }
+
+    private void updateAuthorActions() {
+        if (artwork == null || !prefs.isLoggedIn()) {
+            if (layoutAuthorActions != null) {
+                layoutAuthorActions.setVisibility(View.GONE);
+            }
+            return;
+        }
+
+        Long currentUserId = prefs.getUserId();
+        Long artworkAuthorId = artwork.getUser() != null ? artwork.getUser().getId() : null;
+
+        if (currentUserId != null && currentUserId.equals(artworkAuthorId)) {
+            // Показываем кнопки действий автора
+            layoutAuthorActions.setVisibility(View.VISIBLE);
+
+            // Кнопка "Редактировать" только для отклоненных публикаций
+            if ("REJECTED".equals(artwork.getStatus())) {
+                btnEdit.setVisibility(View.VISIBLE);
+            } else {
+                btnEdit.setVisibility(View.GONE);
+            }
+
+            // Кнопка "Удалить" всегда видима для автора
+            btnDelete.setVisibility(View.VISIBLE);
+        } else {
+            // Скрываем кнопки действий для не-авторов
+            layoutAuthorActions.setVisibility(View.GONE);
         }
     }
 
@@ -336,6 +428,37 @@ public class ArtworkDetailActivity extends AppCompatActivity {
         etComment.setText("");
         btnComment.setEnabled(false);
         artworkViewModel.addComment(artworkId, content);
+    }
+
+    private void editArtwork() {
+        if (artwork == null) {
+            Toast.makeText(this, "Данные публикации не загружены", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Intent intent = new Intent(this, EditArtworkActivity.class);
+        intent.putExtra("artwork_id", artwork.getId());
+        startActivity(intent);
+    }
+
+    private void showDeleteConfirmationDialog() {
+        if (artwork == null) {
+            Toast.makeText(this, "Данные публикации не загружены", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(getString(R.string.dialog_delete_category))
+                .setMessage(getString(R.string.confirm_delete_artwork, artwork.getTitle()))
+                .setPositiveButton("Удалить", (dialog, which) -> deleteArtwork())
+                .setNegativeButton("Отмена", null)
+                .show();
+    }
+
+    private void deleteArtwork() {
+        if (artworkId != null) {
+            artworkViewModel.deleteArtwork(artworkId);
+        }
     }
 
     private void saveLikeState(Long artworkId, boolean liked) {
@@ -477,12 +600,17 @@ public class ArtworkDetailActivity extends AppCompatActivity {
 
         if (artworkData.get("comments") != null) {
             List<Map<String, Object>> commentsData = (List<Map<String, Object>>) artworkData.get("comments");
+            Log.d("COMMENTS_DEBUG", "convertToArtwork: commentsData.size(): " + commentsData.size());
             List<Comment> comments = new ArrayList<>();
             for (Map<String, Object> commentData : commentsData) {
                 Comment comment = convertToComment(commentData);
                 comments.add(comment);
+                Log.d("COMMENTS_DEBUG", "convertToArtwork: Добавлен комментарий ID: " + comment.getId());
             }
             artwork.setComments(comments);
+            Log.d("COMMENTS_DEBUG", "convertToArtwork: Всего комментариев: " + comments.size());
+        } else {
+            Log.d("COMMENTS_DEBUG", "convertToArtwork: commentsData is null");
         }
 
         if (artworkData.get("categories") != null) {

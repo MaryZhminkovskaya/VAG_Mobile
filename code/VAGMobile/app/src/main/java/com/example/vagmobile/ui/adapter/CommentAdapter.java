@@ -39,10 +39,13 @@ public class CommentAdapter extends RecyclerView.Adapter<CommentAdapter.CommentV
 
     @Override
     public int getItemCount() {
-        return commentList != null ? commentList.size() : 0;
+        int count = commentList != null ? commentList.size() : 0;
+        Log.d("COMMENT_ADAPTER", "getItemCount() возвращает: " + count);
+        return count;
     }
 
     public void updateComments(List<Comment> comments) {
+        Log.d("COMMENT_ADAPTER", "updateComments() вызван с размером: " + (comments != null ? comments.size() : 0));
         this.commentList = comments;
         notifyDataSetChanged();
     }

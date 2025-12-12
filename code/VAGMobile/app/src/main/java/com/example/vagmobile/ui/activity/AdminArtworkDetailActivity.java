@@ -3,6 +3,7 @@ package com.example.vagmobile.ui.activity;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -68,7 +69,7 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
                     String message = (String) result.get("message");
                     Toast.makeText(this, "Не удалось загрузить детали публикации: " + message, Toast.LENGTH_SHORT).show();
 
-                    if (message != null && message.contains("Access denied")) {
+                    if (message != null && message.contains(getString(R.string.access_denied))) {
                         loadArtworkWithRegularEndpoint(artworkId);
                     }
                 }
@@ -121,7 +122,7 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
             }
         }
 
-        artwork.setTitle(artworkData.get("title") != null ? artworkData.get("title").toString() : "Без названия");
+        artwork.setTitle(artworkData.get("title") != null ? artworkData.get("title").toString() : getString(R.string.no_title));
         artwork.setDescription(artworkData.get("description") != null ? artworkData.get("description").toString() : "Нет описания");
         artwork.setImagePath(artworkData.get("imagePath") != null ? artworkData.get("imagePath").toString() : "");
         artwork.setStatus(artworkData.get("status") != null ? artworkData.get("status").toString() : "UNKNOWN");
@@ -258,8 +259,8 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
             if (imagePath.startsWith("/")) {
                 imagePath = imagePath.substring(1);
             }
-//            String imageUrl = "http://192.168.0.38:8080/vag/uploads/" + imagePath;
-            String imageUrl = "http://192.168.0.38:8080/vag/uploads/" + imagePath;
+//            String imageUrl = "http://192.168.0.40:8080/vag/uploads/" + imagePath;
+            String imageUrl = "http://192.168.0.40:8080/vag/uploads/" + imagePath;
             System.out.println("AdminArtworkDetailActivity: Загрузка изображения с URL: " + imageUrl);
 
             Glide.with(this)
@@ -267,9 +268,17 @@ public class AdminArtworkDetailActivity extends AppCompatActivity {
                     .placeholder(R.drawable.ic_image_placeholder)
                     .error(R.drawable.ic_error_image)
                     .into(ivArtwork);
+
+            // Добавляем клик для открытия полноэкранного просмотра
+            ivArtwork.setOnClickListener(v -> {
+                Intent intent = new Intent(this, FullscreenImageActivity.class);
+                intent.putExtra("image_url", imageUrl);
+                startActivity(intent);
+            });
         } else {
             System.out.println("AdminArtworkDetailActivity: Путь к изображению пуст");
             ivArtwork.setImageResource(R.drawable.ic_image_placeholder);
+            ivArtwork.setOnClickListener(null); // Убираем клик если нет изображения
         }
     }
 }

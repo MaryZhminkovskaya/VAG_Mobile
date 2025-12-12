@@ -35,7 +35,7 @@
                 android:layout_height="300dp"
                 android:scaleType="centerCrop"
                 android:background="#f0f0f0"
-                android:contentDescription="Artwork image" />
+                android:contentDescription="Изображение публикации" />
 
             <!-- Заголовок -->
             <TextView
@@ -46,7 +46,7 @@
                 android:textSize="24sp"
                 android:textStyle="bold"
                 android:textColor="#333333"
-                android:text="Artwork Title" />
+                android:text="Название публикации" />
 
             <!-- Художник -->
             <TextView
@@ -55,8 +55,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:textSize="18sp"
-                android:textColor="#666666"
-                android:text="By: Artist Name" />
+                android:textColor="@color/on_secondary_light"
+                android:text="Автор: Имя художника" />
 
             <!-- Статус -->
             <TextView
@@ -67,7 +67,7 @@
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="#2196F3"
-                android:text="Status: PENDING" />
+                android:text="Статус: ОЖИДАЕТ" />
 
             <!-- Информация о лайках и просмотрах -->
             <LinearLayout
@@ -82,8 +82,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:textSize="14sp"
-                    android:textColor="#666666"
-                    android:text="Likes: 0" />
+                    android:textColor="@color/on_secondary_light"
+                    android:text="Лайки: 0" />
 
                 <TextView
                     android:id="@+id/tvViews"
@@ -91,8 +91,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:textSize="14sp"
-                    android:textColor="#666666"
-                    android:text="Views: 0" />
+                    android:textColor="@color/on_secondary_light"
+                    android:text="Просмотры: 0" />
 
             </LinearLayout>
 
@@ -103,7 +103,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:textSize="14sp"
-                android:textColor="#666666"
+                android:textColor="@color/on_secondary_light"
                 android:text="Категории: Загрузка..." />
 
             <!-- Информация о пользователе -->
@@ -111,7 +111,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:text="User Information"
+                android:text="Информация о пользователе"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="#333333" />
@@ -122,8 +122,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:textSize="14sp"
-                android:textColor="#666666"
-                android:text="User ID: 123" />
+                android:textColor="@color/on_secondary_light"
+                android:text="ID пользователя: 123" />
 
             <TextView
                 android:id="@+id/tvUserEmail"
@@ -131,7 +131,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:textSize="14sp"
-                android:textColor="#666666"
+                android:textColor="@color/on_secondary_light"
                 android:text="Email: user@example.com" />
 
             <!-- Описание -->
@@ -139,7 +139,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
-                android:text="Description"
+                android:text="Описание"
                 android:textSize="16sp"
                 android:textStyle="bold"
                 android:textColor="#333333" />
@@ -150,9 +150,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:textSize="14sp"
-                android:textColor="#666666"
+                android:textColor="@color/on_secondary_light"
                 android:lineSpacingExtra="4dp"
-                android:text="Artwork description goes here..." />
+                android:text="Здесь будет описание публикации..." />
 
         </LinearLayout>
 
