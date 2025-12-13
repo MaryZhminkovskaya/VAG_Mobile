@@ -19,7 +19,7 @@ import com.example.vagmobile.ui.activity.AdminCategoriesActivity;
 import com.example.vagmobile.ui.activity.AdminArtworksActivity;
 import com.example.vagmobile.ui.activity.LikedArtworksActivity;
 import com.example.vagmobile.ui.activity.EditProfileActivity;
-import com.example.vagmobile.ui.fragment.DocumentationDetailFragment;
+import com.example.vagmobile.ui.fragment.DocumentationFragment;
 import com.example.vagmobile.util.SharedPreferencesHelper;
 
 public class EditProfileFragment extends Fragment {
@@ -113,9 +113,8 @@ public class EditProfileFragment extends Fragment {
 
         if (btnDocumentation != null) {
             btnDocumentation.setOnClickListener(v -> {
-                // Открываем главную страницу документации
-                DocPage mainDocPage = new DocPage("Главная", "https://raw.githubusercontent.com/MaryZhminkovskaya/VAG_Mobile/main/docs/README.md");
-                DocumentationDetailFragment documentationFragment = DocumentationDetailFragment.newInstance(mainDocPage);
+                // Открываем список страниц документации
+                DocumentationFragment documentationFragment = new DocumentationFragment();
 
                 if (getActivity() != null) {
                     getActivity().getSupportFragmentManager()

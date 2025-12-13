@@ -1,12 +1,12 @@
 package com.example.vagmobile.ui.fragment;
 
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -15,26 +15,22 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.vagmobile.R;
 import com.example.vagmobile.model.DocPage;
-import com.example.vagmobile.util.CustomLinkMovementMethod;
-import com.example.vagmobile.util.MarkdownHelper;
 import com.example.vagmobile.viewmodel.DocumentationViewModel;
 
+import io.noties.markwon.AbstractMarkwonPlugin;
 import io.noties.markwon.Markwon;
-import io.noties.markwon.core.CorePlugin;
-import io.noties.markwon.image.glide.GlideImagesPlugin;
+import io.noties.markwon.MarkwonConfiguration;
 import io.noties.markwon.linkify.LinkifyPlugin;
 
 public class DocumentationDetailFragment extends Fragment {
 
     private static final String ARG_DOC_PAGE = "doc_page";
-    private static final String TAG = "DocDetailFragment";
 
-    private Markwon markwon;
     private ProgressBar progressBar;
     private TextView contentTextView;
     private DocumentationViewModel viewModel;
-    private CustomLinkMovementMethod linkMovementMethod;
     private DocPage currentDocPage;
+    private Markwon markwon;
 
     public static DocumentationDetailFragment newInstance(DocPage docPage) {
         DocumentationDetailFragment fragment = new DocumentationDetailFragment();
@@ -47,14 +43,6 @@ public class DocumentationDetailFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        markwon = Markwon.builder(requireContext())
-                .usePlugin(CorePlugin.create())
-                .usePlugin(GlideImagesPlugin.create(requireContext()))
-                .usePlugin(LinkifyPlugin.create())
-                .build();
-
-        linkMovementMethod = new CustomLinkMovementMethod();
     }
 
     @Nullable
@@ -72,92 +60,159 @@ public class DocumentationDetailFragment extends Fragment {
         if (docPage != null) {
             currentDocPage = docPage;
             TextView titleTextView = view.findViewById(R.id.tv_doc_detail_title);
-            contentTextView = view.findViewById(R.id.tv_doc_detail_content);
+            contentTextView = view.findViewById(R.id.contentTextView);
             progressBar = view.findViewById(R.id.progressBar);
 
             titleTextView.setText(docPage.getTitle());
-            setupLinkHandler();
+
+            // Инициализируем Markwon с поддержкой ссылок
+            markwon = Markwon.builder(getContext())
+                    .usePlugin(LinkifyPlugin.create())
+                    .usePlugin(createLinkPlugin())
+                    .build();
+
             setupViewModel();
-            viewModel.loadMarkdownContent(docPage.getRawUrl());
+            loadDocumentationPage(docPage.getRawUrl());
         }
     }
 
     private void setupViewModel() {
         viewModel = new ViewModelProvider(this).get(DocumentationViewModel.class);
 
-        viewModel.getCurrentContent().observe(getViewLifecycleOwner(), content -> {
-            if (content != null) {
-                String pageUrl = currentDocPage != null ? currentDocPage.getRawUrl() : null;
-                String processedContent = MarkdownHelper.processMarkdown(content, pageUrl);
-                markwon.setMarkdown(contentTextView, processedContent);
-                contentTextView.setVisibility(View.VISIBLE);
+        viewModel.getCurrentContent().observe(getViewLifecycleOwner(), markdownContent -> {
+            if (markdownContent != null && contentTextView != null && markwon != null) {
+                markwon.setMarkdown(contentTextView, markdownContent);
+            }
+        });
+
+        viewModel.getErrorMessage().observe(getViewLifecycleOwner(), errorMessage -> {
+            if (errorMessage != null && getContext() != null) {
+                Toast.makeText(getContext(), errorMessage, Toast.LENGTH_LONG).show();
+                if (contentTextView != null) {
+                    contentTextView.setText("Ошибка загрузки документации:\n" + errorMessage);
+                }
             }
         });
 
         viewModel.getIsLoading().observe(getViewLifecycleOwner(), isLoading -> {
-            progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
-            if (isLoading) {
-                contentTextView.setVisibility(View.GONE);
+            if (progressBar != null) {
+                progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
             }
-        });
-
-        viewModel.getErrorMessage().observe(getViewLifecycleOwner(), error -> {
-            if (error != null) {
-                contentTextView.setText("Ошибка загрузки: " + error);
-                contentTextView.setVisibility(View.VISIBLE);
+            if (contentTextView != null) {
+                contentTextView.setVisibility(isLoading ? View.GONE : View.VISIBLE);
             }
         });
     }
 
-    private void setupLinkHandler() {
-        linkMovementMethod.setLinkClickListener(url -> handleLinkClick(url));
-        contentTextView.setMovementMethod(linkMovementMethod);
+    private void loadDocumentationPage(String url) {
+        if (viewModel != null) {
+            viewModel.loadMarkdownContent(url);
+        }
     }
 
-    private void handleLinkClick(String url) {
-        if (url == null || url.trim().isEmpty() || url.trim().equals("#")) {
-            return;
-        }
-
-        try {
-            DocPage targetPage = findDocPageByUrl(url);
-
-            if (targetPage != null) {
-                DocumentationDetailFragment detailFragment = DocumentationDetailFragment.newInstance(targetPage);
-                getParentFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragment_container, detailFragment)
-                        .addToBackStack("documentation")
-                        .commit();
-            } else {
-                android.content.Intent browserIntent = new android.content.Intent(
-                        android.content.Intent.ACTION_VIEW,
-                        android.net.Uri.parse(url));
-                startActivity(browserIntent);
+    private AbstractMarkwonPlugin createLinkPlugin() {
+        return new AbstractMarkwonPlugin() {
+            @Override
+            public void configureConfiguration(MarkwonConfiguration.Builder builder) {
+                builder.linkResolver((view, link) -> {
+                    // Проверяем, является ли ссылка внутренней ссылкой на документацию
+                    DocPage targetPage = findDocPageByLink(link);
+                    if (targetPage != null) {
+                        // Открываем страницу документации внутри приложения
+                        DocumentationDetailFragment detailFragment = DocumentationDetailFragment.newInstance(targetPage);
+                        if (getActivity() != null) {
+                            getActivity().getSupportFragmentManager()
+                                    .beginTransaction()
+                                    .replace(R.id.fragment_container, detailFragment)
+                                    .addToBackStack("documentation")
+                                    .commit();
+                        }
+                    } else {
+                        // Открываем внешнюю ссылку в браузере
+                        try {
+                            android.content.Intent intent = new android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(link));
+                            startActivity(intent);
+                        } catch (Exception e) {
+                            Toast.makeText(getContext(), "Не удалось открыть ссылку: " + link, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
             }
-        } catch (Exception e) {
-            android.content.Intent browserIntent = new android.content.Intent(
-                    android.content.Intent.ACTION_VIEW,
-                    android.net.Uri.parse(url));
-            startActivity(browserIntent);
-        }
+        };
     }
 
-    private DocPage findDocPageByUrl(String url) {
-        if (url == null || viewModel.docPages == null)
+    private DocPage findDocPageByLink(String link) {
+        if (link == null || viewModel == null || viewModel.docPages == null) {
             return null;
+        }
 
-        for (DocPage page : viewModel.docPages) {
-            if (url.equals(page.getRawUrl())) {
-                return page;
-            }
+        String lowerLink = link.toLowerCase();
 
-            String normalizedUrl = url.replace("README.md", "");
-            String normalizedPageUrl = page.getRawUrl().replace("README.md", "");
-            if (normalizedUrl.equals(normalizedPageUrl)) {
-                return page;
+        // Проверяем, содержит ли ссылка ключевые слова, указывающие на внутренние страницы документации
+        if (lowerLink.contains("shutova") || lowerLink.contains("zhminkovskaya")) {
+            // Ищем соответствующую страницу по ключевым словам
+            for (DocPage page : viewModel.docPages) {
+                String title = page.getTitle().toLowerCase();
+                String url = page.getRawUrl().toLowerCase();
+
+                // Проверяем совпадение по автору и разделу
+                if ((lowerLink.contains("shutova") && title.contains("шутова")) ||
+                    (lowerLink.contains("zhminkovskaya") && title.contains("жминьковская"))) {
+
+                    // Для главной страницы автора
+                    if (lowerLink.contains("shutova") && !lowerLink.contains("guide") && !lowerLink.contains("adding") &&
+                        !lowerLink.contains("managing") && !lowerLink.contains("about") && !lowerLink.contains("faq")) {
+                        if (title.contains("шутова: главная")) return page;
+                    }
+
+                    // Для страниц Шутовой
+                    if (lowerLink.contains("shutova")) {
+                        if (lowerLink.contains("guide") && !lowerLink.contains("adding") && !lowerLink.contains("managing")) {
+                            if (title.contains("руководство по выставкам")) return page;
+                        }
+                        if (lowerLink.contains("adding")) {
+                            if (title.contains("добавление работ")) return page;
+                        }
+                        if (lowerLink.contains("managing")) {
+                            if (title.contains("управление выставками")) return page;
+                        }
+                        if (lowerLink.contains("about") && !lowerLink.contains("faq")) {
+                            if (title.contains("о проекте")) return page;
+                        }
+                        if (lowerLink.contains("faq")) {
+                            if (title.contains("чаВо")) return page;
+                        }
+                    }
+
+                    // Для главной страницы Жминьковской
+                    if (lowerLink.contains("zhminkovskaya") && !lowerLink.contains("publications") &&
+                        !lowerLink.contains("creating") && !lowerLink.contains("managing") &&
+                        !lowerLink.contains("forms") && !lowerLink.contains("faq")) {
+                        if (title.contains("жминьковская: главная")) return page;
+                    }
+
+                    // Для страниц Жминьковской
+                    if (lowerLink.contains("zhminkovskaya")) {
+                        if (lowerLink.contains("publications") && !lowerLink.contains("creating") && !lowerLink.contains("managing")) {
+                            if (title.contains("публикации")) return page;
+                        }
+                        if (lowerLink.contains("creating")) {
+                            if (title.contains("создание публикаций")) return page;
+                        }
+                        if (lowerLink.contains("managing")) {
+                            if (title.contains("управление публикациями")) return page;
+                        }
+                        if (lowerLink.contains("forms")) {
+                            if (title.contains("формы публикаций")) return page;
+                        }
+                        if (lowerLink.contains("faq")) {
+                            if (title.contains("чаВо")) return page;
+                        }
+                    }
+                }
             }
         }
+
         return null;
     }
 }
