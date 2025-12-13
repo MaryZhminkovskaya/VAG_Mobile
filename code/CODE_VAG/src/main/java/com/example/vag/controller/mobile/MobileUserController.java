@@ -37,7 +37,6 @@ public class MobileUserController {
         this.mobileAuthController = mobileAuthController;
     }
 
-    // Получить профиль текущего пользователя
     @GetMapping("/profile")
     public ResponseEntity<?> getCurrentUserProfile(@RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
@@ -49,7 +48,6 @@ public class MobileUserController {
                 return ResponseEntity.status(401).body(response);
             }
 
-            // Загружаем пользователя с коллекциями
             User fullUser = userService.findById(user.getId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -69,7 +67,6 @@ public class MobileUserController {
         }
     }
 
-    // Обновить профиль пользователя
     @PutMapping("/profile/update")
     public ResponseEntity<?> updateUserProfile(@RequestBody Map<String, String> profileRequest,
                                                @RequestHeader(value = "Authorization", required = false) String authHeader) {
@@ -87,7 +84,6 @@ public class MobileUserController {
             String description = profileRequest.get("description");
             String currentPassword = profileRequest.get("currentPassword");
 
-            // Проверяем текущий пароль (обязательно для любых изменений)
             if (currentPassword == null || currentPassword.trim().isEmpty()) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
@@ -95,7 +91,6 @@ public class MobileUserController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Проверяем текущий пароль
             if (userService.authenticate(user.getUsername(), currentPassword) == null) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
@@ -103,7 +98,6 @@ public class MobileUserController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Проверяем уникальность username
             if (username != null && !username.equals(user.getUsername())) {
                 if (userService.findByUsername(username).isPresent()) {
                     Map<String, Object> response = new HashMap<>();
@@ -113,7 +107,6 @@ public class MobileUserController {
                 }
             }
 
-            // Проверяем уникальность email
             if (email != null && !email.equals(user.getEmail())) {
                 if (userService.findByEmail(email).isPresent()) {
                     Map<String, Object> response = new HashMap<>();
@@ -123,7 +116,6 @@ public class MobileUserController {
                 }
             }
 
-            // Создаем обновленного пользователя
             User updatedUser = new User();
             updatedUser.setId(user.getId());
             if (username != null && !username.trim().isEmpty()) {
@@ -162,7 +154,6 @@ public class MobileUserController {
         }
     }
 
-    // Получить профиль пользователя по ID
     @GetMapping("/{userId}")
     public ResponseEntity<?> getUserProfile(@PathVariable Long userId) {
         try {
@@ -184,7 +175,6 @@ public class MobileUserController {
         }
     }
 
-    // Получить публикации пользователя
     @GetMapping("/{userId}/artworks")
     public ResponseEntity<?> getUserArtworks(
             @PathVariable Long userId,
@@ -201,16 +191,13 @@ public class MobileUserController {
                 currentUser = mobileAuthController.getUserFromToken(authHeader);
             }
 
-            // Определяем, является ли просматриваемый профиль собственным
             boolean isOwnProfile = currentUser != null && currentUser.getId().equals(userId);
 
             List<Artwork> artworks;
 
             if (isOwnProfile) {
-                // Для собственного профиля показываем все публикации
                 artworks = artworkService.findByUserWithDetails(user);
             } else {
-                // Для чужого профиля показываем только APPROVED публикации
                 artworks = artworkService.findByUserWithDetails(user).stream()
                         .filter(artwork -> "APPROVED".equals(artwork.getStatus()))
                         .collect(Collectors.toList());
@@ -235,7 +222,6 @@ public class MobileUserController {
         }
     }
 
-    // Получить понравившиеся публикации текущего пользователя
     @GetMapping("/liked/artworks")
     public ResponseEntity<?> getLikedArtworks(
             @RequestParam(defaultValue = "0") int page,
@@ -274,7 +260,6 @@ public class MobileUserController {
         }
     }
 
-    // Получить случайных художников
     @GetMapping("/artists/random")
     public ResponseEntity<?> getRandomArtists(@RequestParam(defaultValue = "4") int count) {
         try {
@@ -297,7 +282,6 @@ public class MobileUserController {
         }
     }
 
-    // Получить всех пользователей с количеством публикаций
     @GetMapping("/artists")
     public ResponseEntity<?> getAllArtists() {
         try {
@@ -318,7 +302,6 @@ public class MobileUserController {
         }
     }
 
-    // Обновить профиль с проверкой пароля
     @PutMapping("/profile/update-with-password")
     public ResponseEntity<?> updateUserProfileWithPassword(@RequestBody Map<String, String> profileRequest,
                                                           @RequestHeader(value = "Authorization", required = false) String authHeader) {
@@ -336,7 +319,6 @@ public class MobileUserController {
             String description = profileRequest.get("description");
             String currentPassword = profileRequest.get("currentPassword");
 
-            // Проверяем текущий пароль (обязательно для любых изменений)
             if (currentPassword == null || currentPassword.trim().isEmpty()) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
@@ -344,7 +326,6 @@ public class MobileUserController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Проверяем текущий пароль
             if (userService.authenticate(user.getUsername(), currentPassword) == null) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
@@ -352,7 +333,6 @@ public class MobileUserController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Проверяем уникальность username
             if (username != null && !username.equals(user.getUsername())) {
                 if (userService.findByUsername(username).isPresent()) {
                     Map<String, Object> response = new HashMap<>();
@@ -362,7 +342,6 @@ public class MobileUserController {
                 }
             }
 
-            // Проверяем уникальность email
             if (email != null && !email.equals(user.getEmail())) {
                 if (userService.findByEmail(email).isPresent()) {
                     Map<String, Object> response = new HashMap<>();
@@ -372,7 +351,6 @@ public class MobileUserController {
                 }
             }
 
-            // Создаем обновленного пользователя
             User updatedUser = new User();
             updatedUser.setId(user.getId());
             if (username != null && !username.trim().isEmpty()) {
@@ -411,7 +389,6 @@ public class MobileUserController {
         }
     }
 
-    // Изменить пароль пользователя
     @PutMapping("/profile/change-password")
     public ResponseEntity<?> changePassword(@RequestBody Map<String, String> passwordRequest,
                                            @RequestHeader(value = "Authorization", required = false) String authHeader) {
@@ -427,7 +404,6 @@ public class MobileUserController {
             String currentPassword = passwordRequest.get("currentPassword");
             String newPassword = passwordRequest.get("newPassword");
 
-            // Проверяем обязательные поля
             if (currentPassword == null || currentPassword.trim().isEmpty()) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
@@ -442,7 +418,6 @@ public class MobileUserController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Проверяем текущий пароль (пропускаем если пароль уже проверен в updateProfile)
             boolean skipPasswordCheck = "true".equals(passwordRequest.get("skipPasswordCheck"));
             if (!skipPasswordCheck && userService.authenticate(user.getUsername(), currentPassword) == null) {
                 Map<String, Object> response = new HashMap<>();
@@ -451,7 +426,6 @@ public class MobileUserController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Проверяем, что новый пароль отличается от текущего
             if (currentPassword.equals(newPassword)) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
@@ -459,7 +433,6 @@ public class MobileUserController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Обновляем пароль
             User updatedUser = new User();
             updatedUser.setId(user.getId());
             updatedUser.setPassword(newPassword);
@@ -483,7 +456,6 @@ public class MobileUserController {
         }
     }
 
-    // Удалить публикацию пользователя
     @DeleteMapping("/artworks/{artworkId}")
     public ResponseEntity<?> deleteUserArtwork(@PathVariable Long artworkId,
                                                @RequestHeader(value = "Authorization", required = false) String authHeader) {
@@ -499,7 +471,6 @@ public class MobileUserController {
             Artwork artwork = artworkService.findById(artworkId)
                     .orElseThrow(() -> new RuntimeException("Artwork not found"));
 
-            // Проверяем, что пользователь является владельцем публикации
             if (!artwork.getUser().getId().equals(user.getId())) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);

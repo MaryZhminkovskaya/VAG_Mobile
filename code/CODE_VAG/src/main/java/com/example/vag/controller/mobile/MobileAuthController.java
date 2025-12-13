@@ -17,7 +17,6 @@ public class MobileAuthController {
 
     private final UserService userService;
 
-    // Статическое хранилище токенов
     private static final Map<String, User> tokenStore = new ConcurrentHashMap<>();
     private static final Map<Long, String> userTokenStore = new ConcurrentHashMap<>();
 
@@ -36,7 +35,6 @@ public class MobileAuthController {
             System.out.println("Username: " + username);
             System.out.println("Email: " + email);
 
-            // Проверяем обязательные поля
             if (username == null || username.trim().isEmpty()) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
@@ -58,7 +56,6 @@ public class MobileAuthController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Проверяем, не существует ли уже пользователь
             if (userService.findByUsername(username.trim()).isPresent()) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
@@ -73,20 +70,17 @@ public class MobileAuthController {
                 return ResponseEntity.badRequest().body(response);
             }
 
-            // Создаем нового пользователя
             User newUser = new User();
             newUser.setUsername(username.trim());
             newUser.setEmail(email.trim());
             newUser.setPassword(password);
 
-            // Регистрируем пользователя
             User registeredUser = userService.register(newUser);
 
             System.out.println("User registered successfully: " + registeredUser.getUsername());
             System.out.println("User description: " + registeredUser.getDescription());
             System.out.println("User role: " + registeredUser.getRole().getName().name());
 
-            // Автоматически логиним пользователя после регистрации
             String token = UUID.randomUUID().toString();
             tokenStore.put(token, registeredUser);
             userTokenStore.put(registeredUser.getId(), token);
@@ -97,7 +91,7 @@ public class MobileAuthController {
             authResponse.setId(registeredUser.getId());
             authResponse.setUsername(registeredUser.getUsername());
             authResponse.setEmail(registeredUser.getEmail());
-            authResponse.setDescription(registeredUser.getDescription()); // ДОБАВЛЕНО
+            authResponse.setDescription(registeredUser.getDescription()); 
             authResponse.setRole(registeredUser.getRole().getName().name());
 
             Map<String, Object> response = new HashMap<>();
@@ -129,7 +123,6 @@ public class MobileAuthController {
 
             User user = userService.authenticate(username, password);
 
-            // Убедитесь, что роль установлена правильно
             System.out.println("User role: " + user.getRole().getName().name());
             System.out.println("User description: " + user.getDescription());
 
@@ -150,7 +143,7 @@ public class MobileAuthController {
             authResponse.setId(user.getId());
             authResponse.setUsername(user.getUsername());
             authResponse.setEmail(user.getEmail());
-            authResponse.setDescription(user.getDescription()); // ДОБАВЛЕНО
+            authResponse.setDescription(user.getDescription()); 
             authResponse.setRole(user.getRole().getName().name());
 
             Map<String, Object> response = new HashMap<>();
@@ -202,7 +195,7 @@ public class MobileAuthController {
                 response.put("authenticated", true);
                 response.put("username", user.getUsername());
                 response.put("email", user.getEmail());
-                response.put("description", user.getDescription()); // ДОБАВЛЕНО
+                response.put("description", user.getDescription()); 
                 response.put("role", user.getRole().getName().name());
                 return ResponseEntity.ok(response);
             } else {
@@ -217,7 +210,6 @@ public class MobileAuthController {
         }
     }
 
-    // Публичный метод для проверки токена с исправлением LazyInitializationException
     public User getUserFromToken(String authHeader) {
         try {
             String token = extractToken(authHeader);
@@ -227,8 +219,7 @@ public class MobileAuthController {
 
             if (token != null && tokenStore.containsKey(token)) {
                 User userFromStore = tokenStore.get(token);
-
-                // Вместо прямого возврата, загружаем пользователя из базы с инициализированными полями
+                
                 User managedUser = userService.findById(userFromStore.getId())
                         .orElseThrow(() -> new RuntimeException("User not found in database"));
 

@@ -41,13 +41,11 @@ public class MobileArtworkController {
         this.categoryRepository = categoryRepository;
     }
 
-    // Метод для получения текущего пользователя из токена
     private User getCurrentUser(String authHeader) {
         if (authHeader == null) {
             return null;
         }
 
-        // Используем MobileAuthController для извлечения пользователя из токена
         MobileAuthController authController = new MobileAuthController(userService);
         return authController.getUserFromToken(authHeader);
     }
@@ -269,9 +267,8 @@ public class MobileArtworkController {
             Artwork artwork = new Artwork();
             artwork.setTitle(title);
             artwork.setDescription(description);
-            artwork.setStatus("PENDING"); // Устанавливаем статус PENDING для новых работ
+            artwork.setStatus("PENDING"); 
 
-            // Создаем работу без изображения и категорий
             Artwork savedArtwork = artworkService.create(artwork, null, currentUser);
             ArtworkDTO artworkDTO = artworkMapper.toSimpleDTO(savedArtwork);
 
@@ -301,7 +298,6 @@ public class MobileArtworkController {
             return ResponseEntity.status(401).body(Map.of("success", false, "message", "Требуется аутентификация"));
         }
 
-        // Разрешаем видеть ВСЕ свои работы + админу — все чужие
         boolean isOwnProfile = currentUser.getId().equals(userId);
         boolean isAdmin = currentUser.hasRole("ADMIN");
 
@@ -310,7 +306,7 @@ public class MobileArtworkController {
         }
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<Artwork> artworksPage = artworkService.findAllByUserId(userId, pageable); // новый метод в сервисе
+        Page<Artwork> artworksPage = artworkService.findAllByUserId(userId, pageable); 
 
         List<ArtworkDTO> dtos = artworkMapper.toSimpleDTOList(artworksPage.getContent());
 

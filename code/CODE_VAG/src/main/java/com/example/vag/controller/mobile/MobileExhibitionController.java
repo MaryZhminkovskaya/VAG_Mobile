@@ -41,13 +41,11 @@ public class MobileExhibitionController {
         this.artworkMapper = artworkMapper;
     }
 
-    // Метод для получения текущего пользователя из токена
     private User getCurrentUser(String authHeader) {
         if (authHeader == null) {
             return null;
         }
 
-        // Используем MobileAuthController для извлечения пользователя из токена
         MobileAuthController authController = new MobileAuthController(userService);
         return authController.getUserFromToken(authHeader);
     }
@@ -56,8 +54,6 @@ public class MobileExhibitionController {
     public ResponseEntity<?> getExhibitions(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-
-        // Возвращаем все выставки (как публичные, так и приватные) для просмотра всеми пользователями
 
         try {
             Pageable pageable = PageRequest.of(page, size);
@@ -240,7 +236,6 @@ public class MobileExhibitionController {
             Exhibition exhibition = exhibitionService.findById(id).orElseThrow();
             Pageable pageable = PageRequest.of(page, size);
 
-            // Получаем все работы выставки (фильтрация будет на клиенте)
             Page<Artwork> artworkPage = artworkService.findByExhibitionId(id, pageable);
 
             List<ArtworkDTO> artworkDTOs = artworkMapper.toSimpleDTOList(artworkPage.getContent());
@@ -397,7 +392,6 @@ public class MobileExhibitionController {
 
             Exhibition exhibition = exhibitionService.findById(exhibitionId).orElseThrow();
 
-            // Проверяем, может ли пользователь добавлять работы в эту выставку
             if (exhibition.isAuthorOnly() && !exhibition.getUser().getId().equals(currentUser.getId())) {
                 Map<String, Object> response = new HashMap<>();
                 response.put("success", false);
@@ -405,11 +399,9 @@ public class MobileExhibitionController {
                 return ResponseEntity.status(403).body(response);
             }
 
-            // Получаем все работы пользователя (любого статуса)
             Pageable pageable = PageRequest.of(page, size);
             Page<Artwork> userArtworksPage = artworkService.findByUser(currentUser, pageable);
 
-            // Получаем работы, которые уже в выставке
             Set<Artwork> exhibitionArtworks = exhibition.getArtworks();
 
             List<ArtworkDTO> availableArtworks = userArtworksPage.getContent().stream()
@@ -443,10 +435,8 @@ public class MobileExhibitionController {
         dto.setAuthorOnly(exhibition.isAuthorOnly());
         dto.setCreatedAt(exhibition.getCreatedAt());
 
-        // Установка количества одобренных работ
         dto.setArtworksCount((int) exhibitionService.countApprovedArtworksInExhibition(exhibition.getId()));
 
-        // Установка первой одобренной работы для превью
         Artwork firstArtwork = exhibitionService.getFirstApprovedArtworkInExhibition(exhibition.getId());
         System.out.println("MobileExhibitionController: Exhibition " + exhibition.getId() + " - firstArtwork: " +
                           (firstArtwork != null ? firstArtwork.getTitle() : "null"));
@@ -454,7 +444,6 @@ public class MobileExhibitionController {
             dto.setFirstArtwork(artworkMapper.toSimpleDTO(firstArtwork));
         }
 
-        // Установка информации о пользователе
         if (exhibition.getUser() != null) {
             UserDTO userDTO = new UserDTO();
             userDTO.setId(exhibition.getUser().getId());

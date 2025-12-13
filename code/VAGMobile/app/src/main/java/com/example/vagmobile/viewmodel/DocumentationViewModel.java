@@ -35,8 +35,8 @@ public class DocumentationViewModel extends ViewModel {
                     DOCS_BASE_URL + "/zhminkovskaya/publications/creating/README.md"),
             new DocPage("Жминьковская: управление публикациями",
                     DOCS_BASE_URL + "/zhminkovskaya/publications/managing/README.md"),
-            new DocPage("Жминьковская: формы публикаций", DOCS_BASE_URL + "/zhminkovskaya/forms.md"),
-            new DocPage("Жминьковская: ЧаВо", DOCS_BASE_URL + "/zhminkovskaya/faq.md"));
+            new DocPage("Жминьковская: формы публикаций", DOCS_BASE_URL + "/zhminkovskaya/forms/README.md"),
+            new DocPage("Жминьковская: ЧаВо", DOCS_BASE_URL + "/zhminkovskaya/faq/README.md"));
 
     public void loadMarkdownContent(String url) {
         isLoading.setValue(true);
