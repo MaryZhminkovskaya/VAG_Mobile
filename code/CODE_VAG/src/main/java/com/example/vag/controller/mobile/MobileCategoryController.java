@@ -39,7 +39,6 @@ public class MobileCategoryController {
             this.mobileAuthController = mobileAuthController;
         }
 
-    // Получить все категории
     @GetMapping
     public ResponseEntity<?> getAllCategories() {
         try {
@@ -47,10 +46,8 @@ public class MobileCategoryController {
             List<Category> categories = categoryService.findAll();
             System.out.println("Found " + categories.size() + " categories");
 
-            // Устанавливаем количество одобренных публикаций для каждой категории
             for (Category category : categories) {
                 Long approvedCount = artworkService.countApprovedArtworksByCategoryId(category.getId());
-                // ИСПРАВЛЕНО: Гарантируем, что не будет null
                 category.setApprovedArtworksCount(approvedCount != null ? approvedCount : 0L);
                 System.out.println("Category: " + category.getName() + ", approved artworks: " + approvedCount);
             }
@@ -73,7 +70,6 @@ public class MobileCategoryController {
         }
     }
 
-    // Получить категорию по ID
     @GetMapping("/{id}")
     public ResponseEntity<?> getCategory(@PathVariable Long id) {
         try {
@@ -98,7 +94,6 @@ public class MobileCategoryController {
         }
     }
 
-    // Получить публикации по категории
     @GetMapping("/{id}/artworks")
     public ResponseEntity<?> getArtworksByCategory(
             @PathVariable Long id,
@@ -106,7 +101,6 @@ public class MobileCategoryController {
             @RequestParam(defaultValue = "20") int size) {
 
         try {
-            // Проверяем существование категории
             Category category = categoryService.findById(id)
                     .orElseThrow(() -> new RuntimeException("Category not found"));
 
@@ -133,12 +127,10 @@ public class MobileCategoryController {
         }
     }
 
-    // СОЗДАТЬ КАТЕГОРИЮ (админ)
     @PostMapping
     public ResponseEntity<?> createCategory(@RequestBody Map<String, String> categoryRequest,
                                             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
-            // Проверяем токен и получаем пользователя
             User currentUser = mobileAuthController.getUserFromToken(authHeader);
             if (currentUser == null || !currentUser.hasRole("ADMIN")) {
                 Map<String, Object> response = new HashMap<>();
@@ -178,13 +170,11 @@ public class MobileCategoryController {
         }
     }
 
-    // ОБНОВИТЬ КАТЕГОРИЮ (админ)
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCategory(@PathVariable Long id, 
                                             @RequestBody Map<String, String> categoryRequest,
                                             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
-            // Проверяем токен и получаем пользователя
             User currentUser = mobileAuthController.getUserFromToken(authHeader);
             if (currentUser == null || !currentUser.hasRole("ADMIN")) {
                 Map<String, Object> response = new HashMap<>();
@@ -223,12 +213,10 @@ public class MobileCategoryController {
         }
     }
 
-    // УДАЛИТЬ КАТЕГОРИЮ (админ)
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCategory(@PathVariable Long id,
                                             @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
-            // Проверяем токен и получаем пользователя
             User currentUser = mobileAuthController.getUserFromToken(authHeader);
             if (currentUser == null || !currentUser.hasRole("ADMIN")) {
                 Map<String, Object> response = new HashMap<>();
@@ -239,8 +227,7 @@ public class MobileCategoryController {
 
             Category category = categoryService.findById(id)
                     .orElseThrow(() -> new RuntimeException("Category not found"));
-
-            // Используем правильный метод для проверки
+            
             Long approvedCount = artworkService.countApprovedArtworksByCategoryId(id);
             if (approvedCount > 0) {
                 Map<String, Object> response = new HashMap<>();
